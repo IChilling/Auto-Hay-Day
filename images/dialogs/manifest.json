@@ -1,0 +1,289 @@
+{
+  "version": 1,
+  "coordinate_format": "Feature boxes are LTRB; other boxes are XYWH.",
+  "dialogs": {
+    "fuel_tutorial": {
+      "source": "dialog_fuel_tutorial.png",
+      "bounds": [
+        728,
+        137,
+        1070,
+        662
+      ],
+      "target": [
+        848,
+        350,
+        826,
+        175
+      ],
+      "background": [
+        {
+          "box": [
+            770,
+            250,
+            80,
+            50
+          ],
+          "color_bgr": [
+            202.0,
+            219.0,
+            228.0
+          ]
+        },
+        {
+          "box": [
+            1540,
+            620,
+            100,
+            60
+          ],
+          "color_bgr": [
+            190.0,
+            217.0,
+            228.0
+          ]
+        }
+      ],
+      "source_sha256": "b9057b35d5b590e6e2d0fea7cb02d19b77b2bc93ab1017b520b3698dc494fcfa",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "original_artifact": "artifacts/reconnected-latest.png",
+      "features": [
+        {
+          "file": "fuel_anchor.png",
+          "box": [
+            976,
+            348,
+            1208,
+            408
+          ],
+          "mask": "Original BGR grayscale < 185; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "fuel_line_1.png",
+          "box": [
+            876,
+            348,
+            1652,
+            408
+          ],
+          "mask": "Original BGR grayscale < 185; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "fuel_line_2.png",
+          "box": [
+            848,
+            408,
+            1676,
+            472
+          ],
+          "mask": "Original BGR grayscale < 185; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "fuel_line_3.png",
+          "box": [
+            1052,
+            472,
+            1476,
+            528
+          ],
+          "mask": "Original BGR grayscale < 185; dilate binary mask with a 5x5 square; original RGB unchanged."
+        }
+      ]
+    },
+    "connection_lost": {
+      "source": "dialog_connection_lost.png",
+      "bounds": [
+        173,
+        2,
+        1549,
+        1066
+      ],
+      "target": [
+        825,
+        952,
+        270,
+        83
+      ],
+      "background": [
+        {
+          "box": [
+            360,
+            440,
+            120,
+            90
+          ],
+          "color_bgr": [
+            205.0,
+            233.0,
+            239.0
+          ]
+        },
+        {
+          "box": [
+            1460,
+            780,
+            100,
+            60
+          ],
+          "color_bgr": [
+            205.0,
+            233.0,
+            239.0
+          ]
+        }
+      ],
+      "source_sha256": "05ce669c5d78a5feedfc33d76e0f8dd1d474ba1ca5143290d3d5365470ff271a",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "original_artifact": "artifacts/live-farming-tests/20260906T171516/001.png",
+      "features": [
+        {
+          "file": "connection_anchor.png",
+          "box": [
+            1088,
+            24,
+            1280,
+            144
+          ],
+          "mask": "Original BGR grayscale < 95; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "connection_title.png",
+          "box": [
+            640,
+            24,
+            1280,
+            144
+          ],
+          "mask": "Original BGR grayscale < 95; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "connection_body_1.png",
+          "box": [
+            312,
+            628,
+            1596,
+            684
+          ],
+          "mask": "Original BGR grayscale < 185; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "connection_body_2.png",
+          "box": [
+            536,
+            680,
+            1380,
+            736
+          ],
+          "mask": "Original BGR grayscale < 185; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "connection_retry.png",
+          "box": [
+            824,
+            948,
+            1096,
+            1040
+          ],
+          "mask": "Original BGR grayscale < 95; dilate binary mask with a 5x5 square; original RGB unchanged."
+        }
+      ]
+    },
+    "server_maintenance": {
+      "source": "dialog_server_maintenance.png",
+      "bounds": [
+        173,
+        2,
+        1549,
+        1066
+      ],
+      "target": [
+        796,
+        950,
+        328,
+        89
+      ],
+      "background": [
+        {
+          "box": [
+            360,
+            440,
+            120,
+            90
+          ],
+          "color_bgr": [
+            219.0,
+            249.0,
+            255.0
+          ]
+        },
+        {
+          "box": [
+            1460,
+            780,
+            100,
+            60
+          ],
+          "color_bgr": [
+            219.0,
+            249.0,
+            255.0
+          ]
+        }
+      ],
+      "source_sha256": "e1a1aed98d1996ab076cdec0a4dcbc840ff286a38aca4e24f6e215d324e28b28",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "original_artifact": "artifacts/blue-sweater/selected-actual-pen.png",
+      "features": [
+        {
+          "file": "maintenance_anchor.png",
+          "box": [
+            1000,
+            32,
+            1252,
+            144
+          ],
+          "mask": "Original BGR grayscale < 95; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "maintenance_title.png",
+          "box": [
+            676,
+            32,
+            1252,
+            144
+          ],
+          "mask": "Original BGR grayscale < 95; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "maintenance_body.png",
+          "box": [
+            304,
+            624,
+            1420,
+            684
+          ],
+          "mask": "Original BGR grayscale < 185; dilate binary mask with a 5x5 square; original RGB unchanged."
+        },
+        {
+          "file": "maintenance_retry.png",
+          "box": [
+            796,
+            948,
+            1124,
+            1040
+          ],
+          "mask": "Original BGR grayscale < 95; dilate binary mask with a 5x5 square; original RGB unchanged."
+        }
+      ]
+    }
+  }
+}

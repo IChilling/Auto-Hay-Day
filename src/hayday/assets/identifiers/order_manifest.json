@@ -1,0 +1,141 @@
+{
+  "reference_size": [
+    1920,
+    1080
+  ],
+  "features": {
+    "item_check": {
+      "file": "order_item_check.png",
+      "source": "orders_double_offer.png",
+      "source_sha256": "4e5f81444ce034d2c0ec1a3b2d7c73d6c326dc5d7e5d37eb33588f3dd032fb1d",
+      "box": [
+        1478,
+        414,
+        1527,
+        464
+      ],
+      "mask": "green"
+    },
+    "ticket_check": {
+      "file": "order_ticket_check.png",
+      "source": "orders_double_offer.png",
+      "source_sha256": "4e5f81444ce034d2c0ec1a3b2d7c73d6c326dc5d7e5d37eb33588f3dd032fb1d",
+      "box": [
+        1089,
+        656,
+        1161,
+        732
+      ],
+      "mask": "green"
+    },
+    "ticket_check_tilted": {
+      "file": "order_ticket_check_tilted.png",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "box": [
+        1130,
+        620,
+        1193,
+        697
+      ],
+      "mask": "green"
+    },
+    "quantity_slash": {
+      "file": "order_quantity_slash.png",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "box": [
+        1289,
+        529,
+        1311,
+        559
+      ],
+      "mask": "brown"
+    },
+    "send": {
+      "file": "order_send.png",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "box": [
+        1386,
+        856,
+        1658,
+        1004
+      ],
+      "mask": "send"
+    },
+    "double_offer": {
+      "file": "order_double_offer.png",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "box": [
+        1656,
+        802,
+        1806,
+        957
+      ],
+      "mask": "ellipse"
+    },
+    "bonus_symbols": {
+      "file": "order_bonus_symbols.png",
+      "source": "orders_double_offer.png",
+      "source_sha256": "4e5f81444ce034d2c0ec1a3b2d7c73d6c326dc5d7e5d37eb33588f3dd032fb1d",
+      "box": [
+        1637,
+        414,
+        1830,
+        488
+      ],
+      "mask": "rectangle"
+    },
+    "bonus_send": {
+      "file": "order_bonus_send.png",
+      "source": "orders_double_offer.png",
+      "source_sha256": "4e5f81444ce034d2c0ec1a3b2d7c73d6c326dc5d7e5d37eb33588f3dd032fb1d",
+      "box": [
+        1582,
+        680,
+        1880,
+        774
+      ],
+      "mask": "bonus"
+    },
+    "sent_stamp": {
+      "file": "order_sent_stamp.png",
+      "source": "orders_after_double_send.png",
+      "source_sha256": "f009e8773a710b70b2673af9100229383afb1fe63eb562afe07008d4792ceb26",
+      "box": [
+        956,
+        548,
+        1095,
+        686
+      ],
+      "mask": "ellipse"
+    },
+    "ad_close": {
+      "file": "order_ad_close.png",
+      "source": "orders_ad_finished.png",
+      "source_sha256": "decd5029cf5a447ae8ea96b68dacbd5de3fbe5bacebbda91ee614f14d9a8bea5",
+      "box": [
+        1861,
+        19,
+        1902,
+        59
+      ],
+      "mask": "ellipse"
+    },
+    "navigation": {
+      "file": "order_navigation.png",
+      "source": "resource_icecream_prompt_fresh.png",
+      "source_sha256": "447db6498fefbb2531c38076acb3fb812a167840e81c7cdff12fe2039d60f503",
+      "box": [
+        1747,
+        272,
+        1804,
+        322
+      ],
+      "mask": "rectangle"
+    }
+  },
+  "provenance": "Original RGB pixels from local BlueStacks screenshots captured during authorized order testing. No user explanation images are used. Alpha masks exclude changing backgrounds. Coordinates are [left, top, right, bottom] in source pixels."
+}

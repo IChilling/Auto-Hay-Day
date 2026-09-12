@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "reference_height": 1080,
+  "source": "launcher_hay_day.png",
+  "sha256": "32228f333aeb03e0c3a45d7de6e8fd9f8409169507f24cc8e168cd7aa690ce32",
+  "features": {
+    "hay_day_icon": {
+      "file": "hay_day_icon.png",
+      "box": [
+        1060,
+        256,
+        1160,
+        356
+      ]
+    },
+    "hay_day_label": {
+      "file": "hay_day_label.png",
+      "box": [
+        1068,
+        376,
+        1160,
+        404
+      ]
+    }
+  },
+  "launcher_packages": [
+    "com.uncube.launcher3"
+  ],
+  "game_package": "com.supercell.hayday",
+  "farm_hud": {
+    "source": "animal_sheep_tools.png",
+    "sha256": "d89b17681c98ebc2dfb7a59d3ce83e7eb9515f251ef0d76547a474dbb01dbaec",
+    "features": {
+      "star": {
+        "file": "farm_level_star.png",
+        "box": [
+          0,
+          0,
+          180,
+          165
+        ]
+      },
+      "diamond": {
+        "file": "farm_diamond.png",
+        "box": [
+          1693,
+          105,
+          1768,
+          163
+        ],
+        "source": "farm_zoomed_out_recovery.png",
+        "sha256": "629bffdf8802bb9744e70d54c50a28c9a92845548c9840a3f2fc2bc65c3c2da9"
+      }
+    }
+  }
+}

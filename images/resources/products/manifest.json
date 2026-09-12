@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "products": [
+    {
+      "name": "Blue Sweater",
+      "image": "blue_sweater.png",
+      "identifier": "blue_sweater_identifier.png",
+      "title": "blue_sweater_title.png",
+      "reference_height": 1080,
+      "source_capture": "resource_blue_sweater_menu.png",
+      "source_sha256": "50a3c9d6d6148be2e0fb14f2dc21b1da8b7515140b66de3498baec2cbaf00d1c",
+      "source_box": [
+        431,
+        318,
+        620,
+        454
+      ],
+      "mask": "Largest connected blue artwork in the observed product crop, eroded one pixel. Original RGB retained; variable stock bubble and farm background excluded.",
+      "title_verified": true
+    },
+    {
+      "name": "Pancake",
+      "image": "pancake.png",
+      "identifier": "pancake_identifier.png",
+      "title": "pancake_title.png",
+      "reference_height": 1080,
+      "source_capture": "resource_pancake_menu.png",
+      "source_sha256": "7945206d0de8717220c06037ba6e200281e161cd8971733f95b9f0eabd81a4d6",
+      "source_box": [
+        740,
+        401,
+        932,
+        528
+      ],
+      "mask": "Original product pixels inside polygon alpha mask; excludes stock counter and farm background.",
+      "title_verified": true
+    }
+  ]
+}

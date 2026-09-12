@@ -1,0 +1,171 @@
+{
+  "reference_size": [
+    1920,
+    1080
+  ],
+  "source_name": "truck_order_panel.png",
+  "source_sha256": "6698ae7d76a9c1025dfe5ca9abe2b55ef31f6f18c836c8cfad57dc80081be6cb",
+  "provenance": "Static truck-order UI crops from a local screenshot. Original RGB pixels; binary alpha masks exclude changing text, order contents, and farm scenery. Crop boxes are [left, top, right, bottom] in the original capture. Mask coordinates are relative to each crop. Full farm captures are not packaged.",
+  "features": {
+    "header_edge": {
+      "file": "panel_header_edge.png",
+      "box": [
+        487,
+        30,
+        704,
+        191
+      ],
+      "mask": {
+        "polygon": [
+          [
+            2,
+            2
+          ],
+          [
+            217,
+            7
+          ],
+          [
+            217,
+            157
+          ],
+          [
+            16,
+            155
+          ],
+          [
+            10,
+            142
+          ],
+          [
+            2,
+            17
+          ]
+        ]
+      }
+    },
+    "close_button": {
+      "file": "panel_close_button.png",
+      "box": [
+        1672,
+        33,
+        1847,
+        210
+      ],
+      "mask": {
+        "ellipse": [
+          4,
+          3,
+          171,
+          174
+        ]
+      }
+    },
+    "board_corner": {
+      "file": "panel_board_corner.png",
+      "box": [
+        313,
+        918,
+        435,
+        1028
+      ],
+      "mask": {
+        "polygon": [
+          [
+            0,
+            0
+          ],
+          [
+            40,
+            0
+          ],
+          [
+            40,
+            56
+          ],
+          [
+            53,
+            70
+          ],
+          [
+            122,
+            72
+          ],
+          [
+            122,
+            110
+          ],
+          [
+            35,
+            110
+          ],
+          [
+            16,
+            103
+          ],
+          [
+            3,
+            84
+          ]
+        ]
+      }
+    },
+    "detail_corner": {
+      "file": "panel_detail_corner.png",
+      "box": [
+        1189,
+        208,
+        1300,
+        278
+      ],
+      "mask": {
+        "polygon": [
+          [
+            45,
+            0
+          ],
+          [
+            111,
+            0
+          ],
+          [
+            111,
+            35
+          ],
+          [
+            53,
+            35
+          ],
+          [
+            37,
+            40
+          ],
+          [
+            29,
+            52
+          ],
+          [
+            27,
+            70
+          ],
+          [
+            0,
+            70
+          ],
+          [
+            0,
+            41
+          ],
+          [
+            10,
+            20
+          ],
+          [
+            26,
+            5
+          ]
+        ]
+      }
+    }
+  }
+}

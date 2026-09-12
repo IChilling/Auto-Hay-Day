@@ -1,0 +1,425 @@
+{
+  "version": 1,
+  "features": {
+    "shop": {
+      "file": "shop.png",
+      "source": "codex-clipboard-79766fde-faa2-49b9-8583-116c252c51cc.png",
+      "sha256": "185fffde6e0dea1085a78aae30050242d4b9f076eed6a190c66cbe9a8674d49d",
+      "box": [
+        0,
+        0,
+        225,
+        223
+      ]
+    },
+    "shop_header": {
+      "file": "shop_header.png",
+      "source": "codex-clipboard-c8532662-34d1-4cf7-988f-2e971b2db2e8.png",
+      "sha256": "7e95d1d164062a6b85ac9229c1432797876cfeb4b0a82410862c982701602356",
+      "box": [
+        832,
+        64,
+        1278,
+        132
+      ]
+    },
+    "shop_close": {
+      "file": "shop_close.png",
+      "source": "codex-clipboard-c8532662-34d1-4cf7-988f-2e971b2db2e8.png",
+      "sha256": "7e95d1d164062a6b85ac9229c1432797876cfeb4b0a82410862c982701602356",
+      "box": [
+        1492,
+        30,
+        1629,
+        176
+      ]
+    },
+    "empty_sale": {
+      "file": "empty_sale.png",
+      "source": "codex-clipboard-c8532662-34d1-4cf7-988f-2e971b2db2e8.png",
+      "sha256": "7e95d1d164062a6b85ac9229c1432797876cfeb4b0a82410862c982701602356",
+      "box": [
+        422,
+        637,
+        609,
+        737
+      ]
+    },
+    "sold": {
+      "file": "sold.png",
+      "source": "codex-clipboard-c8532662-34d1-4cf7-988f-2e971b2db2e8.png",
+      "sha256": "7e95d1d164062a6b85ac9229c1432797876cfeb4b0a82410862c982701602356",
+      "box": [
+        438,
+        250,
+        566,
+        319
+      ]
+    },
+    "edit_title": {
+      "file": "edit_title.png",
+      "source": "codex-clipboard-0cfd2905-2617-4fc4-a94f-0039b747a439.png",
+      "sha256": "79fb31062878ace8e2b8198fdeef3e2f540c4eac3415df4234eef4a3eb7f9264",
+      "box": [
+        800,
+        164,
+        1020,
+        231
+      ]
+    },
+    "edit_close": {
+      "file": "edit_close.png",
+      "source": "codex-clipboard-0cfd2905-2617-4fc4-a94f-0039b747a439.png",
+      "sha256": "79fb31062878ace8e2b8198fdeef3e2f540c4eac3415df4234eef4a3eb7f9264",
+      "box": [
+        1125,
+        68,
+        1257,
+        207
+      ]
+    },
+    "newspaper": {
+      "file": "newspaper.png",
+      "source": "codex-clipboard-0cfd2905-2617-4fc4-a94f-0039b747a439.png",
+      "sha256": "79fb31062878ace8e2b8198fdeef3e2f540c4eac3415df4234eef4a3eb7f9264",
+      "box": [
+        1021,
+        465,
+        1102,
+        550
+      ]
+    },
+    "advertise_button": {
+      "file": "advertise_button.png",
+      "source": "codex-clipboard-0cfd2905-2617-4fc4-a94f-0039b747a439.png",
+      "sha256": "79fb31062878ace8e2b8198fdeef3e2f540c4eac3415df4234eef4a3eb7f9264",
+      "box": [
+        728,
+        676,
+        1091,
+        723
+      ]
+    },
+    "advertise_now": {
+      "file": "advertise_now.png",
+      "source": "codex-clipboard-0cfd2905-2617-4fc4-a94f-0039b747a439.png",
+      "sha256": "79fb31062878ace8e2b8198fdeef3e2f540c4eac3415df4234eef4a3eb7f9264",
+      "box": [
+        698,
+        500,
+        963,
+        558
+      ]
+    },
+    "wheat_seed": {
+      "file": "wheat_seed.png",
+      "source": "farming_seed_menu.png",
+      "sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "box": [
+        773,
+        417,
+        913,
+        566
+      ]
+    },
+    "wheat_ripe": {
+      "file": "wheat_ripe.png",
+      "source": "farming_corn_harvested.png",
+      "sha256": "974a3cf8cac8981906dbc805ff35998bd4bf703528ed121907789fd6f2ab8934",
+      "box": [
+        936,
+        777,
+        979,
+        832
+      ]
+    },
+    "soil": {
+      "file": "soil.png",
+      "source": "farming_seed_menu.png",
+      "sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "box": [
+        885,
+        665,
+        967,
+        718
+      ]
+    },
+    "silo_tab": {
+      "file": "silo_tab.png",
+      "source": "live_composer.png",
+      "sha256": "4e67346a176fc7e565fa725bcea392251f588f1e58fe183234e3548fbede957e",
+      "box": [
+        191,
+        263,
+        299,
+        410
+      ],
+      "reference_height": 1080
+    },
+    "composer_adjust": {
+      "file": "composer_adjust.png",
+      "source": "live_wheat_10_36.png",
+      "sha256": "2c5fcb2687513fb9286b0e23d04a8203656ed5a122e855be925fd150b0bd7437",
+      "box": [
+        1260,
+        389,
+        1476,
+        430
+      ],
+      "reference_height": 1080
+    },
+    "composer_title": {
+      "file": "composer_title.png",
+      "source": "live_composer.png",
+      "sha256": "4e67346a176fc7e565fa725bcea392251f588f1e58fe183234e3548fbede957e",
+      "box": [
+        1264,
+        153,
+        1468,
+        218
+      ],
+      "reference_height": 1080
+    },
+    "composer_wheat_title": {
+      "file": "composer_wheat_title.png",
+      "source": "live_wheat_10_36.png",
+      "sha256": "2c5fcb2687513fb9286b0e23d04a8203656ed5a122e855be925fd150b0bd7437",
+      "box": [
+        1296,
+        152,
+        1433,
+        218
+      ],
+      "reference_height": 1080
+    },
+    "composer_close": {
+      "file": "composer_close.png",
+      "source": "live_composer.png",
+      "sha256": "4e67346a176fc7e565fa725bcea392251f588f1e58fe183234e3548fbede957e",
+      "box": [
+        1560,
+        45,
+        1705,
+        188
+      ],
+      "reference_height": 1080
+    },
+    "composer_submit": {
+      "file": "composer_submit.png",
+      "source": "live_wheat_10_36.png",
+      "sha256": "2c5fcb2687513fb9286b0e23d04a8203656ed5a122e855be925fd150b0bd7437",
+      "box": [
+        1260,
+        977,
+        1473,
+        1031
+      ],
+      "reference_height": 1080
+    },
+    "wheat_inventory": {
+      "file": "wheat_inventory.png",
+      "source": "live_composer.png",
+      "sha256": "4e67346a176fc7e565fa725bcea392251f588f1e58fe183234e3548fbede957e",
+      "box": [
+        414,
+        393,
+        531,
+        517
+      ],
+      "reference_height": 1080
+    },
+    "ad_check": {
+      "file": "ad_check.png",
+      "source": "live_wheat_ad_checked.png",
+      "sha256": "654ecec1e74b8eef5a93083ce2a7915c37c1c4017721ed80538adc344aad4cc9",
+      "box": [
+        1084,
+        474,
+        1179,
+        568
+      ],
+      "reference_height": 1080
+    },
+    "ad_marker": {
+      "file": "ad_marker.png",
+      "source": "live_wheat_advertised.png",
+      "sha256": "30f2e0ea5906aab43b41ba56c06bcce75149da0e55b1c7424ede41c0b791c0e6",
+      "box": [
+        394,
+        473,
+        462,
+        557
+      ],
+      "reference_height": 1080
+    },
+    "free_ad_in": {
+      "file": "free_ad_in.png",
+      "source": "live_ad_cooldown.png",
+      "sha256": "1458227260fccc0f3a87e270aa7dc738ee33597744e01ea9743a0972c5c22a6d",
+      "box": [
+        1180,
+        661,
+        1342,
+        711
+      ],
+      "reference_height": 1080
+    },
+    "quantity_plus": {
+      "file": "quantity_plus.png",
+      "source": "live_wheat_selected.png",
+      "sha256": "c016316b0a581c83b750898549604c9526d8f25817cb7f1f2b7af8ba0f43e951",
+      "box": [
+        1490,
+        242,
+        1609,
+        362
+      ],
+      "reference_height": 1080
+    },
+    "price_max": {
+      "file": "price_max.png",
+      "source": "live_wheat_selected.png",
+      "sha256": "c016316b0a581c83b750898549604c9526d8f25817cb7f1f2b7af8ba0f43e951",
+      "box": [
+        1407,
+        534,
+        1495,
+        620
+      ],
+      "reference_height": 1080
+    },
+    "soil_full": {
+      "file": "soil_full.png",
+      "source": "live_seed_menu.png",
+      "sha256": "b831d1f3bda4c68babd2f2899f394b1933dcadf2911d5e93ff8e115f4c50f65d",
+      "box": [
+        1000,
+        577,
+        1110,
+        638
+      ],
+      "reference_height": 1080
+    },
+    "wheat_sale": {
+      "file": "wheat_sale.png",
+      "source": "live_wheat_listed.png",
+      "sha256": "0e1b86d85f3c7aad8d1d4e10984f71ef19f31ff4080a6d4e2c951c8816bce037",
+      "box": [
+        467,
+        283,
+        610,
+        439
+      ],
+      "reference_height": 1080
+    },
+    "advertise_button_live": {
+      "file": "advertise_button_live.png",
+      "source": "live_wheat_ad_checked.png",
+      "sha256": "654ecec1e74b8eef5a93083ce2a7915c37c1c4017721ed80538adc344aad4cc9",
+      "box": [
+        752,
+        690,
+        1145,
+        744
+      ],
+      "reference_height": 1080
+    },
+    "ripe_live": {
+      "file": "ripe_live.png",
+      "source": "live_wheat_fields.png",
+      "sha256": "6d153af769125fe5c4a9fcbd629fcab3e42b7bc8a83c2a3d45822872ffc4b450",
+      "box": [
+        1002,
+        486,
+        1113,
+        565
+      ],
+      "reference_height": 1080
+    },
+    "soil_texture": {
+      "file": "soil_texture.png",
+      "source": "live_wheat_fields.png",
+      "sha256": "6d153af769125fe5c4a9fcbd629fcab3e42b7bc8a83c2a3d45822872ffc4b450",
+      "box": [
+        975,
+        460,
+        1025,
+        495
+      ],
+      "reference_height": 1080
+    },
+    "sold_live": {
+      "file": "sold_live.png",
+      "source": "live_sold.png",
+      "sha256": "a7f2222981f9d1fc248d45903d866fe691c901f19603d409d0eddb9731f67804",
+      "box": [
+        474,
+        266,
+        574,
+        331
+      ],
+      "reference_height": 1080
+    },
+    "ripe_texture": {
+      "file": "ripe_texture.png",
+      "source": "live_before_harvest.png",
+      "sha256": "2968b916023444babaaa27078ad002265b058e0b52e3304b7418d0cd2d175fda",
+      "box": [
+        1020,
+        495,
+        1055,
+        530
+      ],
+      "reference_height": 1080
+    },
+    "ripe_texture_dense": {
+      "file": "ripe_texture_dense.png",
+      "source": "live_before_harvest.png",
+      "sha256": "2968b916023444babaaa27078ad002265b058e0b52e3304b7418d0cd2d175fda",
+      "box": [
+        1100,
+        500,
+        1140,
+        545
+      ],
+      "reference_height": 1080
+    },
+    "empty_outline": {
+      "file": "empty_outline.png",
+      "source": "replant_picker.png",
+      "sha256": "520f92b8b8749e391b0f016feb65211c2fc5e56ebbe5d66967eceda9ca7863fc",
+      "box": [
+        800,
+        636,
+        930,
+        713
+      ],
+      "reference_height": 1080
+    },
+    "ripe_full_a": {
+      "file": "ripe_full_a.png",
+      "source": "full_mature_wheat.png",
+      "sha256": "92a8bad2f8cd8b378e65a0701960855fdba04685ecebfc902eeab0d2b5a2b7fe",
+      "box": [
+        1200,
+        515,
+        1240,
+        560
+      ],
+      "reference_height": 1080
+    },
+    "ripe_full_b": {
+      "file": "ripe_full_b.png",
+      "source": "full_mature_wheat.png",
+      "sha256": "92a8bad2f8cd8b378e65a0701960855fdba04685ecebfc902eeab0d2b5a2b7fe",
+      "box": [
+        1000,
+        670,
+        1040,
+        715
+      ],
+      "reference_height": 1080
+    }
+  },
+  "provenance": "Original RGB pixels from user references and existing farm captures; alpha masks exclude surroundings. No farm coordinates are input targets."
+}

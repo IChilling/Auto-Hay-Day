@@ -1,0 +1,13 @@
+{
+  "source": "Direct BlueStacks ADB screenshot captured after the bounded Violet Dress resource replay",
+  "captured_at": "2026-09-06T20:28:43+00:00",
+  "related_diagnostic_run": "artifacts/violet-dress-live-followup/20260906T202641_7c34d8d6",
+  "source_file": "artifacts/violet-dress-live-followup/post_harvest_current.png",
+  "source_size": [
+    1920,
+    1080
+  ],
+  "sha256": "9b893f135577a27f26262092fe370132e573a590d9f097e35ab6936ee7efa477",
+  "transformation": "Exact original screenshot bytes copied without image processing",
+  "purpose": "Replay the cotton seed picker that opened after harvesting but was not recognized"
+}

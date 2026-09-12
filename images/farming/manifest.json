@@ -1,0 +1,125 @@
+{
+  "reference_size": [
+    1920,
+    1080
+  ],
+  "features": {
+    "sickle": {
+      "file": "sickle.png",
+      "source": "farming_corn_guided.png",
+      "source_sha256": "8828c5f396fc1cecacc45454126310872a2426c844cc363e5653c67d82aa72fe",
+      "box": [
+        660,
+        535,
+        836,
+        684
+      ],
+      "included_pixels": 5673
+    },
+    "guide_arrow": {
+      "file": "guide_arrow.png",
+      "source": "farming_corn_guided.png",
+      "source_sha256": "8828c5f396fc1cecacc45454126310872a2426c844cc363e5653c67d82aa72fe",
+      "box": [
+        706,
+        606,
+        839,
+        719
+      ],
+      "included_pixels": 5568
+    },
+    "guide_tip": {
+      "file": "guide_tip.png",
+      "source": "farming_corn_guided.png",
+      "source_sha256": "8828c5f396fc1cecacc45454126310872a2426c844cc363e5653c67d82aa72fe",
+      "box": [
+        764,
+        650,
+        839,
+        719
+      ],
+      "included_pixels": 2118
+    },
+    "empty_plot": {
+      "file": "empty_plot.png",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "box": [
+        860,
+        645,
+        984,
+        736
+      ],
+      "included_pixels": 3885
+    },
+    "page_previous": {
+      "file": "page_previous.png",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "box": [
+        274,
+        775,
+        397,
+        895
+      ],
+      "included_pixels": 9926
+    },
+    "page_next": {
+      "file": "page_next.png",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "box": [
+        611,
+        775,
+        735,
+        895
+      ],
+      "included_pixels": 10009
+    },
+    "growth_bar": {
+      "file": "growth_bar.png",
+      "source": "farming_corn_planted.png",
+      "source_sha256": "a270975359008df657207e185ebfeee1a5e3fe48383578d8f0dd5f051782e0cc",
+      "box": [
+        644,
+        811,
+        1260,
+        918
+      ],
+      "included_pixels": 11887
+    }
+  },
+  "provenance": "Original RGB pixels from authorized local BlueStacks captures. Alpha is the inclusion mask; transparent pixels are ignored. No generated artwork or fixed farm coordinates. The guide-relative harvest offset is UI geometry, validated against an observed white selected-crop highlight. Crop type, counts, timers and premium buttons are excluded.",
+  "harvest_geometry": {
+    "sickle_box": [
+      660,
+      535,
+      836,
+      684
+    ],
+    "tool_point": [
+      737,
+      613
+    ],
+    "harvest_point": [
+      937,
+      676
+    ],
+    "target_point": [
+      918,
+      702
+    ],
+    "target_box": [
+      882,
+      665,
+      954,
+      739
+    ],
+    "white_highlight_box": [
+      874,
+      582,
+      981,
+      706
+    ]
+  }
+}

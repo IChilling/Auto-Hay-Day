@@ -1,0 +1,10 @@
+{
+  "source": "artifacts/dress-prompt-debug/live-validation/source.png",
+  "sha256": "35fbee60a31d170eec16c487efbc7a78a33c97ec35e42bd03602d746821ae263",
+  "size": [
+    1920,
+    1080
+  ],
+  "device": "emulator-5554",
+  "purpose": "Direct BlueStacks navigation from quest-board Violet Dress through Produce in the Sewing Machine. Original RGB; reference geometry is not a runtime farm location."
+}

@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "reference_height": 1080,
+  "desired_item": "egg_item.png",
+  "features": {
+    "ready": {
+      "file": "ready.png",
+      "box": [
+        1541,
+        614,
+        1574,
+        654
+      ]
+    },
+    "feed": {
+      "file": "feed.png",
+      "box": [
+        1398,
+        265,
+        1474,
+        350
+      ]
+    },
+    "ready_facing": {
+      "file": "ready_facing.png",
+      "box": [
+        1626,
+        566,
+        1666,
+        610
+      ],
+      "source_capture": "resource_chicken_relocated.png"
+    },
+    "coop": {
+      "file": "coop.png",
+      "box": [
+        1580,
+        448,
+        1690,
+        565
+      ],
+      "source_capture": "resource_chicken_relocated.png"
+    },
+    "feed_inactive": {
+      "file": "feed_inactive.png",
+      "box": [
+        726,
+        265,
+        802,
+        350
+      ],
+      "source_capture": "resource_chicken_fed.png"
+    }
+  },
+  "source_capture": "resource_chicken_menu.png",
+  "source_sha256": "64728d432f7ba1893539e0c8bfe911788f8e6f7500ef0418b8a973b52ad2062e",
+  "mask": "Original RGB, alpha includes white and red chicken artwork only; no farm layout pixels.",
+  "identifier_capture": "resource_cookie_recipe_sugar_collected.png",
+  "identifier_box": [
+    906,
+    612,
+    94,
+    101
+  ],
+  "pen_probe": {
+    "center": [
+      65,
+      145
+    ],
+    "width": 40
+  }
+}

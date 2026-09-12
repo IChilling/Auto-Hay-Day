@@ -1,0 +1,98 @@
+{
+  "version": 2,
+  "source": "images/wheating/codex-clipboard-79766fde-faa2-49b9-8583-116c252c51cc.png",
+  "source_sha256": "185fffde6e0dea1085a78aae30050242d4b9f076eed6a190c66cbe9a8674d49d",
+  "source_size": [
+    225,
+    223
+  ],
+  "features": {
+    "counter": [
+      [
+        54,
+        134
+      ],
+      [
+        128,
+        168
+      ],
+      [
+        167,
+        139
+      ],
+      [
+        166,
+        153
+      ],
+      [
+        129,
+        179
+      ],
+      [
+        61,
+        149
+      ]
+    ],
+    "deck": [
+      [
+        14,
+        153
+      ],
+      [
+        44,
+        137
+      ],
+      [
+        54,
+        147
+      ],
+      [
+        61,
+        155
+      ],
+      [
+        100,
+        174
+      ],
+      [
+        123,
+        185
+      ],
+      [
+        133,
+        185
+      ],
+      [
+        168,
+        160
+      ],
+      [
+        176,
+        162
+      ],
+      [
+        165,
+        179
+      ],
+      [
+        193,
+        177
+      ],
+      [
+        138,
+        208
+      ],
+      [
+        22,
+        163
+      ]
+    ]
+  },
+  "excluded_notification_ltrb": [
+    96,
+    76,
+    145,
+    132
+  ],
+  "provenance": "Original RGB pixels; binary polygon alpha masks only. Only the counter rim and platform identify the shop. Roof skins, supports, notifications, tray contents, surroundings, and decorations are excluded. Coordinates describe the reference artwork, never a farm position."
+}

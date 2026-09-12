@@ -1,0 +1,216 @@
+{
+  "version": 1,
+  "source": "images/reference_captures/orchard_raspberry_catalog.png",
+  "source_sha256": "3eee2c7319e99b38a72434c2c16bd5db1b3e6760c1df384ad6c4504bfc4d058f",
+  "source_size": [
+    1920,
+    1080
+  ],
+  "supporting_sources": [
+    {
+      "source": "images/reference_captures/orchard_invalid_placement.png",
+      "source_sha256": "98999dbb97ff4e902243f4feabfe635b83cb5cf84df5f09124ae053d2e783e47",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "purpose": "Explicit no-space negative placement outcome."
+    },
+    {
+      "source": "images/reference_captures/orchard_raspberry_catalog_alternate.png",
+      "source_sha256": "9b0a177d189c589ebd40446730b576cf712b4186993c6c0994d882a3fa211657",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "purpose": "Same Raspberry catalog after a camera pan; independent layout replay."
+    },
+    {
+      "source": "images/reference_captures/orchard_raspberry_catalog_animation.png",
+      "source_sha256": "fc9b55da27561fdec030b514978e2770f7ec3d7235279aceda355df4c448618b",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "purpose": "Same Raspberry card in a different live idle-animation pose."
+    },
+    {
+      "source": "images/reference_captures/orchard_raspberry_placement_before.png",
+      "source_sha256": "970496ea0f1afc4742447fd8f212576718316bdbe6b8611b92178edcf60b4f8c",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "purpose": "Stable catalog frame immediately before the one live purchase swipe."
+    },
+    {
+      "source": "images/reference_captures/orchard_raspberry_placement_after_1.png",
+      "source_sha256": "51069f83b8524099c92fec417e02f012382aae2159358547bfdf41a08fcf000c",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "purpose": "First fresh frame showing the new bush and the exact 220-coin charge."
+    },
+    {
+      "source": "images/reference_captures/orchard_raspberry_placement_after_2.png",
+      "source_sha256": "70a148ceb1174405b21c3ec2c9bb1507e068a9b1dc6336c17aff9af675d35a55",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "purpose": "Second fresh frame showing the same newly placed bush."
+    }
+  ],
+  "coordinate_format": "Source feature boxes are LTRB; runtime positions are always freshly detected.",
+  "species": {
+    "raspberry": {
+      "desired_file": "desired_raspberry.png",
+      "desired_source": "images/learned_items/0d9c7223250cd3328d65.png",
+      "desired_source_sha256": "cd7849312653dce6b1ee07024d4a8b3c2dd38bcb2b1f571edf109485cff622d8",
+      "desired_source_size": [
+        95,
+        102
+      ],
+      "mask": "Original Raspberry artwork pixels selected by saturated berry/leaf hue; binary close/dilate.",
+      "opaque_pixels": 4368,
+      "desired_board_file": "desired_raspberry_board.png"
+    }
+  },
+  "features": {
+    "shop_button": {
+      "file": "shop_button.png",
+      "box": [
+        917,
+        870,
+        1075,
+        1075
+      ],
+      "mask": "Binary ellipse includes the observed round shop control and excludes farm scenery.",
+      "opaque_pixels": 23487
+    },
+    "header": {
+      "file": "header.png",
+      "box": [
+        309,
+        10,
+        716,
+        91
+      ],
+      "mask": "Original near-black outline and neutral white title pixels; binary 3x3 close.",
+      "opaque_pixels": 17135
+    },
+    "raspberry_card": {
+      "file": "raspberry_card.png",
+      "box": [
+        337,
+        210,
+        525,
+        330
+      ],
+      "mask": "Original green foliage and saturated pink Raspberry pixels; binary 3x3 close/dilate; the overlapping generic arrow corner is excluded.",
+      "opaque_pixels": 10197
+    },
+    "card_arrow": {
+      "file": "card_arrow.png",
+      "box": [
+        467,
+        300,
+        565,
+        395
+      ],
+      "mask": "Binary polygon follows the observed white/gold catalog drag arrow.",
+      "opaque_pixels": 3878
+    },
+    "tree_tab": {
+      "file": "tree_tab.png",
+      "box": [
+        918,
+        555,
+        1055,
+        699
+      ],
+      "mask": "Dark-orange tree glyph components inside the selected category tab; binary dilation.",
+      "opaque_pixels": 2313
+    },
+    "desired_raspberry_board": {
+      "file": "desired_raspberry_board.png",
+      "box": [
+        1245,
+        455,
+        1322,
+        516
+      ],
+      "source": "images/reference_captures/orchard_raspberry_board_order.png",
+      "source_sha256": "bc98465e2988f47a6f95f3a8f3c1dd0a0a95ab88d8ffbb37ab2885ed9d930b61",
+      "mask": "Original Raspberry artwork pixels selected by saturated berry/leaf hue; binary close/dilate.",
+      "opaque_pixels": 3618
+    },
+    "invalid_space": {
+      "file": "invalid_space.png",
+      "box": [
+        1021,
+        122,
+        1752,
+        217
+      ],
+      "source": "images/reference_captures/orchard_invalid_placement.png",
+      "source_sha256": "98999dbb97ff4e902243f4feabfe635b83cb5cf84df5f09124ae053d2e783e47",
+      "mask": "Original black outline and neutral white NOT ENOUGH SPACE HERE text; binary 3x3 close.",
+      "opaque_pixels": 43874
+    },
+    "placement_rotate": {
+      "file": "placement_rotate.png",
+      "box": [
+        1111,
+        205,
+        1302,
+        361
+      ],
+      "source": "images/reference_captures/orchard_invalid_placement.png",
+      "source_sha256": "98999dbb97ff4e902243f4feabfe635b83cb5cf84df5f09124ae053d2e783e47",
+      "mask": "Original orange arrows, neutral white button, and dark outline inside the observed rotate control ellipse.",
+      "opaque_pixels": 18192
+    }
+  },
+  "geometry": {
+    "header_box": [
+      309,
+      10,
+      716,
+      91
+    ],
+    "raspberry_card_box": [
+      337,
+      210,
+      525,
+      330
+    ],
+    "card_arrow_box": [
+      467,
+      300,
+      565,
+      395
+    ],
+    "tree_tab_box": [
+      918,
+      555,
+      1055,
+      699
+    ],
+    "shop_button_box": [
+      917,
+      870,
+      1075,
+      1075
+    ],
+    "drag_point": [
+      426,
+      270
+    ],
+    "panel_right": 918,
+    "minimum_clearance_at_1080p": 42
+  },
+  "transaction": "The worker writes placement_attempted before its only charge-capable swipe. A restart never repeats that swipe. Growing requires two fresh stable local observations.",
+  "provenance": "Every reference retains the original captured RGB. Alpha is a binary inclusion mask over stable shop artwork; source coordinates are provenance and never runtime farm coordinates."
+}

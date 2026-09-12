@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "source": "images/wheating/level_up.png",
+  "source_sha256": "af861b99273d2d77379bd03872976e8a3210786d101d935f088b793d11ca2f49",
+  "source_size": [
+    1920,
+    1080
+  ],
+  "provenance": "Unmodified RGB cutouts from a live BlueStacks capture. The changing level number and all reward artwork are excluded.",
+  "bounds": [
+    234,
+    45,
+    1452,
+    1028
+  ],
+  "target": [
+    840,
+    920,
+    240,
+    100
+  ],
+  "background": [],
+  "features": [
+    {
+      "file": "continue.png",
+      "box": [
+        840,
+        920,
+        1080,
+        1020
+      ]
+    },
+    {
+      "file": "level_up.png",
+      "box": [
+        640,
+        60,
+        1260,
+        220
+      ]
+    },
+    {
+      "file": "congratulations.png",
+      "box": [
+        740,
+        240,
+        1160,
+        320
+      ]
+    }
+  ]
+}

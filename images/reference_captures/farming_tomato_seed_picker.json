@@ -1,0 +1,6 @@
+{
+  "source": "Direct BlueStacks ADB capture during harvesting debug, 2026-09-07 UTC",
+  "original": "artifacts/harvest-improvement/seed-picker-2.png",
+  "sha256": "f04422cc7ffbbd31f29f208bed7e18f448a090960a62568cacce98d8cb77c7bd",
+  "purpose": "Offline harvest/replant regression; no farm coordinates are runtime configuration."
+}

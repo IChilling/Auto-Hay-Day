@@ -1,0 +1,12 @@
+{
+  "source": "Direct BlueStacks ADB screenshot captured during the live Violet Dress dependency replay",
+  "captured_at": "2026-09-06T20:08:51+00:00",
+  "source_artifact": "artifacts/violet-dress-live-fix/015_frame.png",
+  "source_size": [
+    1920,
+    1080
+  ],
+  "sha256": "d7446a10bd51e21d58bb1e193abdd680e5c33411d1400a6ad77f4c23de840c85",
+  "transformation": "Exact original screenshot bytes copied without image processing",
+  "purpose": "Replay the one-row Cotton Fabric recipe overlapping the Loom LEVEL panel"
+}

@@ -1,0 +1,13 @@
+{
+  "source": "Direct BlueStacks ADB screenshot saved by the Hay Day Automation order runner",
+  "captured_at": "2026-09-06T19:49:24+00:00",
+  "diagnostic_run": "20260906T194836_9bdfaab3",
+  "diagnostic_frame": "0025_panel.png",
+  "source_size": [
+    1920,
+    1080
+  ],
+  "sha256": "23b40376150848b5fd281b9595175f07a39f5d5c81cb3cbd03f62c94ff7f42e8",
+  "transformation": "Exact original screenshot bytes copied without image processing",
+  "purpose": "Replay the Loom producer menu reached from the Violet Dress fabric dependency"
+}

@@ -1,0 +1,1883 @@
+{
+  "version": 1,
+  "source": "Original BlueStacks ADB captures",
+  "normalization_shape": [
+    40,
+    32
+  ],
+  "label_policy": "Labels are transcribed from inspected live captures; untrained glyphs remain unknown.",
+  "features": [
+    {
+      "file": "1_00.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1273,
+        526,
+        53,
+        35
+      ],
+      "expected_quantity": "1/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1273,
+        529,
+        12,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_01.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1273,
+        526,
+        53,
+        35
+      ],
+      "expected_quantity": "1/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1289,
+        528,
+        22,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_02.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1273,
+        526,
+        53,
+        35
+      ],
+      "expected_quantity": "1/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1314,
+        529,
+        12,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "2_03.png",
+      "glyph": "2",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1598,
+        526,
+        65,
+        35
+      ],
+      "expected_quantity": "2/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1598,
+        527,
+        25,
+        33
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_04.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1598,
+        526,
+        65,
+        35
+      ],
+      "expected_quantity": "2/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1626,
+        528,
+        22,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_05.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1598,
+        526,
+        65,
+        35
+      ],
+      "expected_quantity": "2/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1651,
+        529,
+        12,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "5_06.png",
+      "glyph": "5",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1426,
+        685,
+        67,
+        35
+      ],
+      "expected_quantity": "5/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1426,
+        687,
+        26,
+        32
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_07.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1426,
+        685,
+        67,
+        35
+      ],
+      "expected_quantity": "5/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1456,
+        687,
+        22,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_08.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_ready.png",
+      "source_sha256": "cec1496d50173e231edbe128118e3a54d5efa2773afd769c30edeea8393beb7e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1426,
+        685,
+        67,
+        35
+      ],
+      "expected_quantity": "5/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1481,
+        688,
+        12,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "0_09.png",
+      "glyph": "0",
+      "font": "quantity",
+      "source": "orders_school_missing.png",
+      "source_sha256": "8d05029135cec2b27544e358c72e58881402874f0356c9a6c586f20b296f175f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1590,
+        525,
+        80,
+        40
+      ],
+      "expected_quantity": "0/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1596,
+        528,
+        27,
+        32
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_10.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "orders_school_missing.png",
+      "source_sha256": "8d05029135cec2b27544e358c72e58881402874f0356c9a6c586f20b296f175f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1590,
+        525,
+        80,
+        40
+      ],
+      "expected_quantity": "0/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1626,
+        528,
+        22,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_11.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_school_missing.png",
+      "source_sha256": "8d05029135cec2b27544e358c72e58881402874f0356c9a6c586f20b296f175f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1590,
+        525,
+        80,
+        40
+      ],
+      "expected_quantity": "0/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1651,
+        529,
+        12,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "6_12.png",
+      "glyph": "6",
+      "font": "quantity",
+      "source": "resource_icecream_recipe.png",
+      "source_sha256": "8445fbb57cd8b869231638d707d32c1d1fd8f3871c643c630968d58d0588ec4d",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1120,
+        476,
+        97,
+        61
+      ],
+      "expected_quantity": "6/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1125,
+        489,
+        22,
+        28
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_13.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "resource_icecream_recipe.png",
+      "source_sha256": "8445fbb57cd8b869231638d707d32c1d1fd8f3871c643c630968d58d0588ec4d",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1120,
+        476,
+        97,
+        61
+      ],
+      "expected_quantity": "6/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1149,
+        491,
+        19,
+        26
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_14.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "resource_icecream_recipe.png",
+      "source_sha256": "8445fbb57cd8b869231638d707d32c1d1fd8f3871c643c630968d58d0588ec4d",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1120,
+        476,
+        97,
+        61
+      ],
+      "expected_quantity": "6/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1170,
+        491,
+        11,
+        26
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "4_15.png",
+      "glyph": "4",
+      "font": "quantity",
+      "source": "orders_slot_1.png",
+      "source_sha256": "637c6790e2f65b55143fed6f64baf469ffffbb52f2b0f4d0969493d321325d50",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        525,
+        69,
+        35
+      ],
+      "expected_quantity": "4/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1424,
+        528,
+        28,
+        30
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_16.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "orders_slot_1.png",
+      "source_sha256": "637c6790e2f65b55143fed6f64baf469ffffbb52f2b0f4d0969493d321325d50",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        525,
+        69,
+        35
+      ],
+      "expected_quantity": "4/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1456,
+        527,
+        22,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_17.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_slot_1.png",
+      "source_sha256": "637c6790e2f65b55143fed6f64baf469ffffbb52f2b0f4d0969493d321325d50",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        525,
+        69,
+        35
+      ],
+      "expected_quantity": "4/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1481,
+        528,
+        12,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_18.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_slot_5.png",
+      "source_sha256": "a05161ffe1172204fd43defa46a27f3691462d9b6a1b0f235e0a7d2794a2e74f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1244,
+        526,
+        82,
+        35
+      ],
+      "expected_quantity": "13/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1244,
+        529,
+        13,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "3_19.png",
+      "glyph": "3",
+      "font": "quantity",
+      "source": "orders_slot_5.png",
+      "source_sha256": "a05161ffe1172204fd43defa46a27f3691462d9b6a1b0f235e0a7d2794a2e74f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1244,
+        526,
+        82,
+        35
+      ],
+      "expected_quantity": "13/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1260,
+        527,
+        27,
+        33
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_20.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "orders_slot_5.png",
+      "source_sha256": "a05161ffe1172204fd43defa46a27f3691462d9b6a1b0f235e0a7d2794a2e74f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1244,
+        526,
+        82,
+        35
+      ],
+      "expected_quantity": "13/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1289,
+        528,
+        22,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_21.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_slot_5.png",
+      "source_sha256": "a05161ffe1172204fd43defa46a27f3691462d9b6a1b0f235e0a7d2794a2e74f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1244,
+        526,
+        82,
+        35
+      ],
+      "expected_quantity": "13/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 3,
+      "component_xywh": [
+        1314,
+        529,
+        12,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "4_22.png",
+      "glyph": "4",
+      "font": "quantity",
+      "source": "orders_slot_5.png",
+      "source_sha256": "a05161ffe1172204fd43defa46a27f3691462d9b6a1b0f235e0a7d2794a2e74f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        525,
+        69,
+        35
+      ],
+      "expected_quantity": "4/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1424,
+        528,
+        28,
+        30
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_23.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "orders_slot_5.png",
+      "source_sha256": "a05161ffe1172204fd43defa46a27f3691462d9b6a1b0f235e0a7d2794a2e74f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        525,
+        69,
+        35
+      ],
+      "expected_quantity": "4/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1456,
+        527,
+        22,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "1_24.png",
+      "glyph": "1",
+      "font": "quantity",
+      "source": "orders_slot_5.png",
+      "source_sha256": "a05161ffe1172204fd43defa46a27f3691462d9b6a1b0f235e0a7d2794a2e74f",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        525,
+        69,
+        35
+      ],
+      "expected_quantity": "4/1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1481,
+        528,
+        12,
+        31
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_3_25.png",
+      "glyph": "3",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        590,
+        201,
+        120,
+        78
+      ],
+      "expected_quantity": "3",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        637,
+        215,
+        22,
+        48
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_3_26.png",
+      "glyph": "3",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        590,
+        201,
+        120,
+        78
+      ],
+      "expected_quantity": "3",
+      "source_resize_scale": 0.66,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        420,
+        142,
+        15,
+        31
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_3_27.png",
+      "glyph": "3",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        590,
+        201,
+        120,
+        78
+      ],
+      "expected_quantity": "3",
+      "source_resize_scale": 0.75,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        478,
+        161,
+        16,
+        36
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_3_28.png",
+      "glyph": "3",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        590,
+        201,
+        120,
+        78
+      ],
+      "expected_quantity": "3",
+      "source_resize_scale": 1.25,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        796,
+        269,
+        28,
+        60
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_3_29.png",
+      "glyph": "3",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        590,
+        201,
+        120,
+        78
+      ],
+      "expected_quantity": "3",
+      "source_resize_scale": 1.5,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        955,
+        323,
+        33,
+        71
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_5_30.png",
+      "glyph": "5",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        355,
+        334,
+        128,
+        85
+      ],
+      "expected_quantity": "5",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        407,
+        346,
+        22,
+        48
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_5_31.png",
+      "glyph": "5",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        355,
+        334,
+        128,
+        85
+      ],
+      "expected_quantity": "5",
+      "source_resize_scale": 0.66,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        268,
+        229,
+        15,
+        31
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_5_32.png",
+      "glyph": "5",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        355,
+        334,
+        128,
+        85
+      ],
+      "expected_quantity": "5",
+      "source_resize_scale": 0.75,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        305,
+        260,
+        17,
+        35
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_5_33.png",
+      "glyph": "5",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        355,
+        334,
+        128,
+        85
+      ],
+      "expected_quantity": "5",
+      "source_resize_scale": 1.25,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        508,
+        433,
+        28,
+        59
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_5_34.png",
+      "glyph": "5",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        355,
+        334,
+        128,
+        85
+      ],
+      "expected_quantity": "5",
+      "source_resize_scale": 1.5,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        610,
+        519,
+        33,
+        72
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_2_35.png",
+      "glyph": "2",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        682,
+        414,
+        129,
+        83
+      ],
+      "expected_quantity": "2",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        731,
+        427,
+        22,
+        48
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_2_36.png",
+      "glyph": "2",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        682,
+        414,
+        129,
+        83
+      ],
+      "expected_quantity": "2",
+      "source_resize_scale": 0.66,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        483,
+        282,
+        14,
+        31
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_2_37.png",
+      "glyph": "2",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        682,
+        414,
+        129,
+        83
+      ],
+      "expected_quantity": "2",
+      "source_resize_scale": 0.75,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        548,
+        320,
+        17,
+        36
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_2_38.png",
+      "glyph": "2",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        682,
+        414,
+        129,
+        83
+      ],
+      "expected_quantity": "2",
+      "source_resize_scale": 1.25,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        914,
+        534,
+        27,
+        59
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_2_39.png",
+      "glyph": "2",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        682,
+        414,
+        129,
+        83
+      ],
+      "expected_quantity": "2",
+      "source_resize_scale": 1.5,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1097,
+        641,
+        32,
+        71
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_11_40.png",
+      "glyph": "11",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        231,
+        568,
+        140,
+        81
+      ],
+      "expected_quantity": "11",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        281,
+        583,
+        32,
+        47
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_11_41.png",
+      "glyph": "11",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        231,
+        568,
+        140,
+        81
+      ],
+      "expected_quantity": "11",
+      "source_resize_scale": 0.66,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        186,
+        385,
+        20,
+        31
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_11_42.png",
+      "glyph": "11",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        231,
+        568,
+        140,
+        81
+      ],
+      "expected_quantity": "11",
+      "source_resize_scale": 0.75,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        211,
+        438,
+        24,
+        35
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_11_43.png",
+      "glyph": "11",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        231,
+        568,
+        140,
+        81
+      ],
+      "expected_quantity": "11",
+      "source_resize_scale": 1.25,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        351,
+        729,
+        40,
+        59
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_11_44.png",
+      "glyph": "11",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        231,
+        568,
+        140,
+        81
+      ],
+      "expected_quantity": "11",
+      "source_resize_scale": 1.5,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        422,
+        875,
+        47,
+        70
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_1_45.png",
+      "glyph": "1",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        280,
+        581,
+        17,
+        52
+      ],
+      "expected_quantity": "1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        281,
+        583,
+        16,
+        47
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_6_46.png",
+      "glyph": "6",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        478,
+        548,
+        125,
+        81
+      ],
+      "expected_quantity": "6",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        525,
+        562,
+        26,
+        47
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_6_47.png",
+      "glyph": "6",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        478,
+        548,
+        125,
+        81
+      ],
+      "expected_quantity": "6",
+      "source_resize_scale": 0.66,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        347,
+        371,
+        16,
+        31
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_6_48.png",
+      "glyph": "6",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        478,
+        548,
+        125,
+        81
+      ],
+      "expected_quantity": "6",
+      "source_resize_scale": 0.75,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        394,
+        422,
+        19,
+        35
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_6_49.png",
+      "glyph": "6",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        478,
+        548,
+        125,
+        81
+      ],
+      "expected_quantity": "6",
+      "source_resize_scale": 1.25,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        656,
+        703,
+        32,
+        59
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_6_50.png",
+      "glyph": "6",
+      "font": "outlined",
+      "source": "farming_seed_menu.png",
+      "source_sha256": "347112cbff7ab9167edd1bcb166936a338bbbc4d7d8374d2400c4e18aa09f357",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        478,
+        548,
+        125,
+        81
+      ],
+      "expected_quantity": "6",
+      "source_resize_scale": 1.5,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        788,
+        843,
+        38,
+        71
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_0_51.png",
+      "glyph": "0",
+      "font": "outlined",
+      "source": "resource_icecream_guided.png",
+      "source_sha256": "9c89d9d2761c9149fbca5cccd9a85bab9515089978d876e92d3d131fd4cc181e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        596,
+        260,
+        140,
+        82
+      ],
+      "expected_quantity": "0",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        653,
+        277,
+        25,
+        50
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_0_52.png",
+      "glyph": "0",
+      "font": "outlined",
+      "source": "resource_icecream_guided.png",
+      "source_sha256": "9c89d9d2761c9149fbca5cccd9a85bab9515089978d876e92d3d131fd4cc181e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        596,
+        260,
+        140,
+        82
+      ],
+      "expected_quantity": "0",
+      "source_resize_scale": 0.66,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        431,
+        183,
+        16,
+        33
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_0_53.png",
+      "glyph": "0",
+      "font": "outlined",
+      "source": "resource_icecream_guided.png",
+      "source_sha256": "9c89d9d2761c9149fbca5cccd9a85bab9515089978d876e92d3d131fd4cc181e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        596,
+        260,
+        140,
+        82
+      ],
+      "expected_quantity": "0",
+      "source_resize_scale": 0.75,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        490,
+        208,
+        18,
+        37
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_0_54.png",
+      "glyph": "0",
+      "font": "outlined",
+      "source": "resource_icecream_guided.png",
+      "source_sha256": "9c89d9d2761c9149fbca5cccd9a85bab9515089978d876e92d3d131fd4cc181e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        596,
+        260,
+        140,
+        82
+      ],
+      "expected_quantity": "0",
+      "source_resize_scale": 1.25,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        817,
+        346,
+        30,
+        63
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_0_55.png",
+      "glyph": "0",
+      "font": "outlined",
+      "source": "resource_icecream_guided.png",
+      "source_sha256": "9c89d9d2761c9149fbca5cccd9a85bab9515089978d876e92d3d131fd4cc181e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        596,
+        260,
+        140,
+        82
+      ],
+      "expected_quantity": "0",
+      "source_resize_scale": 1.5,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        980,
+        415,
+        36,
+        75
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_4_56.png",
+      "glyph": "4",
+      "font": "outlined",
+      "source": "resource_chicken_relocated.png",
+      "source_sha256": "eb4377fc27dff5ca5790831c9ddcfc50fd0daf524921827c6e92113488966a96",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        181,
+        25,
+        50
+      ],
+      "expected_quantity": "4",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1424,
+        183,
+        24,
+        46
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_4_57.png",
+      "glyph": "4",
+      "font": "outlined",
+      "source": "resource_chicken_relocated.png",
+      "source_sha256": "eb4377fc27dff5ca5790831c9ddcfc50fd0daf524921827c6e92113488966a96",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        181,
+        25,
+        50
+      ],
+      "expected_quantity": "4",
+      "source_resize_scale": 1.25,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1780,
+        229,
+        30,
+        57
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_4_58.png",
+      "glyph": "4",
+      "font": "outlined",
+      "source": "resource_chicken_relocated.png",
+      "source_sha256": "eb4377fc27dff5ca5790831c9ddcfc50fd0daf524921827c6e92113488966a96",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1424,
+        181,
+        25,
+        50
+      ],
+      "expected_quantity": "4",
+      "source_resize_scale": 1.5,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        2136,
+        274,
+        36,
+        69
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_1_59.png",
+      "glyph": "1",
+      "font": "outlined",
+      "source": "resource_chicken_relocated.png",
+      "source_sha256": "eb4377fc27dff5ca5790831c9ddcfc50fd0daf524921827c6e92113488966a96",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1408,
+        182,
+        15,
+        47
+      ],
+      "expected_quantity": "1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1408,
+        182,
+        15,
+        47
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_9_60.png",
+      "glyph": "9",
+      "font": "outlined",
+      "source": "resource_chicken_fed.png",
+      "source_sha256": "4e6bfcdb57e439d51ecd576c947d0226830db8d4181c1c8d9e4f003bee73c185",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        652,
+        225,
+        32,
+        54
+      ],
+      "expected_quantity": "9",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        656,
+        230,
+        26,
+        47
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_9_61.png",
+      "glyph": "9",
+      "font": "outlined",
+      "source": "resource_chicken_fed.png",
+      "source_sha256": "4e6bfcdb57e439d51ecd576c947d0226830db8d4181c1c8d9e4f003bee73c185",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        652,
+        225,
+        32,
+        54
+      ],
+      "expected_quantity": "9",
+      "source_resize_scale": 1.25,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        820,
+        288,
+        32,
+        58
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_9_62.png",
+      "glyph": "9",
+      "font": "outlined",
+      "source": "resource_chicken_fed.png",
+      "source_sha256": "4e6bfcdb57e439d51ecd576c947d0226830db8d4181c1c8d9e4f003bee73c185",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        652,
+        225,
+        32,
+        54
+      ],
+      "expected_quantity": "9",
+      "source_resize_scale": 1.5,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        984,
+        345,
+        38,
+        70
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "7_63.png",
+      "glyph": "7",
+      "font": "quantity",
+      "source": "resource_pancake_eggs_collected.png",
+      "source_sha256": "bb8cbb84c402e7b51657a43c0bfdc2040f26fd806091d0e3e30ddcbe391e0023",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1149,
+        519,
+        70,
+        34
+      ],
+      "expected_quantity": "7/3",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1153,
+        522,
+        19,
+        26
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "slash_64.png",
+      "glyph": "/",
+      "font": "quantity",
+      "source": "resource_pancake_eggs_collected.png",
+      "source_sha256": "bb8cbb84c402e7b51657a43c0bfdc2040f26fd806091d0e3e30ddcbe391e0023",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1149,
+        519,
+        70,
+        34
+      ],
+      "expected_quantity": "7/3",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 1,
+      "component_xywh": [
+        1173,
+        522,
+        19,
+        26
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "3_65.png",
+      "glyph": "3",
+      "font": "quantity",
+      "source": "resource_pancake_eggs_collected.png",
+      "source_sha256": "bb8cbb84c402e7b51657a43c0bfdc2040f26fd806091d0e3e30ddcbe391e0023",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1149,
+        519,
+        70,
+        34
+      ],
+      "expected_quantity": "7/3",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 2,
+      "component_xywh": [
+        1194,
+        521,
+        22,
+        27
+      ],
+      "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    }
+  ],
+  "trained_glyphs": {
+    "quantity": [
+      "/",
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "outlined": [
+      "0",
+      "1",
+      "11",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "9"
+    ]
+  }
+}

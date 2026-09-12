@@ -1,0 +1,11 @@
+{
+  "source": "artifacts/dress-prompt-debug/board.png",
+  "sha256": "840f576da781d4a93be64e4b732bb4250d56ace0e50200fdb7737e2744870973",
+  "size": [
+    1920,
+    1080
+  ],
+  "device": "emulator-5554",
+  "captured_at": null,
+  "purpose": "Direct BlueStacks capture for Violet Dress location-prompt brightness regression. Original pixels retained; no runtime farm coordinates."
+}

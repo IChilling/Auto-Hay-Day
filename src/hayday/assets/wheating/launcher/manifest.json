@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "reference_height": 1080,
+  "source": "images/wheating/launcher_smart_downloads.png",
+  "sha256": "9287de6a1df5093b853ef7b8b3400f3b229c5644080e77bf447a133402977cf4",
+  "features": {
+    "hay_day_icon": {
+      "file": "hay_day_icon.png",
+      "box": [
+        1060,
+        312,
+        1160,
+        412
+      ]
+    },
+    "hay_day_label": {
+      "file": "hay_day_label.png",
+      "box": [
+        1060,
+        452,
+        1160,
+        494
+      ]
+    }
+  }
+}

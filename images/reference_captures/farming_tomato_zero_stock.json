@@ -1,0 +1,6 @@
+{
+  "source": "Direct BlueStacks ADB capture during harvesting debug, 2026-09-07 UTC",
+  "original": "artifacts/harvest-improvement/replant-live-4.png",
+  "sha256": "286ebc06dd2f5adeb70ecd58536ab4ae080cefaedad8bc6e73feabe4a9b93dc3",
+  "purpose": "Offline harvest/replant regression; no farm coordinates are runtime configuration."
+}

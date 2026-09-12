@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "reference_height": 1080,
+  "capture": "animal_sheep_tools.png",
+  "sha256": "d89b17681c98ebc2dfb7a59d3ce83e7eb9515f251ef0d76547a474dbb01dbaec",
+  "features": {
+    "shears": {
+      "file": "shears.png",
+      "box": [
+        640,
+        330,
+        833,
+        481
+      ]
+    },
+    "arrow": {
+      "file": "shears_arrow.png",
+      "box": [
+        746,
+        394,
+        868,
+        494
+      ]
+    },
+    "feed": {
+      "file": "sheep_feed.png",
+      "box": [
+        909,
+        268,
+        1017,
+        348
+      ]
+    },
+    "pen_trough": {
+      "file": "pen_trough.png",
+      "box": [
+        1108,
+        565,
+        1187,
+        631
+      ]
+    },
+    "shorn": {
+      "file": "shorn.png",
+      "box": [
+        1018,
+        580,
+        1060,
+        633
+      ]
+    },
+    "ready": {
+      "file": "ready.png",
+      "box": [
+        1165,
+        647,
+        1234,
+        702
+      ]
+    },
+    "shears_disabled": {
+      "file": "shears_disabled.png",
+      "box": [
+        640,
+        330,
+        833,
+        481
+      ],
+      "capture": "animal_sheep_hungry.png",
+      "capture_box": [
+        644,
+        282,
+        837,
+        433
+      ]
+    },
+    "arrow_disabled": {
+      "file": "arrow_disabled.png",
+      "box": [
+        746,
+        394,
+        868,
+        494
+      ],
+      "capture": "animal_sheep_hungry.png",
+      "capture_box": [
+        749,
+        347,
+        871,
+        447
+      ]
+    }
+  },
+  "tool_point": [
+    771,
+    395
+  ],
+  "desired_item": "wool_item.png",
+  "mask": "Original ADB pixels. Blue handle mask excludes the open handle and gaps between blades; world objects use inclusion polygons.",
+  "feed_point": [
+    971,
+    321
+  ],
+  "feed_count_box": [
+    808,
+    220,
+    120,
+    74
+  ],
+  "species_note": "Production sheep have a brown face and a wooden rectangular trough. Decorative lambs with black faces and the blue trough are excluded."
+}

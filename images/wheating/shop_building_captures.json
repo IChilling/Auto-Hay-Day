@@ -1,0 +1,16 @@
+[
+  {
+    "file": "shop_after_seeding.png",
+    "source": "Direct BlueStacks ADB capture, 1920x1080",
+    "sha256": "766a09f5191b7cb227042d39708629b9b35628a16357313f245e2bf6bf967575",
+    "transformations": "None; original capture pixels",
+    "description": "Live farm immediately after all 45 wheat plots were replanted; shop opened with one tap."
+  },
+  {
+    "file": "shop_with_sold_notification.png",
+    "source": "Direct BlueStacks ADB capture, 1920x1080",
+    "sha256": "6dcab6e5e1b9fb7b9cf29532c26efe88fd86b5d110d3eca3363f487c84f8480a",
+    "transformations": "None; original capture pixels",
+    "description": "Live shop with eight sold receipts and the gold notification; shop opened with one tap."
+  }
+]

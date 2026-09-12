@@ -1,0 +1,402 @@
+{
+  "version": 1,
+  "source": "resource_cherry_guided.png",
+  "source_sha256": "f91dabb01b8e206c804cb3bf9ce56be84df4a34c7e53de1f0a5aa8303d06bdf4",
+  "source_size": [
+    1920,
+    1080
+  ],
+  "coordinate_format": "Source boxes are LTRB; points/polygons use original screenshot coordinates.",
+  "features": {
+    "basket": {
+      "file": "basket.png",
+      "box": [
+        700,
+        526,
+        844,
+        704
+      ],
+      "polygon": [
+        [
+          711,
+          608
+        ],
+        [
+          715,
+          580
+        ],
+        [
+          725,
+          551
+        ],
+        [
+          742,
+          535
+        ],
+        [
+          763,
+          529
+        ],
+        [
+          784,
+          536
+        ],
+        [
+          803,
+          555
+        ],
+        [
+          816,
+          580
+        ],
+        [
+          820,
+          603
+        ],
+        [
+          831,
+          610
+        ],
+        [
+          837,
+          633
+        ],
+        [
+          830,
+          663
+        ],
+        [
+          821,
+          682
+        ],
+        [
+          802,
+          695
+        ],
+        [
+          738,
+          697
+        ],
+        [
+          723,
+          687
+        ],
+        [
+          712,
+          672
+        ],
+        [
+          707,
+          642
+        ],
+        [
+          707,
+          624
+        ]
+      ],
+      "holes": [
+        [
+          [
+            734,
+            595
+          ],
+          [
+            739,
+            572
+          ],
+          [
+            748,
+            554
+          ],
+          [
+            760,
+            550
+          ],
+          [
+            775,
+            558
+          ],
+          [
+            785,
+            577
+          ],
+          [
+            790,
+            600
+          ]
+        ]
+      ],
+      "stable_comparison": {
+        "source": "fruit_cherry_before_success.png",
+        "source_sha256": "95f35e8a84bff2c9eede07f66749083cc06d1d82fa67f4eb1ef58571fb48dac9",
+        "box": [
+          680,
+          526,
+          824,
+          704
+        ]
+      },
+      "mask": "Fill outer polygon, erase holes, retain pixels with max-channel RGB difference <= 14 versus the aligned independent capture, erode with a 3x3 square."
+    },
+    "arrow": {
+      "file": "arrow.png",
+      "box": [
+        806,
+        636,
+        904,
+        738
+      ],
+      "polygon": [
+        [
+          829,
+          643
+        ],
+        [
+          867,
+          670
+        ],
+        [
+          876,
+          649
+        ],
+        [
+          900,
+          729
+        ],
+        [
+          895,
+          735
+        ],
+        [
+          830,
+          720
+        ],
+        [
+          841,
+          701
+        ],
+        [
+          807,
+          696
+        ],
+        [
+          815,
+          681
+        ],
+        [
+          823,
+          664
+        ]
+      ],
+      "holes": [],
+      "stable_comparison": {
+        "source": "fruit_cherry_before_success.png",
+        "source_sha256": "95f35e8a84bff2c9eede07f66749083cc06d1d82fa67f4eb1ef58571fb48dac9",
+        "box": [
+          786,
+          636,
+          884,
+          738
+        ]
+      },
+      "mask": "Fill outer polygon, erase holes, retain pixels with max-channel RGB difference <= 14 versus the aligned independent capture, erode with a 3x3 square."
+    }
+  },
+  "tool_point": [
+    771,
+    650
+  ],
+  "gesture_validation": {
+    "verified": true,
+    "before": "fruit_cherry_before_success.png",
+    "before_sha256": "95f35e8a84bff2c9eede07f66749083cc06d1d82fa67f4eb1ef58571fb48dac9",
+    "result": "fruit_cherry_gesture_result.png",
+    "result_sha256": "832dc79c08931f489a144f88e2839fefa8b080fd98735752dbfe129a774de49a",
+    "drag_start": [
+      751,
+      650
+    ],
+    "drag_end": [
+      930,
+      650
+    ],
+    "duration_ms": 500,
+    "reference_to_verified_translation": [
+      -20,
+      0
+    ],
+    "evidence": "Fresh-revalidated live drag showed cherries +1 and XP +13. The basket guide remained afterward; runtime inventory observations must confirm each attempted harvest."
+  },
+  "highlight_boxes": [
+    [
+      924,
+      480,
+      973,
+      704
+    ],
+    [
+      602,
+      743,
+      874,
+      786
+    ]
+  ],
+  "provenance": "Original RGB remains unchanged. Binary polygon alpha is intersected with pixels stable across two independently captured farm zooms, excluding changing scenery and the basket handle hole. The white wedge validates the tool menu, not a tree. Runtime endpoints are detected ripe cherry clusters at independent world scales; historical gesture coordinates are evidence only.",
+  "canopy": {
+    "species": "cherry",
+    "references": [
+      {
+        "file": "cherry_cluster_large.png",
+        "source": "fruit_cherry_before_success.png",
+        "box": [
+          1043,
+          429,
+          1090,
+          466
+        ],
+        "source_sha256": "95f35e8a84bff2c9eede07f66749083cc06d1d82fa67f4eb1ef58571fb48dac9",
+        "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close then one 3x3 dilation. RGB pixels remain unchanged.",
+        "world_scale_range": [
+          0.3,
+          1.55
+        ]
+      },
+      {
+        "file": "cherry_cluster_slanted.png",
+        "source": "fruit_cherry_before_success.png",
+        "box": [
+          1110,
+          450,
+          1158,
+          486
+        ],
+        "source_sha256": "95f35e8a84bff2c9eede07f66749083cc06d1d82fa67f4eb1ef58571fb48dac9",
+        "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close then one 3x3 dilation. RGB pixels remain unchanged.",
+        "world_scale_range": [
+          0.3,
+          1.55
+        ]
+      },
+      {
+        "file": "cherry_cluster_small.png",
+        "source": "fruit_cherry_partly_harvested_guided.png",
+        "box": [
+          969,
+          551,
+          992,
+          569
+        ],
+        "source_sha256": "2310c01a3590b44707e25e9dec124af7030d27969fef34a4fbbf82d1d42df81e",
+        "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close then one 3x3 dilation. RGB pixels remain unchanged.",
+        "world_scale_range": [
+          0.65,
+          3.3
+        ]
+      }
+    ],
+    "cluster_evidence": "Two distinct patterns scoring at least 0.86, or one detailed multi-cherry pattern scoring at least 0.93 with surrounding textured green leaves. All candidates require cherry color and the requested item match.",
+    "lighting": "One shared RGB gain in [0.55,1.10] and offset in [-15,120] accounts for neutral cloud brightness. Per-channel hue corrections are never allowed.",
+    "search": "Independent world scales within the detected basket neighborhood. Match ripe clusters outside the tool-menu backdrop and choose the nearest supported cluster. Expose all supported clusters for fresh-frame agreement.",
+    "validation": {
+      "before": "fruit_cherry_small_canopy_before.png",
+      "result": "fruit_cherry_small_canopy_result.png",
+      "drag_start": [
+        751,
+        589
+      ],
+      "drag_end": [
+        975,
+        540
+      ],
+      "duration_ms": 1000,
+      "evidence": "Manual live gesture to visible ripe canopy showed cherries +1 at small farm zoom. Historical points are never runtime targets.",
+      "before_sha256": "6c3ea5d64d5d56fe405d1f7cf4a15d3c7d775dfa69e0f5a8a7648c26785fb173",
+      "result_sha256": "a6b06c2bb2310ab88dac0bd5b1e02f9593b959dc714d7ee8ccbc9f746507b14b"
+    },
+    "desired_item": {
+      "file": "cherry_item.png",
+      "source": "orders_missing_cherry.png",
+      "box": [
+        1245,
+        455,
+        1322,
+        516
+      ],
+      "source_sha256": "514192463415af74dcd8de89c00a8f3e7e2c22834659ae7f4ab57e199fe7a246",
+      "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close then one 3x3 dilation. RGB pixels remain unchanged."
+    }
+  },
+  "raspberry": {
+    "species": "raspberry",
+    "references": [
+      {
+        "file": "raspberry_cluster_left.png",
+        "source": "fruit_raspberry_ripe_guided.png",
+        "box": [
+          1695,
+          410,
+          1731,
+          443
+        ],
+        "source_sha256": "4a40dd73a930b1dee6010cbf136d51494738aaf05588c59bb9985d11233be154",
+        "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close/dilate. Original RGB unchanged.",
+        "world_scale_range": [
+          0.65,
+          3.5
+        ]
+      },
+      {
+        "file": "raspberry_cluster_right.png",
+        "source": "fruit_raspberry_ripe_guided.png",
+        "box": [
+          1732,
+          397,
+          1775,
+          429
+        ],
+        "source_sha256": "4a40dd73a930b1dee6010cbf136d51494738aaf05588c59bb9985d11233be154",
+        "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close/dilate. Original RGB unchanged.",
+        "world_scale_range": [
+          0.65,
+          3.5
+        ]
+      }
+    ],
+    "desired_variants": [
+      {
+        "file": "raspberry_item_board.png",
+        "source": "orchard_raspberry_board_order.png",
+        "box": [
+          1245,
+          455,
+          1322,
+          516
+        ],
+        "source_sha256": "bc98465e2988f47a6f95f3a8f3c1dd0a0a95ab88d8ffbb37ab2885ed9d930b61",
+        "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close/dilate. Original RGB unchanged."
+      }
+    ],
+    "evidence": "Native ripe berry patterns plus surrounding leaf texture, matched beyond the verified basket arrow. Independent world zoom; no saved farm coordinates are used for harvesting.",
+    "desired_item": {
+      "file": "raspberry_item.png",
+      "source": "fruit_raspberry_recipe_before.png",
+      "box": [
+        909,
+        320,
+        1003,
+        421
+      ],
+      "source_sha256": "8c3a2f1ae765bac212ccabcbfba8f5c3ae09d8e6f20390f316dd9dfaaaf89873",
+      "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close/dilate. Original RGB unchanged."
+    },
+    "validation": {
+      "before": "fruit_raspberry_before_verified.png",
+      "result": "fruit_raspberry_harvest_result.png",
+      "inventory": "fruit_raspberry_recipe_confirmed.png",
+      "evidence": "Live basket drag collected one Raspberry. Two subsequent Red Berry Cake recipe readings confirmed inventory 0/1 to 1/1; the durable fruit intent became confirmed.",
+      "before_sha256": "a34bddbc28de0f7a34c93cb37c2ec0abb2917d9e6dec050172444678d8b403a2",
+      "result_sha256": "59899a3fb0fddf9b3d7c1788e3d2dbf340bc65dd3192faaac54eec854854ee3b",
+      "inventory_sha256": "a4b9dd2907a4fc3964b2d8b215e3123593656e78dd9f13af026dc6f855b61afd"
+    }
+  }
+}

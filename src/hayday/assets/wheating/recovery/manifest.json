@@ -1,0 +1,100 @@
+{
+  "source": "connection_server_not_responding.png",
+  "source_sha256": "21dc5a38cec06afd5fc3a35279fe1a3222d61072ebdede21fe9e1ff3ccf08498",
+  "source_size": [
+    1920,
+    1080
+  ],
+  "features": [
+    {
+      "file": "server_anchor.png",
+      "box": [
+        1088,
+        24,
+        1280,
+        144
+      ],
+      "mask": "Original grayscale < 95; dilated 5x5; original RGB unchanged."
+    },
+    {
+      "file": "server_title.png",
+      "box": [
+        620,
+        24,
+        1290,
+        144
+      ],
+      "mask": "Original grayscale < 95; dilated 5x5; original RGB unchanged."
+    },
+    {
+      "file": "server_body_1.png",
+      "box": [
+        260,
+        626,
+        1650,
+        683
+      ],
+      "mask": "Original grayscale < 185; dilated 5x5; original RGB unchanged."
+    },
+    {
+      "file": "server_body_2.png",
+      "box": [
+        756,
+        685,
+        1150,
+        738
+      ],
+      "mask": "Original grayscale < 185; dilated 5x5; original RGB unchanged."
+    },
+    {
+      "file": "server_retry.png",
+      "box": [
+        780,
+        948,
+        1140,
+        1040
+      ],
+      "mask": "Original grayscale < 95; dilated 5x5; original RGB unchanged."
+    }
+  ],
+  "bounds": [
+    173,
+    2,
+    1549,
+    1066
+  ],
+  "target": [
+    780,
+    948,
+    360,
+    92
+  ],
+  "background": [
+    {
+      "box": [
+        360,
+        440,
+        120,
+        90
+      ],
+      "color_bgr": [
+        219.0,
+        249.0,
+        255.0
+      ]
+    },
+    {
+      "box": [
+        1460,
+        780,
+        100,
+        60
+      ],
+      "color_bgr": [
+        219.0,
+        249.0,
+        255.0
+      ]
+    }
+  ]
+}

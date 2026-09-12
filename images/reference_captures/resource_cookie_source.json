@@ -1,0 +1,11 @@
+{
+  "source": "Direct BlueStacks ADB screenshot",
+  "source_file": "cookie-source-2.png",
+  "sha256": "0a87a58595b152642c8d50042d4e02382d8eb29c91f5300f52a549947b607a26",
+  "size": [
+    1920,
+    1080
+  ],
+  "transformations": "None; original screenshot pixels",
+  "purpose": "Cookie location prompt timing and Bakery navigation regression"
+}

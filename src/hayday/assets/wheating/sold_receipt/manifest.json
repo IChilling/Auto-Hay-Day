@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "source": "sold_receipt_reference.png",
+  "sha256": "824189f32103def67218d3b37656bf3c09bc04fc2fc00ddfdf893c01e7fc7054",
+  "rooster": [
+    88,
+    47,
+    150,
+    149
+  ],
+  "label": [
+    60,
+    4,
+    164,
+    72
+  ],
+  "reference_height": 1080
+}

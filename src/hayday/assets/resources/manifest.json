@@ -1,0 +1,35 @@
+{
+  "features": {
+    "navigation_arrow": {
+      "source": "resource_icecream_prompt_fresh.png",
+      "source_sha256": "447db6498fefbb2531c38076acb3fb812a167840e81c7cdff12fe2039d60f503",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "crop_box": [
+        1750,
+        273,
+        1805,
+        326
+      ],
+      "mask": "white pixels (channels >210, spread <42), dilated 2 pixels to preserve contour"
+    },
+    "empty_label": {
+      "source": "resource_icecream_guided.png",
+      "source_sha256": "9c89d9d2761c9149fbca5cccd9a85bab9515089978d876e92d3d131fd4cc181e",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "crop_box": [
+        923,
+        679,
+        1054,
+        735
+      ],
+      "mask": "white pixels (channels >210, spread <42), dilated 2 pixels to preserve contour"
+    }
+  },
+  "provenance": "Original game UI pixels cropped from local screenshots. Alpha masks include only the observed arrow or exact EMPTY letters; no generated artwork."
+}

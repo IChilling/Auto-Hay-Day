@@ -1,0 +1,17 @@
+{
+  "source": "Direct BlueStacks ADB screenshot",
+  "captured_at": "2026-09-07T13:21:00+00:00",
+  "source_sha256": "85ca36f2874ca3ddefc853b53e519a3593c92484dff0e48698457cb589c2ef38",
+  "source_size": [
+    1920,
+    1080
+  ],
+  "crop_xywh": [
+    1047,
+    487,
+    94,
+    102
+  ],
+  "parent_item": "7d58707a334547a06001",
+  "transformation": "Original cropped pixels; runtime excludes boundary-connected cream for matching"
+}

@@ -1,0 +1,11 @@
+# Binary wheels for Apple Silicon macOS 13+ and CPython 3.12.
+flet==0.86.0
+flet-desktop==0.86.0
+Pillow==11.3.0
+numpy==2.2.6
+opencv-python==4.12.0.88
+pyobjc-core==11.1
+pyobjc-framework-Cocoa==11.1
+pyobjc-framework-Quartz==11.1
+pyobjc-framework-CoreML==11.1
+pyobjc-framework-Vision==11.1

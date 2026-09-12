@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "reference_height": 1080,
+  "products": [
+    {
+      "name": "Cookie",
+      "machine": "Bakery",
+      "identifier": "cookie_identifier.png",
+      "title": "cookie_title.png",
+      "features": {
+        "anchor": {
+          "file": "bakery_dome.png",
+          "box": [
+            888,
+            513,
+            62,
+            92
+          ]
+        },
+        "support": {
+          "file": "bakery_barrel.png",
+          "box": [
+            845,
+            582,
+            41,
+            58
+          ]
+        },
+        "output": {
+          "file": "cookie_ready.png",
+          "box": [
+            939,
+            664,
+            41,
+            29
+          ]
+        }
+      },
+      "tap": [
+        943,
+        597
+      ],
+      "source_capture": "resource_cookie_ready.png",
+      "mask": "Original pixels with polygon alpha masks; surrounding farm and menu pixels excluded."
+    }
+  ]
+}
