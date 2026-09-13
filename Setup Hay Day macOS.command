@@ -82,13 +82,16 @@ verify "$task_temp/uv.tar.gz" '7e6ddb9316acc00f2296c82ff4d99977870ee34b2f0ddcae9
 task_uv="$task_temp/uv-aarch64-apple-darwin/uv"
 export UV_PYTHON_INSTALL_DIR="$task_root/python"
 export UV_CACHE_DIR="$task_root/download-cache"
-export UV_PYTHON_PREFERENCE=only-managed
+# Use one Python-selection policy. uv rejects --managed-python together with
+# UV_PYTHON_PREFERENCE, even when both request managed Python.
+unset UV_PYTHON_PREFERENCE UV_NO_MANAGED_PYTHON || true
+export UV_MANAGED_PYTHON=1
 export UV_NO_CONFIG=1
 export UV_NO_PROGRESS=1
 unset PYTHONHOME PYTHONPATH VIRTUAL_ENV CONDA_PREFIX || true
 echo 'Installing a private Python 3.12 runtime (no Homebrew or Xcode needed)...'
 "$task_uv" python install 3.12 --no-bin
-task_python="$("$task_uv" python find --managed-python 3.12)"
+task_python="$("$task_uv" python find 3.12)"
 "$task_python" -I "$task_temp/project/scripts/install_macos.py" \
     --root "$task_root" --uv "$task_uv" --log "$task_log" "$@"
 exit 0
