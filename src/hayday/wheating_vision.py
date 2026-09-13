@@ -59,6 +59,11 @@ class WheatingVision:
         self.root = Path(__file__).parent/'assets/wheating'
         self.specs = json.loads((self.root/'manifest.json').read_text('utf-8'))['features']
         self.refs = {path.stem: _decode(path.read_bytes(), True) for path in self.root.glob('*.png')}
+        # Cropping tools may save the title as RGB. The matcher requires an
+        # alpha mask; include every pixel when the title has no transparency.
+        header = self.refs.get('shop_header')
+        if header is not None and header.shape[2] == 3:
+            self.refs['shop_header'] = cv2.cvtColor(header, cv2.COLOR_BGR2BGRA)
         if not {'shop', 'wheat_seed', 'soil', 'wheat_ripe'} <= self.refs.keys():
             raise ValueError('Wheating reference images are missing.')
         self.wheat_icon = (self.root/'wheat_seed.png').read_bytes()
@@ -519,7 +524,7 @@ class WheatingVision:
 
     def _overview_observed(self, frame, image, header, close):
         png = frame.png
-        scale = header.width/446
+        scale = header.width/self.refs['shop_header'].shape[1]
         slots, features = [], {}
         region = (round(frame.width*.10), round(frame.height*.23), round(frame.width*.80), round(frame.height*.56))
         for name, kind in (('empty_sale', 'empty'), ('sold', 'sold'), ('sold_live', 'sold')):
@@ -633,7 +638,8 @@ class WheatingVision:
                     return None
         slots, updated = [], []
         identities = dict(self._slot_features)
-        badges = [(self._sold_slot(match, header.width/446), match) for match in self._sold_badges(image)]
+        scale = header.width/self.refs['shop_header'].shape[1]
+        badges = [(self._sold_slot(match, scale), match) for match in self._sold_badges(image)]
         for previous, pixels in self._slot_cache:
             if self.cancel():
                 return None

@@ -1,0 +1,227 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260912231019
+Username: PIE\youky
+RunAs User: PIE\youky
+Configuration Name: 
+Machine: PIE (Microsoft Windows NT 10.0.26200.0)
+Host Application: powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File C:\Users\youky\OneDrive\Desktop\Auto Hay Day\setup.ps1 -NoLaunch
+Process ID: 18844
+PSVersion: 5.1.26100.9444
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9444
+BuildVersion: 10.0.26100.9444
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Setting up Hay Day Automation. Close the app before updating its environment.
+Creating the project Python environment...
+
+Installing the tested libraries...
+Collecting anyio==4.15.1 (from -r requirements-windows.txt (line 3))
+  Using cached anyio-4.15.1-py3-none-any.whl.metadata (4.7 kB)
+Collecting certifi==2026.7.22 (from -r requirements-windows.txt (line 4))
+  Using cached certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Collecting comtypes==1.4.16 (from -r requirements-windows.txt (line 5))
+  Using cached comtypes-1.4.16-py3-none-any.whl.metadata (7.8 kB)
+Collecting editables==0.6 (from -r requirements-windows.txt (line 6))
+  Using cached editables-0.6-py3-none-any.whl.metadata (3.1 kB)
+Collecting flet==0.86.0 (from -r requirements-windows.txt (line 7))
+  Using cached flet-0.86.0-py3-none-any.whl.metadata (7.2 kB)
+Collecting flet-desktop==0.86.0 (from -r requirements-windows.txt (line 8))
+  Using cached flet_desktop-0.86.0-py3-none-any.whl.metadata (818 bytes)
+Collecting h11==0.16.0 (from -r requirements-windows.txt (line 9))
+  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting hatchling==1.32.0 (from -r requirements-windows.txt (line 10))
+  Using cached hatchling-1.32.0-py3-none-any.whl.metadata (3.9 kB)
+Collecting httpcore==1.0.9 (from -r requirements-windows.txt (line 11))
+  Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting httpx==0.28.1 (from -r requirements-windows.txt (line 12))
+  Using cached httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+Collecting idna==3.19 (from -r requirements-windows.txt (line 13))
+  Using cached idna-3.19-py3-none-any.whl.metadata (9.2 kB)
+Collecting markdown-it-py==4.2.0 (from -r requirements-windows.txt (line 14))
+  Using cached markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+Collecting mdurl==0.1.2 (from -r requirements-windows.txt (line 15))
+  Using cached mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Collecting msgpack==1.2.2 (from -r requirements-windows.txt (line 16))
+  Using cached msgpack-1.2.2-cp313-cp313-win_amd64.whl.metadata (8.5 kB)
+Collecting numpy==2.5.2 (from -r requirements-windows.txt (line 17))
+  Using cached numpy-2.5.2-cp313-cp313-win_amd64.whl.metadata (6.6 kB)
+Collecting oauthlib==3.3.1 (from -r requirements-windows.txt (line 18))
+  Using cached oauthlib-3.3.1-py3-none-any.whl.metadata (7.9 kB)
+Collecting opencv-python==4.14.0.94 (from -r requirements-windows.txt (line 19))
+  Using cached opencv_python-4.14.0.94-cp37-abi3-win_amd64.whl.metadata (20 kB)
+Collecting packaging==26.3 (from -r requirements-windows.txt (line 20))
+  Using cached packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pathspec==1.1.1 (from -r requirements-windows.txt (line 21))
+  Using cached pathspec-1.1.1-py3-none-any.whl.metadata (14 kB)
+Collecting pillow==12.3.0 (from -r requirements-windows.txt (line 22))
+  Using cached pillow-12.3.0-cp313-cp313-win_amd64.whl.metadata (9.3 kB)
+Collecting pluggy==1.6.0 (from -r requirements-windows.txt (line 23))
+  Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting pygments==2.21.0 (from -r requirements-windows.txt (line 24))
+  Using cached pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting repath==0.9.0 (from -r requirements-windows.txt (line 25))
+  Using cached repath-0.9.0-py3-none-any.whl.metadata (899 bytes)
+Collecting rich==15.0.0 (from -r requirements-windows.txt (line 26))
+  Using cached rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+Collecting six==1.17.0 (from -r requirements-windows.txt (line 27))
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting tomlkit==0.15.1 (from -r requirements-windows.txt (line 28))
+  Using cached tomlkit-0.15.1-py3-none-any.whl.metadata (3.3 kB)
+Collecting trove-classifiers==2026.6.1.19 (from -r requirements-windows.txt (line 29))
+  Using cached trove_classifiers-2026.6.1.19-py3-none-any.whl.metadata (2.3 kB)
+Collecting typing-extensions==4.16.0 (from -r requirements-windows.txt (line 30))
+  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting winrt-runtime==3.2.1 (from -r requirements-windows.txt (line 31))
+  Using cached winrt_runtime-3.2.1-cp313-cp313-win_amd64.whl.metadata (780 bytes)
+Collecting winrt-windows-foundation==3.2.1 (from -r requirements-windows.txt (line 32))
+  Using cached winrt_windows_foundation-3.2.1-cp313-cp313-win_amd64.whl.metadata (1.0 kB)
+Collecting winrt-windows-foundation-collections==3.2.1 (from -r requirements-windows.txt (line 33))
+  Using cached winrt_windows_foundation_collections-3.2.1-cp313-cp313-win_amd64.whl.metadata (1.1 kB)
+Collecting winrt-windows-globalization==3.2.1 (from -r requirements-windows.txt (line 34))
+  Using cached winrt_windows_globalization-3.2.1-cp313-cp313-win_amd64.whl.metadata (1.2 kB)
+Collecting winrt-windows-graphics-imaging==3.2.1 (from -r requirements-windows.txt (line 35))
+  Using cached winrt_windows_graphics_imaging-3.2.1-cp313-cp313-win_amd64.whl.metadata (1.3 kB)
+Collecting winrt-windows-media-ocr==3.2.1 (from -r requirements-windows.txt (line 36))
+  Using cached winrt_windows_media_ocr-3.2.1-cp313-cp313-win_amd64.whl.metadata (1.3 kB)
+Collecting winrt-windows-storage-streams==3.2.1 (from -r requirements-windows.txt (line 37))
+  Using cached winrt_windows_storage_streams-3.2.1-cp313-cp313-win_amd64.whl.metadata (1.3 kB)
+Using cached anyio-4.15.1-py3-none-any.whl (132 kB)
+Using cached certifi-2026.7.22-py3-none-any.whl (136 kB)
+Using cached comtypes-1.4.16-py3-none-any.whl (296 kB)
+Using cached editables-0.6-py3-none-any.whl (5.4 kB)
+Using cached flet-0.86.0-py3-none-any.whl (620 kB)
+Using cached flet_desktop-0.86.0-py3-none-any.whl (6.4 kB)
+Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Using cached hatchling-1.32.0-py3-none-any.whl (78 kB)
+Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Using cached httpx-0.28.1-py3-none-any.whl (73 kB)
+Using cached idna-3.19-py3-none-any.whl (68 kB)
+Using cached markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+Using cached mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Using cached msgpack-1.2.2-cp313-cp313-win_amd64.whl (72 kB)
+Using cached numpy-2.5.2-cp313-cp313-win_amd64.whl (12.5 MB)
+Using cached oauthlib-3.3.1-py3-none-any.whl (160 kB)
+Using cached opencv_python-4.14.0.94-cp37-abi3-win_amd64.whl (41.2 MB)
+Using cached packaging-26.3-py3-none-any.whl (129 kB)
+Using cached pathspec-1.1.1-py3-none-any.whl (57 kB)
+Using cached pillow-12.3.0-cp313-cp313-win_amd64.whl (7.2 MB)
+Using cached pluggy-1.6.0-py3-none-any.whl (20 kB)
+Using cached pygments-2.21.0-py3-none-any.whl (1.3 MB)
+Using cached repath-0.9.0-py3-none-any.whl (4.7 kB)
+Using cached rich-15.0.0-py3-none-any.whl (310 kB)
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Using cached tomlkit-0.15.1-py3-none-any.whl (49 kB)
+Using cached trove_classifiers-2026.6.1.19-py3-none-any.whl (14 kB)
+Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Using cached winrt_runtime-3.2.1-cp313-cp313-win_amd64.whl (241 kB)
+Using cached winrt_windows_foundation-3.2.1-cp313-cp313-win_amd64.whl (118 kB)
+Using cached winrt_windows_foundation_collections-3.2.1-cp313-cp313-win_amd64.whl (69 kB)
+Using cached winrt_windows_globalization-3.2.1-cp313-cp313-win_amd64.whl (137 kB)
+Using cached winrt_windows_graphics_imaging-3.2.1-cp313-cp313-win_amd64.whl (142 kB)
+Using cached winrt_windows_media_ocr-3.2.1-cp313-cp313-win_amd64.whl (42 kB)
+Using cached winrt_windows_storage_streams-3.2.1-cp313-cp313-win_amd64.whl (131 kB)
+Installing collected packages: trove-classifiers, typing-extensions, tomlkit, six, pygments, pluggy, pillow, pathspec, p
+ackaging, oauthlib, numpy, msgpack, mdurl, idna, h11, editables, comtypes, certifi, winrt-runtime, repath, opencv-python
+, markdown-it-py, httpcore, hatchling, anyio, winrt-windows-storage-streams, winrt-windows-media-ocr, winrt-windows-grap
+hics-imaging, winrt-windows-globalization, winrt-windows-foundation-collections, winrt-windows-foundation, rich, httpx,
+flet, flet-desktop
+Successfully installed anyio-4.15.1 certifi-2026.7.22 comtypes-1.4.16 editables-0.6 flet-0.86.0 flet-desktop-0.86.0 h11-
+0.16.0 hatchling-1.32.0 httpcore-1.0.9 httpx-0.28.1 idna-3.19 markdown-it-py-4.2.0 mdurl-0.1.2 msgpack-1.2.2 numpy-2.5.2
+ oauthlib-3.3.1 opencv-python-4.14.0.94 packaging-26.3 pathspec-1.1.1 pillow-12.3.0 pluggy-1.6.0 pygments-2.21.0 repath-
+0.9.0 rich-15.0.0 six-1.17.0 tomlkit-0.15.1 trove-classifiers-2026.6.1.19 typing-extensions-4.16.0 winrt-runtime-3.2.1 w
+inrt-windows-foundation-3.2.1 winrt-windows-foundation-collections-3.2.1 winrt-windows-globalization-3.2.1 winrt-windows
+-graphics-imaging-3.2.1 winrt-windows-media-ocr-3.2.1 winrt-windows-storage-streams-3.2.1
+Obtaining file:///C:/Users/youky/OneDrive/Desktop/Auto%20Hay%20Day
+  Checking if build backend supports build_editable ... done
+  Preparing editable metadata (pyproject.toml) ... done
+Requirement already satisfied: comtypes==1.4.16 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (1.4.16)
+Requirement already satisfied: flet-desktop==0.86.0 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (0.86.0
+)
+Requirement already satisfied: flet==0.86.0 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (0.86.0)
+Requirement already satisfied: numpy<3,>=2 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (2.5.2)
+Requirement already satisfied: opencv-python<5,>=4.12 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (4.14
+.0.94)
+Requirement already satisfied: pillow<13,>=11 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (12.3.0)
+Requirement already satisfied: winrt-runtime==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (3.2.1)
+
+Requirement already satisfied: winrt-windows-foundation-collections==3.2.1 in .\.venv\Lib\site-packages (from hayday-aut
+omation==0.1.1) (3.2.1)
+Requirement already satisfied: winrt-windows-foundation==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation==0.1
+.1) (3.2.1)
+Requirement already satisfied: winrt-windows-globalization==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation==
+0.1.1) (3.2.1)
+Requirement already satisfied: winrt-windows-graphics-imaging==3.2.1 in .\.venv\Lib\site-packages (from hayday-automatio
+n==0.1.1) (3.2.1)
+Requirement already satisfied: winrt-windows-media-ocr==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation==0.1.
+1) (3.2.1)
+Requirement already satisfied: winrt-windows-storage-streams==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation
+==0.1.1) (3.2.1)
+Requirement already satisfied: oauthlib>=3.2.2 in .\.venv\Lib\site-packages (from flet==0.86.0->hayday-automation==0.1.1
+) (3.3.1)
+Requirement already satisfied: httpx>=0.28.1 in .\.venv\Lib\site-packages (from flet==0.86.0->hayday-automation==0.1.1)
+(0.28.1)
+Requirement already satisfied: repath>=0.9.0 in .\.venv\Lib\site-packages (from flet==0.86.0->hayday-automation==0.1.1)
+(0.9.0)
+Requirement already satisfied: msgpack>=1.1.0 in .\.venv\Lib\site-packages (from flet==0.86.0->hayday-automation==0.1.1)
+ (1.2.2)
+Requirement already satisfied: rich>=13.0.0 in .\.venv\Lib\site-packages (from flet-desktop==0.86.0->hayday-automation==
+0.1.1) (15.0.0)
+Requirement already satisfied: typing_extensions>=4.12.2 in .\.venv\Lib\site-packages (from winrt-runtime==3.2.1->hayday
+-automation==0.1.1) (4.16.0)
+Requirement already satisfied: anyio in .\.venv\Lib\site-packages (from httpx>=0.28.1->flet==0.86.0->hayday-automation==
+0.1.1) (4.15.1)
+Requirement already satisfied: certifi in .\.venv\Lib\site-packages (from httpx>=0.28.1->flet==0.86.0->hayday-automation
+==0.1.1) (2026.7.22)
+Requirement already satisfied: httpcore==1.* in .\.venv\Lib\site-packages (from httpx>=0.28.1->flet==0.86.0->hayday-auto
+mation==0.1.1) (1.0.9)
+Requirement already satisfied: idna in .\.venv\Lib\site-packages (from httpx>=0.28.1->flet==0.86.0->hayday-automation==0
+.1.1) (3.19)
+Requirement already satisfied: h11>=0.16 in .\.venv\Lib\site-packages (from httpcore==1.*->httpx>=0.28.1->flet==0.86.0->
+hayday-automation==0.1.1) (0.16.0)
+Requirement already satisfied: six>=1.9.0 in .\.venv\Lib\site-packages (from repath>=0.9.0->flet==0.86.0->hayday-automat
+ion==0.1.1) (1.17.0)
+Requirement already satisfied: markdown-it-py>=2.2.0 in .\.venv\Lib\site-packages (from rich>=13.0.0->flet-desktop==0.86
+.0->hayday-automation==0.1.1) (4.2.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in .\.venv\Lib\site-packages (from rich>=13.0.0->flet-desktop==0.
+86.0->hayday-automation==0.1.1) (2.21.0)
+Requirement already satisfied: mdurl~=0.1 in .\.venv\Lib\site-packages (from markdown-it-py>=2.2.0->rich>=13.0.0->flet-d
+esktop==0.86.0->hayday-automation==0.1.1) (0.1.2)
+Building wheels for collected packages: hayday-automation
+  Building editable for hayday-automation (pyproject.toml) ... done
+  Created wheel for hayday-automation: filename=hayday_automation-0.1.1-py3-none-any.whl size=1953 sha256=43285cb787d780
+0500d5fde02efa546c974877d53897e0e2595108545227f3cb
+  Stored in directory: C:\Users\youky\AppData\Local\Temp\pip-ephem-wheel-cache-snpb2z_p\wheels\d6\83\74\ea378981bad26adf
+6f83050f08278fb487c0425ed6ed7d9547
+Successfully built hayday-automation
+Installing collected packages: hayday-automation
+Successfully installed hayday-automation-0.1.1
+No broken requirements found.
+Preparing and checking the desktop interface and recognition libraries...
+Desktop client, recognition libraries, and Windows popup support are ready.
+{
+  "passed": true,
+  "routes": [
+    "empty/overview",
+    "empty/devices",
+    "empty/captures",
+    "empty/activity",
+    "empty/settings",
+    "populated/overview",
+    "populated/devices",
+    "populated/captures",
+    "populated/activity",
+    "populated/settings"
+  ],
+  "errors": []
+}
+Setup complete. Use Launch Hay Day.cmd to open the app.
+BlueStacks with Hay Day and ADB enabled is required for game automation.
+**********************
+Windows PowerShell transcript end
+End time: 20260912231040
+**********************

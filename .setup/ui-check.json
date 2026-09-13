@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "routes": [
+    "empty/overview",
+    "empty/devices",
+    "empty/captures",
+    "empty/activity",
+    "empty/settings",
+    "populated/overview",
+    "populated/devices",
+    "populated/captures",
+    "populated/activity",
+    "populated/settings"
+  ],
+  "errors": []
+}
