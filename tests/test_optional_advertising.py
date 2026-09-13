@@ -214,3 +214,108 @@ def test_ad_diagnostics_remain_bounded(tmp_path):
     assert len(list(game.run.device_root.glob('advertisement_*.png'))) == 2
     save_trace(game.shop)
     assert json.loads(path.read_text()) == records
+
+
+@pytest.fixture
+def ad_clock(monkeypatch):
+    now = [time.time()]
+    monkeypatch.setattr(time, 'time', lambda: now[0])
+    return now
+
+
+def test_full_silo_checks_live_free_ad_despite_stale_timer(tmp_path, ad_clock):
+    game = AdGame(tmp_path, 'marker')
+    game.run.state.update(silo_recovery={'released': 0}, ad_after=ad_clock[0]+240)
+    assert game.shop.service()
+    assert game.opens == game.submits == game.run.advertisements == 1
+    assert game.kind == 'overview'
+
+
+def test_full_silo_uses_observed_cooldown_and_checks_at_expiry(tmp_path, ad_clock):
+    game = AdGame(tmp_path, 'marker')
+    game.run.state.update(silo_recovery={'released': 0}, ad_after=ad_clock[0]+240)
+    game.cooldown = 60
+    assert game.shop.service()
+    assert game.opens == 1 and game.submits == 0
+    assert game.run.state['ad_after'] == ad_clock[0]+61
+    ad_clock[0] += 60
+    assert game.shop.service()
+    assert game.opens == 1
+    ad_clock[0] += 1
+    game.cooldown = None
+    assert game.shop.service()
+    assert game.opens == 2 and game.submits == 1
+
+
+def test_full_silo_retries_unclear_availability_without_reopening_each_loop(tmp_path, ad_clock):
+    game = AdGame(tmp_path, 'marker')
+    game.run.state.update(silo_recovery={'released': 0}, ad_after=ad_clock[0]+240)
+    original = game.view
+    game.view = lambda: replace(original(), ad_free=False)
+    assert game.shop.service()
+    assert game.opens == 1 and game.submits == 0
+    # Recreating the shop must retain the backoff while recovery is in progress.
+    game.run.state = json.loads(game.run.state_path.read_text())
+    game.shop = WheatShop(game.run)
+    ad_clock[0] += 29
+    assert game.shop.service()
+    assert game.opens == 1
+    ad_clock[0] += 1
+    game.view = original
+    assert game.shop.service()
+    assert game.opens == 2 and game.submits == 1
+
+
+@pytest.mark.parametrize('outcome', ['miss', 'unmarked', 'cooldown'])
+def test_full_silo_live_check_preserves_recent_submission_guard(tmp_path, ad_clock, outcome):
+    game = AdGame(tmp_path, outcome)
+    game.advertise()
+    assert game.submits == 1
+    previous_opens = game.opens
+    # Even a free-looking panel cannot authorize replay of a recent attempt.
+    game.cooldown = None
+    game.run.state.update(silo_recovery={'released': 0}, ad_after=ad_clock[0]+240)
+    game.shop = WheatShop(game.run)
+    assert game.shop.service()
+    assert game.opens == previous_opens+1 and game.submits == 1
+    assert game.run.state['ad_after'] >= ad_clock[0]+301
+    ad_clock[0] += 300
+    assert game.shop.service()
+    assert game.opens == previous_opens+1 and game.submits == 1
+    ad_clock[0] += 1
+    game.outcome = 'marker'
+    assert game.shop.service()
+    assert game.submits == 2
+
+
+@pytest.mark.parametrize('operation', ['advertise', 'list', 'collect'])
+def test_full_silo_ad_probe_does_not_touch_pending_transactions(tmp_path, ad_clock, operation):
+    game = AdGame(tmp_path)
+    pending = {'operation': operation, 'at': ad_clock[0], 'slot': list(game.slot.target.box)}
+    game.run.state.update(silo_recovery={'released': 0}, ad_after=ad_clock[0]+240,
+                          pending=pending)
+    assert game.shop.service()
+    assert game.opens == game.submits == 0
+    assert game.run.state['pending'] == pending
+
+
+def test_normal_shop_keeps_cached_ad_schedule(tmp_path, ad_clock):
+    game = AdGame(tmp_path, 'marker')
+    game.run.state['ad_after'] = ad_clock[0]+240
+    assert game.shop.service()
+    assert game.opens == game.submits == 0
+
+
+def test_unclear_silo_probe_keeps_submission_guard_after_recovery_ends(tmp_path, ad_clock):
+    game = AdGame(tmp_path)
+    game.advertise()
+    game.run.state['silo_recovery'] = {'released': 0}
+    original = game.view
+    game.view = lambda: replace(original(), ad_free=False)
+    assert game.shop.service()
+    assert game.run.state['ad_after'] >= ad_clock[0]+301
+    game.run.state.pop('silo_recovery')
+    game.view = original
+    ad_clock[0] += 30
+    assert game.shop.service()
+    assert game.submits == 1

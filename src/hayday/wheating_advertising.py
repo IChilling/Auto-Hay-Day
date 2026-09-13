@@ -14,6 +14,21 @@ from hayday.wheating_vision import SaleSlot
 COOLDOWN = 301.
 
 
+def submission_after(run):
+    """Keep actual submission attempts protected independently of ad scheduling."""
+    last = run.state.get('last_advertisement')
+    if last is None:
+        return 0.
+    if isinstance(last, dict) and isinstance(last.get('intent'), dict):
+        attempted = last['intent'].get('at')
+        if type(attempted) not in (int, float) or not math.isfinite(attempted):
+            attempted = last.get('at')
+        if type(attempted) in (int, float) and math.isfinite(attempted):
+            return attempted+COOLDOWN
+    # Incomplete legacy evidence cannot authorize an early repeat.
+    return run.state['ad_after']
+
+
 def trace(shop, stage, frame=None, view=None, **details):
     events = getattr(shop, '_ad_events', None)
     if events is None:
@@ -141,12 +156,15 @@ def reconcile(shop, initial=None, *, probe=True):
     return _finish(shop, frame, view, 'uncertain')
 
 
-def advertise(shop, frame, view, slot):
+def advertise(shop, frame, view, slot, *, check_ready=False):
+    if shop.run.state.get('pending'):
+        return
     shop._ad_events = []
     shop._ad_before = frame
     trace(shop, 'begin', frame, view, slot=list(slot.target.box))
+    next_check = None
     try:
-        shop._advertise_once(frame, view, slot)
+        next_check = shop._advertise_once(frame, view, slot, check_ready=check_ready)
     except (WheatingBlocked, AdbError) as error:
         shop.run.check()  # Cancellation/device/deadline guards still win.
         trace(shop, 'error', error=str(error))
@@ -161,7 +179,8 @@ def advertise(shop, frame, view, slot):
         elif shop.run.state.get('pending'):
             raise  # Never retire a sale or collection through optional recovery.
         else:
-            shop.run.state['ad_after'] = max(shop.run.state['ad_after'], time.time()+30)
+            retained = submission_after(shop.run) if check_ready else shop.run.state['ad_after']
+            shop.run.state['ad_after'] = max(retained, time.time()+30)
             shop.run.persist()
             trace(shop, 'uncertain', current, observed)
             if observed.kind == 'edit':
@@ -170,3 +189,8 @@ def advertise(shop, frame, view, slot):
                 shop._ready_view = current, observed
     finally:
         save_trace(shop)
+        recovery = shop.run.state.get('silo_recovery')
+        if check_ready and recovery is not None:
+            recovery['ad_check_after'] = max(time.time()+30,
+                shop.run.state['ad_after'] if next_check is None else next_check)
+            shop.run.persist()

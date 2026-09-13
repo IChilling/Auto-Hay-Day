@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -134,6 +135,9 @@ class WheatSiloFull:
                 or type(recovery.get('released')) is not int or not 0 <= recovery['released'] <= 10000
                 or type(recovery.get('reserve')) is not int or not 0 <= recovery['reserve'] <= 9999
                 or type(recovery.get('surplus_empty', False)) is not bool
+                or type(recovery.get('ad_check_after', 0)) not in (int, float)
+                or not math.isfinite(recovery.get('ad_check_after', 0))
+                or recovery.get('ad_check_after', 0) < 0
                 or not isinstance(recovery.get('harvests'), dict)
                 or any(not isinstance(k, str) or not isinstance(v, str) for k, v in recovery['harvests'].items())):
             self.run.block('The saved Silo Full recovery is invalid.')

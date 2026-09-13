@@ -356,33 +356,44 @@ class WheatShop:
         self.run.publish(f'Wheating: listed {quantity} wheat for {price} coins ({self.run.listed} total).')
         return True
 
-    def _advertise(self, frame, view, slot):
+    def _advertise(self, frame, view, slot, *, check_ready=False):
         from hayday.wheating_advertising import advertise
-        return advertise(self, frame, view, slot)
+        return advertise(self, frame, view, slot, check_ready=check_ready)
 
-    def _advertise_once(self, frame, view, slot):
-        from hayday.wheating_advertising import reconcile, trace
+    def _advertise_once(self, frame, view, slot, *, check_ready=False):
+        from hayday.wheating_advertising import reconcile, submission_after, trace
         opened = self._open_slot(frame, view, slot, 'edit')
         if opened is None:
             trace(self, 'listing_changed')
-            return
+            return time.time()+30
         frame, view = opened
         trace(self, 'edit_opened', frame, view)
         if view.wheat is None:
             self.run.block('The Edit Sale panel does not confirm wheat.')
         if view.cooldown is not None:
             trace(self, 'cooldown_active', frame, view)
-            self.run.state['ad_after'] = time.time()+max(2, view.cooldown)+1
+            self.run.state['ad_after'] = max(time.time()+max(2, view.cooldown)+1,
+                                            submission_after(self.run))
             self.run.persist()
             self.close(frame, view)
             return
         if not view.ad_free:
             trace(self, 'advertisement_unavailable', frame, view)
             # An existing live advertisement or unrecognized cooldown needs no tap.
-            self.run.state['ad_after'] = time.time()+30
+            next_check = time.time()+30
+            self.run.state['ad_after'] = max(next_check, submission_after(self.run))
             self.run.persist()
             self.close(frame, view)
-            return
+            return next_check
+        if check_ready:
+            # A live free control supersedes a cached estimate, but never the
+            # protection for an actual (possibly unconfirmed) submission.
+            self.run.state['ad_after'] = submission_after(self.run)
+            self.run.persist()
+            if time.time() < self.run.state['ad_after']:
+                trace(self, 'submission_retained', frame, view)
+                self.close(frame, view)
+                return
         if not view.ad_checked:
             fresh, checked = self.current(frame, view)
             if (checked.wheat is None or not checked.ad_free or checked.cooldown is not None
@@ -448,8 +459,14 @@ class WheatShop:
             # Listing never waits for an advertisement. Fill the available
             # crates first, then advertise one of the existing wheat listings.
             wheat = next((s for s in view.slots if s.kind == 'wheat' and not s.advertised), None)
-            if wheat and time.time() >= self.run.state['ad_after']:
-                self._advertise(frame, view, wheat)
+            recovery = self.run.state.get('silo_recovery')
+            # Before waiting on a full shop, inspect the live ad control even
+            # when our cached timer says to wait. Pace further inspections.
+            check_ready = (recovery is not None and empty is None
+                           and time.time() >= recovery.get('ad_check_after', 0))
+            if (wheat and not self.run.state.get('pending')
+                    and (check_ready or time.time() >= self.run.state['ad_after'])):
+                self._advertise(frame, view, wheat, check_ready=check_ready)
                 continue
             self._ready_view = frame, view
             if self.run.state.get('silo_recovery') is not None:

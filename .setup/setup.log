@@ -1,12 +1,12 @@
 ﻿**********************
 Windows PowerShell transcript start
-Start time: 20260912231019
+Start time: 20260911170608
 Username: PIE\youky
 RunAs User: PIE\youky
 Configuration Name: 
 Machine: PIE (Microsoft Windows NT 10.0.26200.0)
-Host Application: powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File C:\Users\youky\OneDrive\Desktop\Auto Hay Day\setup.ps1 -NoLaunch
-Process ID: 18844
+Host Application: powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File C:\Users\youky\OneDrive\Desktop\test\setup.ps1 -NoLaunch
+Process ID: 54184
 PSVersion: 5.1.26100.9444
 PSEdition: Desktop
 PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9444
@@ -136,92 +136,24 @@ Successfully installed anyio-4.15.1 certifi-2026.7.22 comtypes-1.4.16 editables-
 0.9.0 rich-15.0.0 six-1.17.0 tomlkit-0.15.1 trove-classifiers-2026.6.1.19 typing-extensions-4.16.0 winrt-runtime-3.2.1 w
 inrt-windows-foundation-3.2.1 winrt-windows-foundation-collections-3.2.1 winrt-windows-globalization-3.2.1 winrt-windows
 -graphics-imaging-3.2.1 winrt-windows-media-ocr-3.2.1 winrt-windows-storage-streams-3.2.1
-Obtaining file:///C:/Users/youky/OneDrive/Desktop/Auto%20Hay%20Day
+Obtaining file:///C:/Users/youky/OneDrive/Desktop/test
   Checking if build backend supports build_editable ... done
-  Preparing editable metadata (pyproject.toml) ... done
-Requirement already satisfied: comtypes==1.4.16 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (1.4.16)
-Requirement already satisfied: flet-desktop==0.86.0 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (0.86.0
-)
-Requirement already satisfied: flet==0.86.0 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (0.86.0)
-Requirement already satisfied: numpy<3,>=2 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (2.5.2)
-Requirement already satisfied: opencv-python<5,>=4.12 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (4.14
-.0.94)
-Requirement already satisfied: pillow<13,>=11 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (12.3.0)
-Requirement already satisfied: winrt-runtime==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation==0.1.1) (3.2.1)
+  error: subprocess-exited-with-error
 
-Requirement already satisfied: winrt-windows-foundation-collections==3.2.1 in .\.venv\Lib\site-packages (from hayday-aut
-omation==0.1.1) (3.2.1)
-Requirement already satisfied: winrt-windows-foundation==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation==0.1
-.1) (3.2.1)
-Requirement already satisfied: winrt-windows-globalization==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation==
-0.1.1) (3.2.1)
-Requirement already satisfied: winrt-windows-graphics-imaging==3.2.1 in .\.venv\Lib\site-packages (from hayday-automatio
-n==0.1.1) (3.2.1)
-Requirement already satisfied: winrt-windows-media-ocr==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation==0.1.
-1) (3.2.1)
-Requirement already satisfied: winrt-windows-storage-streams==3.2.1 in .\.venv\Lib\site-packages (from hayday-automation
-==0.1.1) (3.2.1)
-Requirement already satisfied: oauthlib>=3.2.2 in .\.venv\Lib\site-packages (from flet==0.86.0->hayday-automation==0.1.1
-) (3.3.1)
-Requirement already satisfied: httpx>=0.28.1 in .\.venv\Lib\site-packages (from flet==0.86.0->hayday-automation==0.1.1)
-(0.28.1)
-Requirement already satisfied: repath>=0.9.0 in .\.venv\Lib\site-packages (from flet==0.86.0->hayday-automation==0.1.1)
-(0.9.0)
-Requirement already satisfied: msgpack>=1.1.0 in .\.venv\Lib\site-packages (from flet==0.86.0->hayday-automation==0.1.1)
- (1.2.2)
-Requirement already satisfied: rich>=13.0.0 in .\.venv\Lib\site-packages (from flet-desktop==0.86.0->hayday-automation==
-0.1.1) (15.0.0)
-Requirement already satisfied: typing_extensions>=4.12.2 in .\.venv\Lib\site-packages (from winrt-runtime==3.2.1->hayday
--automation==0.1.1) (4.16.0)
-Requirement already satisfied: anyio in .\.venv\Lib\site-packages (from httpx>=0.28.1->flet==0.86.0->hayday-automation==
-0.1.1) (4.15.1)
-Requirement already satisfied: certifi in .\.venv\Lib\site-packages (from httpx>=0.28.1->flet==0.86.0->hayday-automation
-==0.1.1) (2026.7.22)
-Requirement already satisfied: httpcore==1.* in .\.venv\Lib\site-packages (from httpx>=0.28.1->flet==0.86.0->hayday-auto
-mation==0.1.1) (1.0.9)
-Requirement already satisfied: idna in .\.venv\Lib\site-packages (from httpx>=0.28.1->flet==0.86.0->hayday-automation==0
-.1.1) (3.19)
-Requirement already satisfied: h11>=0.16 in .\.venv\Lib\site-packages (from httpcore==1.*->httpx>=0.28.1->flet==0.86.0->
-hayday-automation==0.1.1) (0.16.0)
-Requirement already satisfied: six>=1.9.0 in .\.venv\Lib\site-packages (from repath>=0.9.0->flet==0.86.0->hayday-automat
-ion==0.1.1) (1.17.0)
-Requirement already satisfied: markdown-it-py>=2.2.0 in .\.venv\Lib\site-packages (from rich>=13.0.0->flet-desktop==0.86
-.0->hayday-automation==0.1.1) (4.2.0)
-Requirement already satisfied: pygments<3.0.0,>=2.13.0 in .\.venv\Lib\site-packages (from rich>=13.0.0->flet-desktop==0.
-86.0->hayday-automation==0.1.1) (2.21.0)
-Requirement already satisfied: mdurl~=0.1 in .\.venv\Lib\site-packages (from markdown-it-py>=2.2.0->rich>=13.0.0->flet-d
-esktop==0.86.0->hayday-automation==0.1.1) (0.1.2)
-Building wheels for collected packages: hayday-automation
-  Building editable for hayday-automation (pyproject.toml) ... done
-  Created wheel for hayday-automation: filename=hayday_automation-0.1.1-py3-none-any.whl size=1953 sha256=43285cb787d780
-0500d5fde02efa546c974877d53897e0e2595108545227f3cb
-  Stored in directory: C:\Users\youky\AppData\Local\Temp\pip-ephem-wheel-cache-snpb2z_p\wheels\d6\83\74\ea378981bad26adf
-6f83050f08278fb487c0425ed6ed7d9547
-Successfully built hayday-automation
-Installing collected packages: hayday-automation
-Successfully installed hayday-automation-0.1.1
-No broken requirements found.
-Preparing and checking the desktop interface and recognition libraries...
-Desktop client, recognition libraries, and Windows popup support are ready.
-{
-  "passed": true,
-  "routes": [
-    "empty/overview",
-    "empty/devices",
-    "empty/captures",
-    "empty/activity",
-    "empty/settings",
-    "populated/overview",
-    "populated/devices",
-    "populated/captures",
-    "populated/activity",
-    "populated/settings"
-  ],
-  "errors": []
-}
-Setup complete. Use Launch Hay Day.cmd to open the app.
-BlueStacks with Hay Day and ADB enabled is required for game automation.
+  × Preparing editable metadata (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> No available output.
+
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+  Preparing editable metadata (pyproject.toml) ... error
+error: metadata-generation-failed
+
+× Encountered error while generating package metadata.
+╰─> from file:///C:/Users/youky/OneDrive/Desktop/test
+
+note: This is an issue with the package mentioned above, not pip.
+hint: See above for details.
 **********************
 Windows PowerShell transcript end
-End time: 20260912231040
+End time: 20260911170621
 **********************
