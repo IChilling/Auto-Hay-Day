@@ -3,6 +3,10 @@ import base64
 import hashlib
 import importlib.util
 import io
+import os
+import shlex
+import shutil
+import subprocess
 import sys
 import tarfile
 from pathlib import Path
@@ -21,6 +25,48 @@ def script(name):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def test_bootstrap_managed_python_policy_with_uv(tmp_path):
+    """Exercise uv's real argument parser with the bootstrap's actual policy."""
+    uv = shutil.which("uv")
+    if not uv:
+        local = ROOT / ".setup/macos-build-tools/uv.exe"
+        if local.is_file():
+            uv = str(local)
+    if not uv:
+        pytest.skip("uv is required for the bootstrap CLI integration check")
+    # Simulate a caller with a conflicting Python preference in their shell.
+    environment = os.environ.copy()
+    environment.update(UV_PYTHON_PREFERENCE="only-system", UV_NO_MANAGED_PYTHON="1")
+    bootstrap = (ROOT / "scripts/macos-bootstrap.sh").read_text(encoding="utf-8")
+    for line in bootstrap.splitlines():
+        if not line.startswith(("unset ", "export ")):
+            continue
+        words = shlex.split(line, comments=True)
+        if words and words[0] == "unset":
+            for name in words[1:]:
+                if name == "||":
+                    break
+                environment.pop(name, None)
+        elif words and words[0] == "export":
+            name, value = words[1].split("=", 1)
+            if name.startswith("UV_") and "$" not in value:
+                environment[name] = value
+    environment["UV_PYTHON_INSTALL_DIR"] = str(tmp_path / "empty-managed-installations")
+    environment["UV_CACHE_DIR"] = str(tmp_path / "cache")
+    find_line = next(line for line in bootstrap.splitlines() if line.startswith("task_python="))
+    command = shlex.split(find_line.removeprefix('task_python="$(').removesuffix(')"'))
+    result = subprocess.run(
+        [uv, *command[1:], "--no-python-downloads"], env=environment,
+        cwd=tmp_path, capture_output=True, text=True, timeout=30,
+    )
+    # There is deliberately no private Python: lookup must run, reject system
+    # Python, and report the missing runtime rather than a CLI-option conflict.
+    assert result.returncode != 0
+    assert "No interpreter found" in result.stderr, result.stderr
+    assert "managed installations" in result.stderr
+    assert "cannot be used with" not in result.stderr
 
 
 def test_single_file_contains_complete_clean_project(tmp_path):
