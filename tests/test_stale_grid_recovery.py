@@ -90,7 +90,7 @@ def test_unconfirmed_picker_keeps_previous_checkpoint(recorded):
     worker._plant_selected.assert_not_called()
 
 
-def test_repeated_visible_soil_recognition_errors_do_not_force_stop(recorded, tmp_path):
+def test_repeated_visible_soil_recognition_errors_stop_without_restarting(recorded, tmp_path):
     worker, frame, entry = recorded
     client = SimpleNamespace(serial='test', capture=Mock(return_value=frame), force_stop_hay_day=Mock())
     run = WheatingRunner(client, tmp_path/'run')
@@ -101,10 +101,11 @@ def test_repeated_visible_soil_recognition_errors_do_not_force_stop(recorded, tm
     fields = WheatFields.__new__(WheatFields)
     fields.run, fields.worker = run, worker
     worker._close = Mock()
-    for _ in range(3):
+    restart.recover(WheatingBlocked('Saved grid cannot match'), fields)
+    with pytest.raises(WheatingBlocked, match='Field recovery made no progress'):
         restart.recover(WheatingBlocked('Saved grid cannot match'), fields)
     client.force_stop_hay_day.assert_not_called()
-    assert restart.stage == 'live_field_retry'
+    assert restart.stage == 'recognition_blocked'
     assert worker.state['items']['field'] is entry
     run.cancel_event.set()
     with pytest.raises(WheatingCancelled):

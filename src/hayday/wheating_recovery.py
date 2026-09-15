@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import cv2
@@ -12,9 +13,14 @@ from hayday.launcher import LauncherVision, LaunchRecovery
 from hayday.reconnect import ReconnectBlocked, ReconnectRecovery
 from hayday.resource_vision import ResourceVision, _decode
 from hayday.tutorials import TutorialBlocked, TutorialDismissal
+from hayday.wheating_event_board import WheatEventBoard
 from hayday.wheating_level_up import WheatLevelUp
+from hayday.wheating_neighborhood import WheatNeighborhood
+from hayday.wheating_notifications import WheatNotifications
+from hayday.wheating_play_games import WheatPlayGames
 from hayday.wheating_popup import WheatHostPopup
 from hayday.wheating_silo import WheatSiloFull
+from hayday.wheating_transient import WheatAchievement
 
 
 class WheatServerDialog(DialogVision):
@@ -57,10 +63,22 @@ class WheatLaunchRecovery(LaunchRecovery):
             super()._wait_for_launch()
 
     def _record_launch(self):
+        self.run._workspace_needs_restore = True
+        self.run._workspace_zoom_attempted = False
+        self.run._launch_rotation_until = time.monotonic()+15.
         if self.run._failsafe:
             self.run._failsafe.launch_attempted()
         super()._record_launch()
         self._launches = self._launches[-3:]
+
+    def _returned_game(self, frame):
+        if super()._returned_game(frame):
+            return True
+        recovery = getattr(self.run, '_recovery', None)
+        return (self.client.foreground_package() == 'com.supercell.hayday'
+                and any(handler is not None and handler.observe(frame) is not None
+                        for handler in (getattr(recovery, 'event_board', None),
+                                        getattr(recovery, 'neighborhood', None))))
 
     def process(self, frame):
         restart = self.run._failsafe
@@ -81,8 +99,13 @@ class WheatRecovery:
     def __init__(self, run):
         self.run = run
         self.host_popup = WheatHostPopup(run)
+        self.notifications = WheatNotifications(run)
+        self.play_games = WheatPlayGames(run)
+        self.event_board = WheatEventBoard(run)
+        self.neighborhood = WheatNeighborhood(run)
         self.level_up = WheatLevelUp(run)
         self.silo_full = WheatSiloFull(run)
+        self.achievement = WheatAchievement(run)
         options = dict(capture=run._capture_raw, cancel_event=run.cancel_event,
                        check=run.check, wait=run.wait, progress=run.publish, save=self.save)
         self.launch = WheatLaunchRecovery(run, **options)
@@ -96,6 +119,8 @@ class WheatRecovery:
         # Login may return directly to the tutorial. Recognize it here; the
         # normal tutorial helper still owns its fresh confirmation and dismissal.
         return (self.run.vision.farm(frame) or self.level_up.observe(frame) is not None
+                or self.event_board.observe(frame) is not None
+                or self.neighborhood.observe(frame) is not None
                 or self.tutorial._observe(frame) is not None)
 
     def save(self, label, frame):
@@ -110,6 +135,8 @@ class WheatRecovery:
                            interpolation=cv2.INTER_AREA)
         hsv = cv2.cvtColor(small, cv2.COLOR_BGR2HSV)
         launcher = float(np.mean(cv2.inRange(hsv, (100, 90, 0), (130, 255, 95)) > 0)) > .35
+        if not launcher and not self.run.vision.farm(frame):
+            launcher = self.launch._package_home() is not None
         cream = cv2.inRange(hsv, (15, 0, 160), (45, 125, 255))
         cream = cv2.morphologyEx(cream, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
         count, _, stats, _ = cv2.connectedComponentsWithStats(cream)
@@ -122,16 +149,25 @@ class WheatRecovery:
 
     def process(self, frame):
         try:
+            frame = self.achievement.process(frame)
             frame = self.silo_full.process(frame)
-            frame = self.level_up.process(frame)
+            frame = self.introductions(frame)
             launcher, dialog = self.possible(frame)
             if launcher and not self.run.state.get('pending'):
                 frame = self.launch.process(frame)
+                frame = self.introductions(frame)
                 _, dialog = self.possible(frame)
             if dialog:
                 if not self.run.state.get('pending'):
                     frame = self.reconnect.process(frame)
                 frame = self.tutorial.process(frame)
+                # Reconnection can land directly on a level-up or introduction.
+                frame = self.introductions(frame)
             return self.level_up.process(frame)
         except (ReconnectBlocked, TutorialBlocked) as exc:
             self.run.block(str(exc))
+
+    def introductions(self, frame):
+        frame = self.level_up.process(frame)
+        frame = self.event_board.process(frame)
+        return self.neighborhood.process(frame)

@@ -5,7 +5,35 @@ import cv2
 import numpy as np
 
 from hayday.camera import CameraNavigator
-from hayday.resource_vision import _decode
+from hayday.resource_vision import VisualTarget, _decode
+
+
+def _distributed_translation(old, new, width, height):
+    """Find a dominant translation despite unrelated repeated-tree matches."""
+    offsets = new-old
+    bins, counts = np.unique(np.floor(offsets/3).astype(int), axis=0, return_counts=True)
+    modes = []
+    for index in np.argsort(counts)[-16:]:
+        center = bins[index]*3+1.5
+        for _ in range(2):
+            supported = np.linalg.norm(offsets-center, axis=1) <= 2.5
+            if not supported.any():
+                break
+            center = np.median(offsets[supported], axis=0)
+        supported = np.linalg.norm(offsets-center, axis=1) <= 2.5
+        modes.append((int(supported.sum()), center, supported))
+    if not modes:
+        return None
+    count, shift, supported = max(modes, key=lambda value: value[0])
+    if count < 40 or any(n >= count*.8 and np.linalg.norm(center-shift) > 5
+                         for n, center, _ in modes):
+        return None
+    tracked = old[supported]
+    cells = {(int(x/(width/4)), int(y/(height/4))) for x, y in tracked}
+    if (len(cells) < 4 or len(np.unique(np.rint(tracked), axis=0)) < 25
+            or np.ptp(tracked[:, 0]) < width*.25 or np.ptp(tracked[:, 1]) < height*.20):
+        return None
+    return np.float64([[1, 0, shift[0]], [0, 1, shift[1]]])
 
 
 def farm_transform(before, after):
@@ -40,9 +68,14 @@ def _farm_transform(before, after, *, displaced=False):
     old = np.float32([old_keys[m.queryIdx].pt for m in good])
     new = np.float32([new_keys[m.trainIdx].pt for m in good])
     matrix, inliers = cv2.estimateAffinePartial2D(old, new, method=cv2.RANSAC, ransacReprojThreshold=3)
-    if (matrix is None or inliers is None or not np.isfinite(matrix).all()
-            or inliers.sum() < max(22, len(good)*.55)):
+    if matrix is None or inliers is None or not np.isfinite(matrix).all():
         return None
+    if inliers.sum() < max(22, len(good)*.55):
+        # A large shop return shares only a narrow part of the farm; repeated
+        # leaves elsewhere create many unrelated descriptor matches. Accept a
+        # pure translation only when at least 40 distributed landmarks agree
+        # within 2.5 pixels. This fallback cannot authorize a zoom or rotation.
+        return _distributed_translation(old, new, width, height) if displaced else None
     scale = np.hypot(matrix[0, 0], matrix[1, 0])
     tracked = old[inliers.ravel().astype(bool)]
     if (not .35 < scale < 3.5 or abs(matrix[1, 0]/scale) > .025
@@ -69,6 +102,36 @@ def _settled(run):
     run.block('The farm camera did not settle after restarting.')
 
 
+def _field_center(bounds, soil, matrix, points):
+    if bounds is not None:
+        return bounds.center
+    if soil:
+        return ((min(p.x for p in soil)+max(p.x+p.width for p in soil))/2,
+                (min(p.y for p in soil)+max(p.y+p.height for p in soil))/2)
+    if matrix is not None:
+        projected = np.c_[np.asarray(points), np.ones(len(points))] @ matrix.T
+        return (projected.min(axis=0)+projected.max(axis=0))/2
+    return None
+
+
+def _workspace_drag(frame, center, shop):
+    if center is not None:
+        # Leave room below and left of the field for the roadside shop.
+        dx, dy = .58-center[0]/frame.width, .48-center[1]/frame.height
+    elif shop is not None:
+        dx, dy = .34-shop.center[0]/frame.width, .67-shop.center[1]/frame.height
+    else:
+        # Restart opens around the farmhouse. A short right/up grass swipe
+        # reveals the roadside area to its left and lifts the low field into
+        # view. This is a bounded search gesture, never a saved tap coordinate.
+        dx, dy = .30, -.10
+    dx, dy = float(np.clip(dx, -.30, .30)), float(np.clip(dy, -.28, .28))
+    if abs(dx)+abs(dy) < .025:
+        return None
+    return next((drag for fraction in (1., .5, .25)
+                 if (drag := CameraNavigator._grass_start(frame, dx*fraction, dy*fraction))), None)
+
+
 def restore_workspace(run, fields):
     reference = getattr(fields, '_known_before', None)
     points = getattr(fields, '_known_points', [])
@@ -85,14 +148,31 @@ def restore_workspace(run, fields):
             bare = saved_soil_grid(worker, pending[0])
             if bare:
                 reference, points, _ = bare
-    zooms = 0
-    for step in range(7):
+    unchanged = 0
+    # At most seven gestures, including at most one zoom, with a final
+    # observation. The zoom budget belongs to the running game, not this call:
+    # local recovery retries must not start zooming out all over again.
+    for step in range(8):
         run.check()
         if run.diagnostics:
             (run.diagnostics/f'restart_workspace_{step}.png').write_bytes(frame.png)
         bounds = run.vision.field_bounds(frame)
+        if bounds is None:
+            bounds = getattr(run.vision, 'edge_field_bounds', lambda _: None)(frame)
         shop = run.vision.shop_building(frame)
-        if shop and run.vision.plots(frame, 'empty'):
+        soil = run.vision.plots(frame, 'empty')
+        group = getattr(fields, '_group', None)
+        if bounds is None and shop and group is not None and len(group.points) >= 3:
+            view = group.observe(frame)
+            if (view is not None and len(view.cells) >= len(group.points)
+                    and view.count('growing') == len(view.cells)):
+                # Current crop pixels must support every saved tile. A growing
+                # field has neither bare furrows nor yellow harvest foliage.
+                x, y = np.asarray(view.cells, dtype=object)[:, :2].astype(float).T
+                dx, dy = view.pitch
+                bounds = VisualTarget(round(x.min()-dx), round(y.min()-dy),
+                    round(np.ptp(x)+2*dx), round(np.ptp(y)+2*dy), 1.)
+        if shop and soil:
             # Bare soil is a valid workspace, including when a legacy saved
             # grid is wrong. The crop worker verifies a fresh picker and grid.
             run._shop_anchor = frame, shop
@@ -109,27 +189,35 @@ def restore_workspace(run, fields):
                 and bounds.y+bounds.height < frame.height*.83):
             run._shop_anchor = frame, shop
             return frame
+        if step == 7:
+            break
+        if unchanged >= 2:
+            run.block('The farm camera did not move toward the roadside shop after two grass drags.')
         matrix = farm_transform(reference, frame) if reference is not None and points else None
         scale = np.hypot(matrix[0, 0], matrix[1, 0]) if matrix is not None else None
-        if zooms < 2 and (matrix is None or scale > 1.08):
+        center = _field_center(bounds, soil, matrix, points)
+        too_large = bounds is not None and (bounds.width > frame.width*.74
+                                            or bounds.height > frame.height*.60)
+        needs_zoom = (too_large or (scale is not None and scale > 1.08)
+                      or (center is None and shop is None))
+        if not getattr(run, '_workspace_zoom_attempted', False) and needs_zoom:
+            run._workspace_zoom_attempted = True
             area = CameraNavigator._pinch_area(frame)
-            if area is None:
-                run.block('No clear grass is available to restore the farm zoom after restarting.')
-            run.client.pinch_zoom_out(width=frame.width, height=frame.height,
-                                     cancel_event=run.cancel_event, center=area[0], span=area[1])
-            zooms += 1
-        elif matrix is not None:
-            projected = np.c_[np.asarray(points), np.ones(len(points))] @ matrix.T
-            center = (projected.min(axis=0)+projected.max(axis=0))/2
-            dx = float(np.clip(.58-center[0]/frame.width, -.30, .30))
-            dy = float(np.clip(.52-center[1]/frame.height, -.28, .28))
-            if abs(dx)+abs(dy) < .025:
-                run.block('The saved farm area returned, but its wheat field and shop are not both recognized.')
-            drag = CameraNavigator._grass_start(frame, dx, dy)
-            if drag is None:
-                run.block('No clear grass is available to restore the saved field position.')
-            run.client.swipe(*drag, width=frame.width, height=frame.height, duration_ms=300)
-        else:
-            run.block('The saved wheat workspace could not be matched after restarting; no blind camera scan was sent.')
+            if area is not None:
+                run.publish('Wheating: zooming out once before positioning the roadside shop and field.')
+                run.check()
+                run.client.pinch_zoom_out(width=frame.width, height=frame.height,
+                                         cancel_event=run.cancel_event, center=area[0], span=area[1])
+                frame = _settled(run)
+                continue
+        drag = _workspace_drag(frame, center, shop)
+        if drag is None:
+            run.block('The roadside workspace is not recognized or has no clear grass for camera positioning.')
+        run.publish('Wheating: moving the camera toward the roadside shop and field.')
+        before = CameraNavigator._view(frame)
+        run.check()
+        run.client.swipe(*drag, width=frame.width, height=frame.height, duration_ms=300)
         frame = _settled(run)
+        moved = not CameraNavigator._same_view(before, CameraNavigator._view(frame))
+        unchanged = 0 if moved else unchanged+1
     run.block('The saved wheat field and shop could not be restored after restarting.')

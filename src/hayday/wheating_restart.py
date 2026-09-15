@@ -6,7 +6,7 @@ import math
 import time
 
 from hayday.adb import AdbError
-from hayday.wheating import WheatingBlocked
+from hayday.wheating import WheatingBlocked, WheatingPrerequisite
 
 
 class WheatStalled(WheatingBlocked):
@@ -149,6 +149,8 @@ class WheatRestart:
         ))
 
     def recover(self, error, fields):
+        if isinstance(error, WheatingPrerequisite):
+            raise error
         self.active = True
         self._record('recovery_requested', error)
         try:
@@ -158,8 +160,8 @@ class WheatRestart:
                     self.run.block('Local recovery requires the active device session lock.')
                 if not self._retryable_restart_error(error):
                     raise error
-                from hayday.wheating_shop import WheatShop
                 from hayday.wheating_advertising import reconcile, save_trace, trace
+                from hayday.wheating_shop import WheatShop
                 shop = WheatShop(self.run)
                 frame = self._capture('recovery_before')
                 view = self.run.vision.shop(frame)
@@ -183,6 +185,11 @@ class WheatRestart:
                 from hayday.camera import CameraNavigator
                 if self.run.vision.farm(frame) and not CameraNavigator._modal_visible(frame):
                     if getattr(fields, 'has_live_work', lambda _frame: False)(frame):
+                        if self._local_signature == self._progress():
+                            self._record('recognition_blocked', error)
+                            self.run.block(f'Field recovery made no progress: {error}. '
+                                           'Hay Day was left open and pending work was preserved.')
+                        self._local_signature = self._progress()
                         # Restarting a visible, actionable field cannot repair
                         # stale geometry. Let the crop worker rebuild from its
                         # fresh soil/crop observations, preserving pending input.
@@ -260,6 +267,8 @@ class WheatRestart:
                 previous.host_popup.close()
                 self.run.vision = WheatingVision(cancel=self.run.cancel_event.is_set)
                 self.run._shop_anchor = None
+                self.run._workspace_zoom_attempted = False
+                self.run._workspace_needs_restore = True
                 self.run._recovery = WheatRecovery(self.run)
                 self._record('launch_requested', error)
                 self._launch_reserved = True

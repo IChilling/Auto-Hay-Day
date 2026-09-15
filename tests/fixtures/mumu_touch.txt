@@ -1,0 +1,11 @@
+add device 4: /dev/input/event4
+  name:     "Xiaomi Touchscreen"
+  events:
+    KEY (0001): BTN_MOUSE             BTN_TOOL_FINGER      
+    ABS (0003): ABS_MT_SLOT           : value 1, min 0, max 31, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_X     : value 0, min 0, max 1080, fuzz 0, flat 0, resolution 0
+                ABS_MT_POSITION_Y     : value 0, min 0, max 1920, fuzz 0, flat 0, resolution 0
+                ABS_MT_TRACKING_ID    : value 0, min 0, max 65535, fuzz 0, flat 0, resolution 0
+                ABS_MT_PRESSURE       : value 0, min 0, max 0, fuzz 0, flat 0, resolution 0
+  input props:
+    INPUT_PROP_DIRECT

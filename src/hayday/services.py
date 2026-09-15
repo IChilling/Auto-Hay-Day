@@ -15,6 +15,7 @@ from hayday.adb import (
     discover_adb_executables,
     discover_bluestacks_instances,
 )
+from hayday.emulators import EmulatorConnection, adb_provider, discover_mumu_instances
 from hayday.storage import AppData, Settings
 from hayday.wheating_services import WheatingServices
 
@@ -24,6 +25,7 @@ class Services(WheatingServices):
         self.data = AppData(root)
         self.settings = self.data.load_settings()
         self.devices: list[Device] = []
+        self.instances: list[EmulatorConnection] = []
         self.client: AdbClient | None = None
         self.frame: Screenshot | None = None
         self.frame_serial = ""
@@ -50,19 +52,58 @@ class Services(WheatingServices):
         with self._lock:
             self._ensure_open()
             executables = discover_adb_executables()
-            instances = discover_bluestacks_instances()
+            bluestacks = discover_bluestacks_instances()
             settings = self.settings
-            if not settings.adb_path and executables:
+            self.instances = discover_mumu_instances(Path(settings.adb_path) if settings.adb_path else None)
+            blue_adb = next((item.path for item in executables if 'BlueStacks' in item.source), None)
+            if blue_adb:
+                self.instances.extend(EmulatorConnection('BlueStacks', item.name, item.display_name,
+                                      blue_adb, item.endpoint) for item in bluestacks)
+            providers = {adb_provider(item.path) for item in executables}
+            new_path = not settings.adb_path
+            if new_path and executables and len(providers) == 1:
                 settings = replace(settings, adb_path=str(executables[0].path))
-            if len(instances) == 1 and not settings.selected_serial:
-                settings = replace(settings, endpoint=instances[0].endpoint)
+            matching = [item for item in self.instances
+                        if settings.adb_path and item.adb_path == Path(settings.adb_path).resolve()]
+            if new_path and len(matching) == 1 and not settings.selected_serial:
+                settings = replace(settings, endpoint=matching[0].endpoint)
             self.save_settings(settings)
             if not settings.adb_path:
-                return "Choose the BlueStacks HD-Adb.exe path to get connected."
+                return "Choose a discovered emulator instance or browse to an ADB executable."
             serial = self.connected_serial
             client = self._new_client(serial)
         self._refresh(client, serial)
         return f"Discovery complete. {len(self.devices)} device(s) found."
+
+    def connect_instance(self, key: str) -> str:
+        """Select the installation and connect only the explicitly chosen instance."""
+        with self._lock:
+            self._ensure_open()
+            instance = next((item for item in self.instances if item.key == key), None)
+            if instance is None:
+                raise AdbError('That emulator instance is no longer available. Discover again.')
+            self.disconnect()
+            self.save_settings(replace(self.settings, adb_path=str(instance.adb_path),
+                                       endpoint=instance.endpoint, selected_serial=''))
+            client = self._new_client()
+        try:
+            client.connect(instance.endpoint)
+            self._refresh(client, '')
+            with self._lock:
+                self._ensure_current(client)
+                if not any(device.serial == instance.endpoint and device.online for device in self.devices):
+                    raise AdbError('The selected emulator endpoint is not online.')
+                client.serial = instance.endpoint
+            frame = client.capture()
+            with self._lock:
+                self._ensure_current(client)
+                self.save_settings(replace(self.settings, selected_serial=instance.endpoint))
+                self.frame, self.frame_serial = frame, instance.endpoint
+                self.connected_serial = instance.endpoint
+            return f'Connected to {instance.emulator}: {instance.display_name} ({instance.endpoint}).'
+        except Exception:
+            self._discard_client(client)
+            raise
 
     def _ensure_open(self) -> None:
         if self._closed:
@@ -79,7 +120,7 @@ class Services(WheatingServices):
             self.disconnect()
             self.devices = []
             if not self.settings.adb_path:
-                raise AdbError("Choose an ADB executable on the BlueStacks page first.")
+                raise AdbError("Choose an ADB executable on the Emulators page first.")
             self.client = AdbClient(self.settings.adb_path, serial=serial)
             return self.client
 
@@ -154,7 +195,7 @@ class Services(WheatingServices):
                 raise AdbError("A game workflow is running. Stop it before capturing manually.")
             client, serial = self.client, self.connected_serial
             if not serial or not client:
-                raise AdbError("Select an online BlueStacks device first.")
+                raise AdbError("Select an online emulator device first.")
             self._captures_active += 1
         try:
             frame = client.capture()
@@ -194,7 +235,7 @@ class Services(WheatingServices):
             serial = self.connected_serial
             original_client = self.client
             if not serial or not original_client:
-                raise AdbError("Select an online BlueStacks device first.")
+                raise AdbError("Select an online emulator device first.")
             # The test owns a fixed serial; changing the normal session cancels it.
             client = AdbClient(self.settings.adb_path, serial=serial)
             runner = BoardTestRunner(
@@ -243,7 +284,7 @@ class Services(WheatingServices):
                 raise AdbError("Another game workflow or capture is already running. Stop it first.")
             original_client, serial = self.client, self.connected_serial
             if not serial or not original_client:
-                raise AdbError("Select an online BlueStacks device first.")
+                raise AdbError("Select an online emulator device first.")
             client = AdbClient(self.settings.adb_path, serial=serial)
 
             def publish(update: dict) -> None:

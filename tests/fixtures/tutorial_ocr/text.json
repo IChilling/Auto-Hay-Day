@@ -1,0 +1,104 @@
+{
+  "16448": {
+    "size": [
+      1920,
+      1080
+    ],
+    "foreground": "com.supercell.hayday",
+    "text": {
+      "text": "My, mg what do we haue here?\nRepair gour neighborhood house bo\nchab and plag with gour closest\nFriends!",
+      "lines": [
+        {
+          "text": "My, mg what do we haue here?",
+          "bounds": [
+            901,
+            329,
+            721,
+            45
+          ]
+        },
+        {
+          "text": "Repair gour neighborhood house bo",
+          "bounds": [
+            854,
+            388,
+            814,
+            45
+          ]
+        },
+        {
+          "text": "chab and plag with gour closest",
+          "bounds": [
+            890,
+            447,
+            742,
+            45
+          ]
+        },
+        {
+          "text": "Friends!",
+          "bounds": [
+            1167,
+            506,
+            189,
+            37
+          ]
+        }
+      ],
+      "reward_granted": false,
+      "reward_countdown_seconds": null,
+      "error": null
+    },
+    "panel": {
+      "x": 684,
+      "y": 136,
+      "width": 1112,
+      "height": 660,
+      "score": 1.0
+    },
+    "event": "None",
+    "neighborhood": "None"
+  },
+  "16480": {
+    "size": [
+      1920,
+      1080
+    ],
+    "foreground": "com.supercell.hayday",
+    "text": {
+      "text": "Tap on bhe inpo bubbon bo show\nmore details and rewards!",
+      "lines": [
+        {
+          "text": "Tap on bhe inpo bubbon bo show",
+          "bounds": [
+            897,
+            388,
+            729,
+            45
+          ]
+        },
+        {
+          "text": "more details and rewards!",
+          "bounds": [
+            950,
+            447,
+            622,
+            37
+          ]
+        }
+      ],
+      "reward_granted": false,
+      "reward_countdown_seconds": null,
+      "error": null
+    },
+    "panel": {
+      "x": 684,
+      "y": 136,
+      "width": 1112,
+      "height": 660,
+      "score": 1.0
+    },
+    "event": "None",
+    "neighborhood": "None"
+  }
+}

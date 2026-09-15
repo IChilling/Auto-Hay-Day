@@ -5,7 +5,6 @@ import hashlib
 import math
 import time
 import uuid
-from collections import deque
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
@@ -19,6 +18,7 @@ from hayday.farming import FarmingWorker
 from hayday.farming_vision import FarmingVision, HarvestTarget
 from hayday.resource_vision import VisualTarget, _decode
 from hayday.resources import ResourceChanged, ResourceResult
+from hayday.soil_vision import soil_references
 from hayday.wheating_motion import WheatMotion
 from hayday.wheating_numbers import read_number
 
@@ -29,7 +29,11 @@ class WheatFarmingVision(FarmingVision):
         self._control_locations = {}
         root = Path(__file__).parent/'assets/wheating'
         self._outline_reference = _decode((root/'empty_outline.png').read_bytes(), True)
-        self._soil_texture = _decode((root/'soil_texture.png').read_bytes(), True)
+        self._soil_textures = tuple(soil_references().values())
+        self._soil_texture = self._soil_textures[0]  # Compatibility with existing diagnostic callers.
+        wheat = _decode((root/'wheat_inventory.png').read_bytes(), True)
+        yy, xx = np.nonzero(wheat[:, :, 3] >= 200)
+        self._picker_wheat = wheat[yy.min():yy.max()+1, xx.min():xx.max()+1]
 
     def _hsv(self, png):
         image = self._frame(png)
@@ -68,11 +72,49 @@ class WheatFarmingVision(FarmingVision):
                 if self._matches(png, 'page_previous', .92) else None)
         return self._cache['seed_controls']
 
+    def seed_menu(self, png):
+        if super().seed_menu(png):
+            return True
+        # Early farms have only one crop page, so there are no paging buttons.
+        # Require wheat artwork beside its own gold arrow plus a second matching
+        # crop arrow down-left in the same fan. The selected soil outline and
+        # two fresh stock readings still independently gate every planting.
+        image = self._frame(png)
+        if 'single_page_seed_menu' not in self._cache:
+            self._cache['single_page_seed_menu'] = False
+            tips = self._matches(png, 'guide_tip', .94)
+            if len(tips) >= 2:
+                base = image.shape[0]/1080
+                # Use the crop worker's wheat-artwork threshold. The fan's
+                # independently matched arrows establish menu geometry; a
+                # selected outline and two stock readings still gate planting.
+                seeds = self._matcher._search(image, self._picker_wheat,
+                    np.array([1., 1.23, 1.26, 1.29])*base, .90, self.cancel, max_peaks=4)
+                pairs = []
+                for seed in seeds:
+                    for tip in tips:
+                        dx, dy = np.subtract(tip.center, seed.center)
+                        if not (.3*seed.width < dx < 1.1*seed.width
+                                and .25*seed.height < dy < seed.height):
+                            continue
+                        if any(other != tip and .85 < other.width/tip.width < 1.15
+                               and .5*seed.width < tip.x-other.x < 5*seed.width
+                               and .25*seed.height < other.y-tip.y < 3*seed.height
+                               for other in tips):
+                            pairs.append((seed, tip))
+                self._cache['single_page_seed_menu'] = len(pairs) == 1
+        return self._cache['single_page_seed_menu']
+
     def _matches(self, png, name, threshold=.91):
         image = self._frame(png)
         key = name, threshold
         if key in self._cache:
             return self._cache[key]
+        if name == 'guide_tip':
+            # Every arrow in the fan is needed to identify the single-page
+            # picker. One strong cached/native-scale hit must not suppress
+            # arrows whose best raster match is at a neighboring scale.
+            return super()._matches(png, name, threshold)
         reference = self.references[name]
         local = []
         for old in self._control_locations.get(name, ()):
@@ -94,7 +136,8 @@ class WheatFarmingVision(FarmingVision):
             # zooming. Try that scale first; unfamiliar layouts retain the
             # existing broad search as a fallback.
             local = list(self._matcher._search(image, reference, np.array([image.shape[0]/1080]),
-                min(.99, threshold+.02), self.cancel, max_peaks=4))
+                min(.99, threshold+.02),
+                self.cancel, max_peaks=4))
         if local:
             result = tuple(sorted(local, key=lambda target: -target.score))
             self._cache[key] = result
@@ -186,7 +229,9 @@ class WheatFarmingVision(FarmingVision):
         hsv = self._hsv(png)
         reference = self._outline_reference
         base = image.shape[0]/1080
-        white = cv2.inRange(hsv, (0, 0, 205), (179, 55, 255))
+        # Smoke darkens the otherwise complete selection border. Its neutral
+        # gray pixels still support the same closed shape and soil interior.
+        white = cv2.inRange(hsv, (0, 0, 190), (179, 55, 255))
         reference_white = cv2.inRange(cv2.cvtColor(reference[:, :, :3], cv2.COLOR_BGR2HSV), (0, 0, 205), (179, 55, 255))
         shape_matches = []
         for scale in (base,):
@@ -194,11 +239,14 @@ class WheatFarmingVision(FarmingVision):
             response = cv2.matchTemplate(white, shape, cv2.TM_CCOEFF_NORMED)
             for _ in range(3):
                 _, score, _, (x, y) = cv2.minMaxLoc(response)
-                if score < .70:
+                if score < .50:
                     break
                 plot = VisualTarget(x+round(6*scale), y+round(6*scale), round(117*scale), round(65*scale), score)
                 pixels = self.tile_pixels(hsv, plot.center, plot.width/2, plot.height/2)
-                if pixels is not None and ((pixels[:, 0] >= 8) & (pixels[:, 0] <= 16) & (pixels[:, 1] >= 30)).mean() > .7:
+                # Sprouts can hide the lower selection border. The remaining
+                # border still fits the full diamond, whose soil interior is
+                # independently required inside the confirmed crop picker.
+                if pixels is not None and ((pixels[:, 0] >= 8) & (pixels[:, 0] <= 18) & (pixels[:, 1] >= 30)).mean() > (.80 if score < .70 else .70):
                     shape_matches.append(plot)
                 response[max(0, y-30):y+31, max(0, x-60):x+61] = -1
         if len(shape_matches) == 1:
@@ -219,7 +267,7 @@ class WheatFarmingVision(FarmingVision):
         if len(full) == 1:
             self.full_outline = True
             return full[0]
-        white = cv2.inRange(hsv, (0, 0, 205), (179, 55, 255))
+        white = cv2.inRange(hsv, (0, 0, 190), (179, 55, 255))
         contours, _ = cv2.findContours(white, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         base = image.shape[0]/1080
         found = []
@@ -256,42 +304,9 @@ class WheatFarmingVision(FarmingVision):
         return image[cy-dy:cy+dy+1, cx-dx:cx+dx+1][mask]
 
     def empty_tiles(self, frame, plot, limit):
-        """Follow the selected tile's observed lattice through contiguous soil."""
-        if not getattr(self, 'full_outline', False):
-            return []
-        hsv = self._hsv(frame.png)
-        # White selection art extends beyond the plot itself. Derive grid pitch
-        # from repeated furrow textures instead of treating that border as soil.
-        texture = self._soil_texture
-        scale = plot.width/117
-        matches = self._matcher._search(self._frame(frame.png), texture, np.array([scale]), .91, self.cancel, 16)
-        offsets = []
-        for first in matches:
-            for second in matches:
-                x, y = abs(first.center[0]-second.center[0]), abs(first.center[1]-second.center[1])
-                if plot.width*.4 < x < plot.width*.51 and plot.height*.34 < y < plot.height*.52:
-                    offsets.append((x, y))
-        dx, dy = np.median(offsets, axis=0) if len(offsets) >= 4 else ((plot.width-10)/2, (plot.height-10)/2)
-        if min(dx, dy) < 6:
-            return [plot.center]
-        seen, queue, points = set(), deque([(0, 0)]), []
-        while queue and len(points) < min(limit, 98):
-            i, j = queue.popleft()
-            if (i, j) in seen:
-                continue
-            seen.add((i, j))
-            center = (round(plot.center[0]+(i-j)*dx), round(plot.center[1]+(i+j)*dy))
-            if not (frame.width*.12 < center[0] < frame.width*.87 and frame.height*.2 < center[1] < frame.height*.84):
-                continue
-            pixels = self.tile_pixels(hsv, center, dx, dy)
-            if pixels is None:
-                continue
-            soil = (pixels[:, 0] >= 8) & (pixels[:, 0] <= 16) & (pixels[:, 1] >= 65) & (pixels[:, 2] < 245)
-            if float(soil.mean()) < .93:
-                continue
-            points.append(center)
-            queue.extend(((i+1, j), (i, j+1), (i-1, j), (i, j-1)))
-        return points
+        """Inspect every visible cell on the selected tile's measured lattice."""
+        from hayday.wheating_soil import empty_tiles
+        return empty_tiles(self, frame, plot, limit)
 
 
 class WheatCropWorker(FarmingWorker):
@@ -302,10 +317,12 @@ class WheatCropWorker(FarmingWorker):
         self.planted_points = []
         self.plant_before = None
         self.harvest_plan = None
+        self.harvest_grid_plan = None
         self.harvest_plot_centers = False
         self.soil_frame = None
         self.remaining_seed_stock = None
         self.field_size = 0
+        self.field_points = []
         self._wheat_seed_location = None
         self.growth_ready_at = None
         self.growth_timer = None
@@ -346,6 +363,26 @@ class WheatCropWorker(FarmingWorker):
 
     @staticmethod
     def _translated_plot(before, after, point, *, require_visible=True):
+        projected = WheatCropWorker._orb_translated_plot(before, after, point, require_visible=False)
+        if projected is None:
+            from hayday.wheating_restart_camera import farm_transform
+            try:
+                matrix = farm_transform(before, after)
+            except (ValueError, cv2.error):
+                return None
+            # Crop input permits only a near-pure camera translation. Wider
+            # scale changes remain exclusive to the recovery camera workflow.
+            if (matrix is None or abs(np.hypot(matrix[0, 0], matrix[1, 0])-1) > .003
+                    or abs(matrix[1, 0]) > .002):
+                return None
+            projected = tuple(int(round(n)) for n in matrix @ np.array([*point, 1.]))
+        if require_visible and not (after.width*.13 < projected[0] < after.width*.88
+                                    and after.height*.15 < projected[1] < after.height*.88):
+            return None
+        return projected
+
+    @staticmethod
+    def _orb_translated_plot(before, after, point, *, require_visible=True):
         # A picker and animated buildings can consume the generic matcher's
         # feature budget and tilt its affine fit by several pixels. Use broad
         # farm landmarks and verify the displacement as a pure translation.
@@ -433,9 +470,10 @@ class WheatCropWorker(FarmingWorker):
         HSV pass and never schedules another gesture, so normal cycles do not
         pay for a second field scan.
         """
-        if not (self.harvest_plan and self.harvest_plot_centers):
+        grid_plan = self.harvest_grid_plan or (self.harvest_plan if self.harvest_plot_centers else None)
+        if not grid_plan:
             return []
-        before, points = self.harvest_plan
+        before, points = grid_plan
         if not points:
             return []
         shift = self._harvest_shift
@@ -541,13 +579,21 @@ class WheatCropWorker(FarmingWorker):
                 targets = [replace(t, x=t.x+x, y=t.y+y) for t in self.vision._matcher._search(
                     image[y:bottom, x:right], reference, np.array([1.23, 1.26, 1.29])*base, .94,
                     self.cancel_event.is_set, 4)]
+                if not targets:
+                    # Subpixel scaling and field lighting can miss the three
+                    # fast scales. Refine this small, geometrically bounded
+                    # area at the same threshold as the broad item fallback.
+                    targets = [replace(t, x=t.x+x, y=t.y+y) for t in self.vision._matcher._search(
+                        image[y:bottom, x:right], reference, np.linspace(1.20, 1.32, 13)*base, .90,
+                        self.cancel_event.is_set, 4)]
         if not targets:
             targets = self.vision._matcher._search(image[:region[3], :region[2]], reference,
                 np.array([1.26, 1.])*frame.height/1080, .94, self.cancel_event.is_set, 4)
         if not targets:
             targets = self.items.find_item(frame.png, wheat, min_scale=.5, max_scale=2.,
                 region=region, threshold=.90, cancel=self.cancel_event.is_set)
-        targets = [t for t in targets if self._stock_box(frame, t) is not None]
+        targets = [t for t in targets if any(self._stock_box(frame, t, separate=separate) is not None
+                                           for separate in (False, True))]
         self._check()
         if len(targets) == 1:
             self._wheat_seed_location = targets[0]
@@ -610,50 +656,10 @@ class WheatCropWorker(FarmingWorker):
 
     @staticmethod
     def harvest_path(frame, harvest):
-        """A continuous sweep stays inside the selected wheat's yellow foliage."""
-        if harvest.highlight is None:
-            return []
-        hsv = cv2.cvtColor(_decode(frame.png), cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, (18, 155, 150), (36, 255, 255))
-        base = frame.height/1080
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((max(3, round(5*base)),)*2, np.uint8))
-        count, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
-        hx, hy = harvest.highlight.center
-        choices = [(i, stat) for i, stat in enumerate(stats[1:count], 1)
-                   if stat[4] > 500*base**2 and stat[0] <= hx < stat[0]+stat[2]
-                   and stat[1] <= hy < stat[1]+stat[3]]
-        if len(choices) != 1:
-            return []
-        label, (x, y, w, h, _) = choices[0]
-        component = (labels == label).astype(np.uint8)
-        component[:round(frame.height*.20)] = 0
-        component[round(frame.height*.84):] = 0
-        component[:, :round(frame.width*.12)] = 0
-        component[:, round(frame.width*.88):] = 0
-        interior = cv2.erode(component, np.ones((3, 3), np.uint8))
-        allowed = cv2.dilate(component, np.ones((5, 5), np.uint8))
-        step = max(12, round(22*base))
-        candidates = []
-        for row, yy in enumerate(range(int(y+step//2), int(y+h), step)):
-            xs = list(range(int(x+step//2), int(x+w), step))
-            if row % 2:
-                xs.reverse()
-            candidates.extend((xx, yy) for xx in xs if interior[yy, xx])
-        start = harvest.target.center
-        points = [start]
-        while candidates and len(points) < 32:
-            candidates.sort(key=lambda p: np.linalg.norm(np.subtract(points[-1], p)))
-            selected = None
-            for index, point in enumerate(candidates):
-                distance = np.linalg.norm(np.subtract(points[-1], point))
-                line = np.rint(np.linspace(points[-1], point, max(2, round(distance/3)))).astype(int)
-                if allowed[line[:, 1], line[:, 0]].mean() >= .98:
-                    selected = index
-                    break
-            if selected is None:
-                break
-            points.append(candidates.pop(selected))
-        return points if len(points) > 3 else []
+        """Use the same complete diagonal coverage as the field selector."""
+        from hayday.wheating_vision import WheatingVision
+        points = WheatingVision().harvest_sweep(frame)
+        return [harvest.target.center, *points] if points else []
 
     def _saved_frame(self, proof):
         if not isinstance(proof, dict):
@@ -673,21 +679,35 @@ class WheatCropWorker(FarmingWorker):
             return None
 
     def _planted_state(self, before, after, points, plot):
+        states = self._observed_planting(before, after, points, plot)
+        if states is None:
+            return None
+        return 'mature' if all(s == 'mature' for s in states) else 'growing'
+
+    def _observed_planting(self, before, after, points, plot, *, allow_bare=False, allow_unknown=False):
         from hayday.game_scene import farm_scene_vision
         if not farm_scene_vision().ready(after.png) or CameraNavigator._modal_visible(after):
             return None
         moved = self._translated_plot(before, after, points[0])
+        scale = 1.
         if moved is None:
-            return None
-        shift = np.subtract(moved, points[0])
+            if not allow_bare:
+                return None
+            from hayday.wheating_restart_camera import farm_transform
+            matrix = farm_transform(before, after)
+            if matrix is None:
+                return None
+            centers = np.c_[np.asarray(points), np.ones(len(points))] @ matrix.T
+            scale = float(np.hypot(matrix[0, 0], matrix[1, 0]))
+        else:
+            centers = np.asarray(points)+np.subtract(moved, points[0])
         hsv = cv2.cvtColor(self.vision._frame(after.png), cv2.COLOR_BGR2HSV)
-        mature = True
-        for point in points:
-            center = np.add(point, shift)
+        states = []
+        for center in centers:
             if not (after.width*.12 < center[0] < after.width*.88
                     and after.height*.18 < center[1] < after.height*.84):
                 return None
-            pixels = self.vision.tile_pixels(hsv, center, (plot.width-10)/2, (plot.height-10)/2)
+            pixels = self.vision.tile_pixels(hsv, center, (plot.width-10)*scale/2, (plot.height-10)*scale/2)
             if pixels is None:
                 return None
             yellow = (pixels[:, 0] >= 18) & (pixels[:, 0] <= 31) & (pixels[:, 1] >= 140) & (pixels[:, 2] >= 160)
@@ -700,16 +720,27 @@ class WheatCropWorker(FarmingWorker):
                 ripe = float((cv2.inRange(body, (18, 140, 160), (31, 255, 255)) > 0).mean()) >= .4
             green = (pixels[:, 0] >= 28) & (pixels[:, 0] <= 90) & (pixels[:, 1] > 70) & (pixels[:, 2] > 70)
             soil = (pixels[:, 0] >= 8) & (pixels[:, 0] <= 18) & (pixels[:, 1] >= 65) & (pixels[:, 2] < 245)
-            if not ripe and not (float(green.mean()) >= .035 and float(soil.mean()) >= .45):
-                return None
-            mature = mature and ripe
-        return 'mature' if mature else 'growing'
+            if allow_bare and float(soil.mean()) >= .93 and float(green.mean()) < .035:
+                states.append('bare')
+            elif ripe:
+                states.append('mature')
+            elif ((float(green.mean()) >= .035 and float(soil.mean()) >= .45
+                   and float(yellow.mean()) < .15)
+                  or (float(green.mean()) >= .40 and float(soil.mean()) >= .055
+                      and float(green.mean()+soil.mean()) >= .78)):
+                states.append('growing')
+            else:
+                if allow_unknown:
+                    states.append('unknown')
+                else:
+                    return None
+        return tuple(states)
 
     def _resume_planted(self, frame, icon, key, entry):
         """Confirm an interrupted planting from current plants; never replay it."""
         before = self._saved_frame(entry.get('plant_before'))
         points = entry.get('points')
-        if (before is None or not isinstance(points, list) or not 1 <= len(points) <= 98
+        if (before is None or not isinstance(points, list) or not 1 <= len(points) <= 512
                 or any(not isinstance(p, list) or len(p) != 2 or any(type(n) is not int for n in p)
                        or not 0 <= p[0] < frame.width or not 0 <= p[1] < frame.height for p in points)
                 or len({tuple(p) for p in points}) != len(points)):
@@ -723,15 +754,20 @@ class WheatCropWorker(FarmingWorker):
         previous, previous_state = None, None
         fresh = frame
         for observation in range(8):
-            second = self._planted_state(before, fresh, points, plot)
-            if (second is not None and second == previous_state
+            second = self._observed_planting(before, fresh, points, plot, allow_bare=True,
+                                            allow_unknown=True)
+            if (second is not None and previous_state is not None
                     and previous is not None and fresh.captured_at
                     and fresh.captured_at != previous.captured_at):
-                frame = previous
-                break
+                agreed = tuple(a if a == b else 'unknown'
+                               for a, b in zip(previous_state, second, strict=True))
+                if any(s != 'unknown' for s in agreed):
+                    second = agreed
+                    frame = previous
+                    break
             # Clouds and crop animation can briefly obscure a single tile.
-            # Keep the same per-plot proof and require two consecutive clear
-            # captures rather than restarting the game on one unclear frame.
+            # Require agreement per tile across two captures. An unstable tile
+            # stays scheduled, without invalidating its confirmed neighbors.
             previous, previous_state = fresh, second
             if observation < 7:
                 self._pause(.25)
@@ -740,10 +776,11 @@ class WheatCropWorker(FarmingWorker):
             return ResourceResult('unsupported',
                 'Some attempted wheat plots are not visibly planted in two fresh matching field observations; no gesture was replayed.')
         self.plant_before = before
-        self.planted_points = [tuple(p) for p in points]
+        self.planted_points = [tuple(p) for p, kind in zip(points, second, strict=True) if kind in {'growing', 'mature'}]
+        self.field_points = [tuple(p) for p in points]
         self.field_size = len(points)
         self.remaining_seed_stock = None  # Inventory may have changed while stopped.
-        self.resumed_mature = second == 'mature'
+        self.resumed_mature = all(kind == 'mature' for kind in second)
         remaining = self.growth_duration
         try:
             remaining = max(0., min(remaining, datetime.fromisoformat(entry['updated_at']).timestamp()
@@ -752,8 +789,13 @@ class WheatCropWorker(FarmingWorker):
             pass
         self.growth_ready_at = time.monotonic()+(0 if self.resumed_mature else remaining)
         proof = [self._evidence(f, entry['operation'], f'plant_reconciled_{i}') for i, f in enumerate((frame, fresh))]
-        self._record(key, 'growing', replanted=True, planted_count=len(points), plant_after=proof, recovered=True)
-        return ResourceResult('waiting', f'Verified wheat on all {len(points)} previously attempted plots without repeating planting.')
+        planted = len(self.planted_points)
+        deferred = [list(p) for p, kind in zip(points, second, strict=True) if kind in {'bare', 'unknown'}]
+        self._record(key, 'growing', replanted=True, planted_count=planted, plant_after=proof,
+                     recovered=True, recovered_bare=second.count('bare'),
+                     deferred_points=deferred, unverified_count=second.count('unknown'))
+        return ResourceResult('waiting', f'Verified {planted} planted plots; '
+            f'{len(deferred)} unfinished or obscured plots remain scheduled for fresh field recovery.')
 
     def _resume_replanted_field(self, frame, icon, key, entry):
         """Retire an old replant intent when the entire saved field is ripe again."""
@@ -774,7 +816,7 @@ class WheatCropWorker(FarmingWorker):
             if origin is None:
                 return None
             soil_plot = replace(plot, x=origin[0]-plot.width//2, y=origin[1]-plot.height//2)
-            points = self.vision.empty_tiles(soil, soil_plot, 98)
+            points = self.vision.empty_tiles(soil, soil_plot, 512)
         if not points:
             return None
         previous = None
@@ -809,6 +851,30 @@ class WheatCropWorker(FarmingWorker):
         entry = self.state['items'].get(key, {})
         if entry.get('stage') == 'plant_attempted' and entry.get('points'):
             return self._resume_planted(frame, icon, key, entry)
+        if (entry.get('stage') == 'harvested_needs_replant'
+                and not any(entry.get(name) for name in ('plant_before', 'points', 'replanted'))):
+            from hayday.wheating_harvest_repair import repair_remaining
+            from hayday.wheating_transition import saved_grid
+
+            # A failed/partial picker is not a planting attempt. Clear it so
+            # remaining ripe tiles and bare soil are freshly visible on resume.
+            if self.vision.seed_menu(frame.png):
+                frame = self._close(frame)
+            grid = saved_grid(self, entry)
+            if grid is not None:
+                frame = repair_remaining(self, frame, key, grid)
+        if (entry.get('stage') == 'harvested_needs_replant'
+                and not entry.get('replant_evidence')
+                and not any(entry.get(name) for name in ('plant_before', 'points', 'replanted'))):
+            # A failed picker can leave a valid crop fan open without a saved
+            # picker checkpoint. Clear it and select a fresh soil tile instead
+            # of repeatedly tapping the old exposed-soil sample or tile seam.
+            if self.vision.seed_menu(frame.png):
+                frame = self._close(frame)
+            from hayday.wheating_crop_resume import rediscover_bare_field
+            recovered = rediscover_bare_field(self, frame, icon, key, entry)
+            if recovered is not None:
+                return recovered
         if entry.get('stage') == 'harvested_needs_replant' and entry.get('replant_evidence'):
             # Restore the unobscured field, since the open picker hides tiles.
             # The superclass separately verifies the saved picker before input.
@@ -873,6 +939,9 @@ class WheatCropWorker(FarmingWorker):
             fresh_path = [fresh_path[0], *self._motion.plots(fresh_path[1:], 'harvest')]
         elif self.harvest_plan:
             fresh_path = self._motion.sweep(fresh_path)
+        from hayday.wheating_routes import diagonal_trace
+        fresh_path = diagonal_trace(fresh_path, bounds=(fresh.width*.10, fresh.height*.15,
+                                                       fresh.width*.90, fresh.height*.89))
         timing = self._motion.timing(len(fresh_path))
         operation = uuid.uuid4().hex
         self._fresh(started)
@@ -894,25 +963,20 @@ class WheatCropWorker(FarmingWorker):
         # like seeding. Foliage sweeps need extra samples between their row ends
         # so fast movement cannot jump over an untracked plot.
         duration = self._sweep_duration(fresh_path)
-        if self.harvest_plan and not self.harvest_plot_centers:
-            # The horizontal sweep revisits each tile on adjacent scan lines.
-            # Shorten its travel time while retaining every 32-pixel sample;
-            # plot-center harvesting and planting keep their existing timing.
-            duration = max(250, round(duration*.5))
         spacing = self.harvest_sample_spacing
         if spacing is None and not (self.harvest_plan and self.harvest_plot_centers):
             spacing = max(1, round(32*fresh.height/1080))
         waypoint_hold = self.harvest_waypoint_hold
         if waypoint_hold is None:
-            waypoint_hold = 40 if self.harvest_plan and self.harvest_plot_centers else 0
+            waypoint_hold = 85 if self.harvest_plan and self.harvest_plot_centers else 0
         self.client.drag_path([checked.tool.center, *fresh_path], width=fresh.width, height=fresh.height,
             duration_ms=duration, cancel_event=self.cancel_event,
             time_factors=timing,
             # Reusing evdev removes the old per-open dwell. Explicitly give
-            # each crop center two game frames, including the final crop,
-            # without imposing a hold on every horizontal interpolation point.
+            # each crop center several game frames under multi-instance load,
+            # without imposing a hold on every interpolation point.
             min_waypoint_ms=waypoint_hold,
-            max_step_px=None if self.harvest_plan and self.harvest_plot_centers else spacing)
+            max_step_px=spacing or max(1, round(20*fresh.height/1080)))
         return self._replant_after_harvest(fresh, checked, icon, key, operation)
 
     def _await_harvested_soil(self, before, harvest, key):
@@ -922,7 +986,7 @@ class WheatCropWorker(FarmingWorker):
         evidence_frames = []
         self._replant_grid = None
         self._harvest_shift = None
-        tracked = bool(self.harvest_plan and self.harvest_plot_centers)
+        tracked = bool(self.harvest_grid_plan or (self.harvest_plan and self.harvest_plot_centers))
         for _ in range(12):
             self._pause(.05)
             frame = self._quick_frame()
@@ -965,6 +1029,16 @@ class WheatCropWorker(FarmingWorker):
                 return ResourceResult('unsupported', 'The harvested field could not be aligned after its rewards cleared.')
             soil = replace(soil, x=point[0]-soil.width//2, y=point[1]-soil.height//2)
             after = cleared
+        else:
+            from hayday.wheating_harvest_repair import repair_remaining
+            from hayday.wheating_transition import tracked_soil
+
+            repaired = repair_remaining(self, after, key, self._replant_grid)
+            if repaired is not after:
+                after = repaired
+                soil = tracked_soil(self, after)
+                if soil is None:
+                    return ResourceResult('changed', 'The cleared field needs a fresh soil selection after harvest repair.')
         residual = self._residual_grid_points(after)
         proof = self._evidence(after, operation, 'harvest_clear')
         grid_proof = ({**self._evidence(self._replant_grid[0], operation, 'replant_grid'),
@@ -1032,6 +1106,7 @@ class WheatCropWorker(FarmingWorker):
         if prepared and (prepared[2] is not frame or time.monotonic()-prepared[3] > 1.):
             prepared = None
         self.planted_points = []
+        self.field_points = []
         self.plant_before = None
         self.resumed_mature = False
         self.growth_ready_at = None
@@ -1064,20 +1139,43 @@ class WheatCropWorker(FarmingWorker):
         if grid:
             soil_points = planting_grid(self, frame, plot, grid)
             origin = plot.center
+            # A previous sweep may have missed a visible boundary row. A
+            # complete fresh soil grid can replace the old route, so that
+            # omission cannot perpetuate itself across later wheat cycles.
+            clear_origin = self._translated_plot(frame, soil_frame, plot.center, require_visible=False)
+            if clear_origin is not None:
+                clear_plot = replace(plot, x=clear_origin[0]-plot.width//2,
+                                     y=clear_origin[1]-plot.height//2)
+                observed = self.vision.empty_tiles(soil_frame, clear_plot, 512)
+                if observed and len(observed) >= len(soil_points or ()):
+                    soil_points = observed
+                    origin = clear_origin
         else:
             origin = self._translated_plot(frame, soil_frame, plot.center, require_visible=False) if soil_frame is not frame else plot.center
             if origin is None:
                 return ResourceResult('changed', 'The whole field could not be aligned with its seed picker.')
             soil_plot = replace(plot, x=origin[0]-plot.width//2, y=origin[1]-plot.height//2)
-            soil_points = self.vision.empty_tiles(soil_frame, soil_plot, 98)
+            soil_points = self.vision.empty_tiles(soil_frame, soil_plot, 512)
+        if self.vision.full_outline:
+            # The confirmed seed picker independently identifies its selected
+            # soil tile. A weak furrow match there must not strand the other
+            # cells or move the drag's first contact to a different tile.
+            tolerance = max(6, plot.width*.12)
+            soil_points = [tuple(map(int, origin)),
+                           *(p for p in (soil_points or ()) if math.dist(p, origin) > tolerance)][:512]
         if not soil_points:
             return ResourceResult('unsupported', 'The full selected plot outline is needed to trace one planting sweep.')
         self.field_size = len(soil_points)
+        self.field_points = [tuple(map(int, np.add(p, np.subtract(plot.center, origin))))
+                             for p in soil_points]
         if len(soil_points) > available:
             self.progress(f'Wheating: using {available} seeds in one sweep across the {len(soil_points)}-plot field; the next harvest will supply the rest.')
             soil_points = soil_points[:available]
         shift = np.subtract(plot.center, origin)
         points = [tuple(map(int, np.add(p, shift))) for p in soil_points]
+        if any(not (frame.width*.12 < x < frame.width*.88 and frame.height*.18 < y < frame.height*.88)
+               for x, y in points):
+            return ResourceResult('changed', 'The complete soil grid needs camera positioning before planting.')
         if len(points) < 2:
             self.plant_before = frame
             planted_at = time.monotonic()
@@ -1101,25 +1199,40 @@ class WheatCropWorker(FarmingWorker):
         if (not self._same_target(plot, checked, fresh) or not self._same_target(seed, fresh_seed, fresh)
                 or self._count(fresh, fresh_seed) != available):
             return ResourceResult('changed', 'The wheat seed stock or empty field changed before its sweep.')
-        # Floating particles can briefly cover individual tiles. Sweep only the
-        # soil verified in both observations; rediscover the remainder afterward.
+        # Retain the union of aligned observations. A particle hiding one tile
+        # must not remove it from the drag. Seed identity and stock were checked
+        # above; attempting to seed an occupied cell is harmless.
         if soil_frame is frame and grid is None:
-            current_points = self.vision.empty_tiles(fresh, checked, available)
-            points = [p for p in points if p in current_points]
+            current_points = self.vision.empty_tiles(fresh, checked, 512)
+            for p in current_points:
+                if all(math.dist(p, old) > max(6, plot.width*.12) for old in self.field_points):
+                    self.field_points.append(p)
+            self.field_size = len(self.field_points)
+            # Keep coverage debt separately from the stock-limited gesture.
+            # The union can uncover additional cells after the first reading.
+            points = self.field_points[:available]
+            if any(not (fresh.width*.12 < x < fresh.width*.88 and fresh.height*.18 < y < fresh.height*.88)
+                   for x, y in points):
+                return ResourceResult('changed', 'The expanded soil grid needs camera positioning before planting.')
         if not points or points[0] != plot.center:
             return ResourceResult('changed', 'The selected soil became obscured before planting.')
         ordered = self._motion.plots(points, 'seed')
-        timing = self._motion.timing(len(ordered))
+        from hayday.wheating_routes import diagonal_trace
+        route = diagonal_trace(ordered, bounds=(fresh.width*.12, fresh.height*.18,
+                                               fresh.width*.88, fresh.height*.88))
+        timing = self._motion.timing(len(route))
         operation = uuid.uuid4().hex
         self._fresh(started)
         proof = self._evidence(fresh, operation, 'plant_before')
         self._record(key, 'plant_attempted', operation=operation, available_before=available,
-                     plant_before=proof, points=[list(p) for p in ordered], time_factors=list(timing))
+                     plant_before=proof, points=[list(p) for p in ordered],
+                     seed_route=[list(p) for p in route], time_factors=list(timing))
         self._check()
         self._fresh(started)
-        self.client.drag_path([fresh_seed.center, *ordered], width=fresh.width, height=fresh.height,
-                              duration_ms=self._sweep_duration(ordered), cancel_event=self.cancel_event,
-                              min_waypoint_ms=50, time_factors=timing)
+        self.client.drag_path([fresh_seed.center, *route], width=fresh.width, height=fresh.height,
+                              duration_ms=self._sweep_duration(route), cancel_event=self.cancel_event,
+                              min_waypoint_ms=85, max_step_px=max(1, round(20*fresh.height/1080)),
+                              time_factors=timing)
         planted_at = time.monotonic()
         self.growth_ready_at = planted_at+self.growth_duration
         # Releasing over a planted tile can open its growth timer across several
@@ -1164,4 +1277,6 @@ class WheatCropWorker(FarmingWorker):
                 self._close(after)
                 return ResourceResult('waiting', f'Planted wheat on {len(ordered)} observed empty plots.', {'planted': len(ordered)})
             previous = confirmed
-        return ResourceResult('unsupported', 'The wheat sweep was sent once but not every plot confirmed growth; its intent remains pending.')
+        # Resolve partial success immediately, retaining the exact unplanted
+        # cells for the next fresh picker rather than blocking the whole farm.
+        return self._resume_planted(after, icon, key, self.state['items'][key])

@@ -22,6 +22,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from hayday.adb import Device, Screenshot  # noqa: E402
+from hayday.emulators import EmulatorConnection  # noqa: E402
 from hayday.services import Services  # noqa: E402
 from hayday.ui import BG, REFERENCE, MainWindow  # noqa: E402
 
@@ -62,7 +63,7 @@ def main():
                     page.add(screenshot)
                 await asyncio.sleep(arguments.seconds_per_route)
                 await window.initialize()
-                for state in ("empty", "populated"):
+                for state in ("empty", "populated", "multi-running"):
                     if state == "populated":
                         buffer = io.BytesIO()
                         Image.new("RGB", (960, 540), "#377651").save(buffer, format="PNG")
@@ -74,15 +75,38 @@ def main():
                             Device("emulator-5554", "device", "Smoke test emulator"),
                             Device("127.0.0.1:5565", "offline", "Offline test emulator"),
                         ]
+                        services.instances = [
+                            EmulatorConnection('MuMu', '0', 'Android Device', Path('mumu/adb.exe'), '127.0.0.1:16384'),
+                            EmulatorConnection('BlueStacks', 'Pie64', 'Farm', Path('blue/HD-Adb.exe'), '127.0.0.1:5555'),
+                            EmulatorConnection('MuMu', '2', 'Android Device-1-1', Path('mumu/adb.exe'), '127.0.0.1:16448'),
+                        ]
                         services.data.save_capture(services.frame.png)
                         window.reference_shown = False
+                    if state == 'multi-running':
+                        services.select_wheating_instances([i.key for i in services.instances])
+                        services.wheating_progress = {'instances': {
+                            instance.key: dict(name=instance.display_name, serial=instance.endpoint,
+                                status='running', planted=51 if index == 0 else 9,
+                                listed=51 if index == 0 else 9, message='Wheat is growing',
+                                frame=services.frame)
+                            for index, instance in enumerate(services.instances)}}
+                        window.wheating_running = True
+                        window.wheating_planted = window.wheating_listed = 69
                     for route in ROUTES:
                         window.navigate(route)
                         await asyncio.sleep(arguments.seconds_per_route)
+                        if state == 'multi-running' and route == 'overview':
+                            assert len(window._fleet_buttons) == 3
+                            assert all(not view.disabled and not stop.disabled
+                                       for view, stop in window._fleet_buttons.values())
+                            assert not window.wheating_reset_button.visible
+                            window._fleet_buttons[services.instances[1].key][0].on_click(None)
+                            assert services.frame_serial == services.instances[1].endpoint
                         if screenshot:
                             png = await screenshot.capture(pixel_ratio=1.0)
                             (arguments.screenshots / f"{state}-{route}.png").write_bytes(png)
                         report["routes"].append(f"{state}/{route}")
+                window.wheating_running = False
                 report["passed"] = not report["errors"]
             except Exception:
                 report["errors"].append(traceback.format_exc())
@@ -100,6 +124,7 @@ def main():
         with (
             patch("hayday.services.discover_adb_executables", return_value=[]),
             patch("hayday.services.discover_bluestacks_instances", return_value=[]),
+            patch("hayday.services.discover_mumu_instances", return_value=[]),
             patch(
                 "hayday.services.AdbClient",
                 side_effect=AssertionError("Smoke test must not issue ADB commands"),

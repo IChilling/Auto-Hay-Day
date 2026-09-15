@@ -150,8 +150,16 @@ class WheatSiloFull:
                 close = self.observe(frame)
                 if close:
                     self._dismiss(SiloFullDetected(frame, close))
+            prepare = getattr(fields, 'prepare_workspace', None)
+            if prepare is not None:
+                prepare(self.run.frame)
             group = getattr(fields, '_group', None)
             grouped = max(len(group.points), len(group.view.cells) if group.view else 0) if group else 0
+            if recovery['released'] == 0 and not recovery.get('reserve_verified', False):
+                measure = getattr(fields, 'bare_seed_reserve', None)
+                if callable(measure):
+                    recovery['reserve'] = max(recovery['reserve'], measure())
+                recovery['reserve_verified'] = True
             self.run.state['seed_reserve'] = max(recovery['reserve'], len(getattr(fields, '_known_points', ())), grouped, 1)
             self.run.state['wheat_empty'] = recovery.get('surplus_empty', False)
             shop._stock_empty_until = 0.

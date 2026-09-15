@@ -5,6 +5,7 @@ import hashlib
 import shutil
 import threading
 import time
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from hayday.adb import AdbClient, AdbError
@@ -15,9 +16,75 @@ class WheatingServices:
         self._wheating_runner = None
         self.last_wheating_run = None
         self.wheating_progress = {}
+        self.wheating_preview_key = None
+
+    def select_wheating_instances(self, keys):
+        with self._lock:
+            self._ensure_open()
+            if self._wheating_runner:
+                raise AdbError('Stop Wheating before changing its selected instances.')
+            if not set(keys) <= {i.key for i in self.instances}:
+                raise AdbError('An instance is no longer available. Discover again.')
+            self.save_settings(replace(self.settings, wheating_instances=tuple(keys)))
+
+    def select_wheating_preview(self, key):
+        with self._lock:
+            states = self.wheating_progress.get('instances', {})
+            if key not in states:
+                return
+            self.wheating_preview_key = key
+            state = states[key]
+            if state.get('frame'):
+                self.frame, self.frame_serial = state['frame'], state['serial']
+
+    def _start_wheating_fleet(self, cancel_event, progress, max_seconds, reset_restart_cooldown):
+        from hayday.wheating_fleet import WheatingFleet
+
+        with self._lock:
+            self._ensure_open()
+            if self._wheating_runner or self._order_runner or self._board_runner or self._captures_active:
+                raise AdbError('Stop the other workflow before starting Wheating.')
+            choices = {i.key: i for i in self.instances}
+            if not set(self.settings.wheating_instances) <= choices.keys():
+                raise AdbError('A selected instance is unavailable. Discover and review the selection.')
+            selected = [choices[key] for key in self.settings.wheating_instances]
+            self.wheating_preview_key = selected[0].key
+            self.wheating_progress = {}
+
+            def publish(update):
+                with self._lock:
+                    if self._closed or update['sequence'] <= self.wheating_progress.get('sequence', 0):
+                        return
+                    current = update['instances'].get(self.wheating_preview_key, {})
+                    if current.get('frame'):
+                        self.frame, self.frame_serial = current['frame'], current['serial']
+                    self.wheating_progress = dict(update)
+                    output = {**update, 'frame': current.get('frame')}
+                if progress:
+                    progress(output)
+
+            fleet = WheatingFleet(selected, self.data.root/'diagnostics'/'wheating',
+                progress=publish, cancel_event=cancel_event, max_seconds=max_seconds,
+                reset_restart_cooldown=reset_restart_cooldown)
+            self._wheating_runner = fleet
+        try:
+            result = fleet.run()
+            with self._lock:
+                if not self._closed:
+                    self.last_wheating_run = result
+                    for key, outcome in result.results.items():
+                        self.data.log('INFO' if outcome.success else 'WARNING',
+                            f'{choices[key].display_name}: {outcome.message} Evidence: {outcome.diagnostics}', 'wheating')
+            return result
+        finally:
+            with self._lock:
+                if self._wheating_runner is fleet:
+                    self._wheating_runner = None
 
     def start_wheating(self, cancel_event: threading.Event | None = None, progress=None, max_seconds=None,
                       *, reset_restart_cooldown=False):
+        if self.settings.wheating_instances:
+            return self._start_wheating_fleet(cancel_event, progress, max_seconds, reset_restart_cooldown)
         from hayday.wheating import WheatingRunner
 
         with self._lock:
@@ -26,7 +93,7 @@ class WheatingServices:
                 raise AdbError('Another game workflow or capture is already running. Stop it first.')
             original_client, serial = self.client, self.connected_serial
             if not original_client or not serial:
-                raise AdbError('Select an online BlueStacks device first.')
+                raise AdbError('Select an online emulator device first.')
             client = AdbClient(self.settings.adb_path, serial=serial, timeout_seconds=30)
 
             def publish(update):
@@ -70,10 +137,13 @@ class WheatingServices:
                 if self._wheating_runner is runner:
                     self._wheating_runner = None
 
-    def cancel_wheating(self):
+    def cancel_wheating(self, key=None):
         with self._lock:
             if self._wheating_runner:
-                self._wheating_runner.cancel()
+                if key is None:
+                    self._wheating_runner.cancel()
+                elif hasattr(self._wheating_runner, 'instances'):
+                    self._wheating_runner.cancel(key)
 
     def reset_wheating(self) -> str:
         """Reset the selected device's Wheating state and relaunch Hay Day.

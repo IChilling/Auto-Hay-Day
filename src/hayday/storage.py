@@ -32,12 +32,20 @@ class Settings:
     selected_serial: str = ""
     preview_interval_seconds: float = 3.0
     farm_name: str = "My farm"
+    wheating_instances: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         self.validate()
 
     def validate(self) -> None:
         """Validate and normalize fields, including instances edited after creation."""
+        keys = self.wheating_instances
+        if (not isinstance(keys, (list, tuple)) or len(keys) > 32
+                or any(not isinstance(k, str) or not k or len(k) > 1024
+                       or any(ord(c) < 32 for c in k) for k in keys)
+                or len(set(keys)) != len(keys)):
+            raise ValueError('wheating_instances must contain unique emulator instance keys.')
+        self.wheating_instances = tuple(keys)
         for name in ("adb_path", "endpoint", "selected_serial", "farm_name"):
             value = getattr(self, name)
             if not isinstance(value, str):

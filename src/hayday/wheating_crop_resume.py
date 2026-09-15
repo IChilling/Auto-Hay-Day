@@ -53,7 +53,7 @@ def saved_soil_grid(worker, entry):
     if origin is None:
         return None
     soil_plot = replace(plot, x=origin[0]-plot.width//2, y=origin[1]-plot.height//2)
-    points = worker.vision.empty_tiles(soil, soil_plot, 98)
+    points = worker.vision.empty_tiles(soil, soil_plot, 512)
     return (soil, points, plot) if points else None
 
 

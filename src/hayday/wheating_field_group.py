@@ -47,7 +47,7 @@ def lattice_pitch(points):
     return tuple(map(float, pitch))
 
 
-def observe_group(frame, seeds, pitch, soil_texture):
+def observe_group(frame, seeds, pitch, soil_texture, *, bounded=False):
     """Follow one observed lattice, stopping at grass, roads and other objects."""
     from hayday.wheating_crop import WheatFarmingVision
     image = _decode(frame.png)
@@ -60,28 +60,38 @@ def observe_group(frame, seeds, pitch, soil_texture):
         indices.append((round((x+y)/2), round((y-x)/2)))
     known = set(indices)
     seen, found, queue = set(), {}, deque(indices)
-    texture = None
+    textures = None
 
     def furrows(x, y):
-        nonlocal texture
-        if texture is None:
-            color, mask = ResourceVision._scaled(soil_texture, dx/53.5)
-            texture = cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), mask
-        ref, mask = texture
-        rh, rw = ref.shape
-        crop = image[max(0, y-rh-8):min(frame.height, y+rh+8),
-                     max(0, x-rw-8):min(frame.width, x+rw+8)]
-        if crop.shape[0] < rh or crop.shape[1] < rw:
-            return False
-        scores = cv2.matchTemplate(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY), ref,
-                                   cv2.TM_CCOEFF_NORMED, mask=mask)
-        return float(np.nan_to_num(scores, nan=0., posinf=0., neginf=0.).max()) >= .91
+        nonlocal textures
+        if textures is None:
+            references = soil_texture if isinstance(soil_texture, (tuple, list)) else (soil_texture,)
+            textures = []
+            for reference in references:
+                color, mask = ResourceVision._scaled(reference, dx/53.5)
+                textures.append((cv2.cvtColor(color, cv2.COLOR_BGR2GRAY), mask))
+        for ref, mask in textures:
+            rh, rw = ref.shape
+            crop = image[max(0, y-rh-8):min(frame.height, y+rh+8),
+                         max(0, x-rw-8):min(frame.width, x+rw+8)]
+            if crop.shape[0] < rh or crop.shape[1] < rw:
+                continue
+            scores = cv2.matchTemplate(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY), ref,
+                                       cv2.TM_CCOEFF_NORMED, mask=mask)
+            if float(np.nan_to_num(scores, nan=0., posinf=0., neginf=0.).max()) >= .91:
+                return True
+        return False
 
-    while queue and len(seen) < 500:
+    while queue and len(seen) < 512*5:
         ij = queue.popleft()
         if ij in seen:
             continue
         seen.add(ij)
+        if bounded and ij not in known:
+            # The complete bare-soil footprint was recorded before planting.
+            # Yellow overhangs and grass beside buildings are not extra plots.
+            # New/disconnected soil is still discovered by the field worker.
+            continue
         i, j = ij
         x, y = np.rint(origin+((i-j)*dx, (i+j)*dy)).astype(int)
         if not (frame.width*.12 < x < frame.width*.88 and frame.height*.20 < y < frame.height*.84):
@@ -100,13 +110,13 @@ def observe_group(frame, seeds, pitch, soil_texture):
         elif soil >= .90 and (ij in known or furrows(x, y)):
             kind = 'bare'
         elif ((green >= .40 and soil >= .055 and green+soil >= .78)
-              or (ij in known and green >= .035 and soil >= .45)):
+              or (ij in known and green >= .035 and soil >= .45 and yellow < .15)):
             kind = 'growing'
         else:
             continue
         found[ij] = (int(x), int(y), kind)
         queue.extend(((i+1, j), (i-1, j), (i, j+1), (i, j-1)))
-        if len(found) > 98:
+        if len(found) > 512:
             return None
     if len(found) < 3 or sum(ij in found for ij in known) < max(2, len(known)*.65):
         return None
@@ -147,6 +157,14 @@ class WheatFieldGroup:
         self.points = list(getattr(fields, '_known_points', []))
         layout = getattr(fields.run, 'state', {}).get('field_layout')
         self.proof = layout.get('before') if isinstance(layout,dict) else None
+        observed = layout.get('observed_points') if isinstance(layout, dict) else None
+        if (self.reference is not None and isinstance(observed, list) and 3 <= len(observed) <= 512
+                and all(isinstance(p, list) and len(p) == 2 and all(type(n) is int for n in p)
+                        and 0 <= p[0] < self.reference.width and 0 <= p[1] < self.reference.height
+                        for p in observed)
+                and len({tuple(p) for p in observed}) == len(observed)
+                and lattice_pitch(observed) is not None):
+            self.points = [tuple(p) for p in observed]
         self._load_reference()
 
     def _load_reference(self):
@@ -154,7 +172,7 @@ class WheatFieldGroup:
         if not isinstance(saved,dict) or saved.get('version') != 1:
             return
         points, proof = saved.get('points'), saved.get('reference')
-        if (not isinstance(points, list) or not len(self.points) < len(points) <= 98
+        if (not isinstance(points, list) or not len(self.points) < len(points) <= 512
                 or not isinstance(proof, dict)):
             return
         width, height = proof.get('width'), proof.get('height')
@@ -199,7 +217,7 @@ class WheatFieldGroup:
             if moved is None:
                 continue
             seeds = np.asarray(points)+np.subtract(moved, points[0])
-            self.view = observe_group(frame, seeds, pitch, fields.worker.vision._soil_texture)
+            self.view = observe_group(frame, seeds, pitch, fields.worker.vision._soil_textures, bounded=True)
             if self.view is not None:
                 if before is fields._known_before and before is not self.reference:
                     # The larger historical reference failed live validation.
@@ -267,7 +285,8 @@ class WheatFieldGroup:
 
     def planted(self):
         self._frame = None
-        planted = getattr(self.fields.worker, 'planted_points', [])
+        planted = (getattr(self.fields.worker, 'field_points', None)
+                   or getattr(self.fields.worker, 'planted_points', []))
         actual = self.fields.run.state.get('field_layout', {})
         if planted and len(planted) >= len(self.points) and lattice_pitch(planted) is not None:
             self.reference = self.fields.worker.plant_before

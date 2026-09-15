@@ -54,13 +54,27 @@ class WheatFields:
         from hayday.wheating_field_group import WheatFieldGroup
         self._group = WheatFieldGroup(self)
 
+    def prepare_workspace(self, frame=None):
+        """Position the farm before the first crop, reserve, or shop attempt."""
+        if not getattr(self.run, '_workspace_needs_restore', False):
+            return frame if frame is not None else self.run.frame
+        # Let the shop worker reconcile/close an already open shop first.
+        if frame is not None and self.run.vision.shop(frame).kind in {'overview', 'composer', 'edit'}:
+            return frame
+        from hayday.wheating_restart_camera import restore_workspace
+        self.run.publish('Wheating: preparing the startup camera before crop and shop work.')
+        restored = restore_workspace(self.run, self)
+        self.run._workspace_needs_restore = False
+        self.run.publish('Wheating: startup workspace verified. The field and shop are ready.')
+        return restored
+
     def _load_layout(self):
         """Reuse planting evidence; live translation and wheat still gate input."""
         layout = getattr(self.run, 'state', {}).get('field_layout')
         if not isinstance(layout, dict) or layout.get('version') != 2:
             return
         proof, points = layout.get('before'), layout.get('points')
-        if not isinstance(proof, dict) or not isinstance(points, list) or not 1 <= len(points) <= 98:
+        if not isinstance(proof, dict) or not isinstance(points, list) or not 1 <= len(points) <= 512:
             return
         width, height = proof.get('width'), proof.get('height')
         if any(type(n) is not int or not 2 <= n <= 16384 for n in (width, height)):
@@ -97,7 +111,9 @@ class WheatFields:
                 or self.worker._saved_frame(proof) != before):
             proof = self.worker._evidence(before, uuid.uuid4().hex, 'field_layout')
         self.run.state['field_layout'] = {'version': 2, 'before': proof,
-            'points': [list(map(int, point)) for point in points]}
+            'points': [list(map(int, point)) for point in points],
+            'observed_points': [list(map(int, point)) for point in
+                                (getattr(self.worker, 'field_points', None) or points)]}
         self._known_before, self._known_points = before, list(points)
         if group := getattr(self, '_group', None):
             group.planted()
@@ -237,7 +253,7 @@ class WheatFields:
             self.run._shop_anchor = frame, shop
         # Each iteration rediscovers remaining soil/wheat after the last gesture.
         # Growth happens while subsequent plots and shop sales are serviced.
-        for _ in range(200):
+        for _ in range(512):
             self.run.check()
             self._relocate(frame)
             group = getattr(self, '_group', None)
@@ -296,6 +312,7 @@ class WheatFields:
                 frame = fresh
                 continue
             self.worker.harvest_plan = None
+            self.worker.harvest_grid_plan = None
             self.worker.harvest_plot_centers = False
             self.worker.harvest_route_mode = None
             self.worker.harvest_observed_points = 0
@@ -304,19 +321,35 @@ class WheatFields:
             self.worker.harvest_waypoint_hold = None
             self.worker.soil_frame = fresh
             if kind == 'ripe':
-                sweep = tracked or self.run.vision.harvest_sweep(fresh)
+                # Always cover live foliage. A previous planting cache may
+                # omit a single edge crop that overlaps its neighbors' sprites.
+                sweep = self.run.vision.harvest_sweep(fresh)
+                if tracked:
+                    from hayday.wheating_field_group import lattice_pitch
+                    from hayday.wheating_routes import diagonal_mask_sweep
+                    pitch = lattice_pitch(tracked)
+                    if pitch:
+                        mask = np.zeros((fresh.height, fresh.width), np.uint8)
+                        dx, dy = pitch
+                        for x, y in tracked:
+                            cv2.fillConvexPoly(mask, np.int32([(x-dx*1.15,y), (x,y-dy*1.15),
+                                                             (x+dx*1.15,y), (x,y+dy*1.15)]), 1)
+                        mask[:round(fresh.height*.16)] = 0
+                        mask[round(fresh.height*.87):] = 0
+                        mask[:, :round(fresh.width*.11)] = 0
+                        mask[:, round(fresh.width*.89):] = 0
+                        sweep = [*sweep, *diagonal_mask_sweep(mask,
+                            step=max(8, round(dy*.6)), margin=3)]
+                    self.worker.harvest_grid_plan = fresh, tracked
                 if not sweep:
                     self.run.block('The whole wheat field could not be traced for a single harvest sweep.')
                 self.worker.harvest_plan = fresh, sweep
-                self.worker.harvest_plot_centers = bool(tracked)
-                self.worker.harvest_route_mode = (
-                    'known_grid' if known and len(observed) == len(tracked)
-                    else 'known_grid_relaxed' if known else 'foliage')
+                self.worker.harvest_plot_centers = False
+                self.worker.harvest_route_mode = 'diagonal_grid_and_foliage' if tracked else 'diagonal_foliage'
                 self.worker.harvest_observed_points = len(observed)
                 self.worker.harvest_expected_points = len(tracked)
-                self.worker.harvest_sample_spacing = None if tracked else max(
-                    1, round(16*fresh.height/1080))
-                self.worker.harvest_waypoint_hold = None if tracked else 16
+                self.worker.harvest_sample_spacing = max(1, round(16*fresh.height/1080))
+                self.worker.harvest_waypoint_hold = 24
             selected, expected, control, ready = self._select(fresh, checked, kind)
             if not ready:
                 if self.run.diagnostics:
@@ -359,11 +392,13 @@ class WheatFields:
                 continue
             if not result or not entry.get('replanted') or entry.get('stage') != 'growing':
                 self.run.block(result.message if result else 'The selected wheat controls are unsupported.')
-            gain = max(1, len(self.worker.planted_points))
+            gain = len(self.worker.planted_points) if 'recovered_bare' in entry else max(1, len(self.worker.planted_points))
             planted += gain
             self.run.planted += gain
             self.last_stock = self.worker.remaining_seed_stock
             self.next_harvest = min(self.next_harvest, self.worker.growth_ready_at or time.monotonic()+self.worker.growth_duration)
+            if entry.get('deferred_points'):
+                self.next_harvest = min(self.next_harvest, time.monotonic()+15)
             self.run.state['field_ready_at'] = time.time()+max(0., self.next_harvest-time.monotonic())
             self.run.state['wheat_empty'] = self.last_stock == 0
             self._remember_layout(entry)
@@ -371,7 +406,10 @@ class WheatFields:
             # Only completed work is retired; uncertain gestures survive restart.
             self.worker.state['items'].pop(key)
             self.run.save_json(self.worker.state_path, self.worker.state)
-            self.run.publish(f'Wheating: planted {gain}/{self.worker.field_size} plots in one sweep. Checking wheat sales while it grows.')
+            if entry.get('recovered_bare'):
+                self.run.publish(f'Wheating: reconciled {gain} planted and {entry["recovered_bare"]} bare plots. Resuming the remaining soil.')
+            else:
+                self.run.publish(f'Wheating: planted {gain}/{self.worker.field_size} plots in one sweep. Checking wheat sales while it grows.')
             frame = self._clear()
             self._relocate(frame)
             if not self.run.vision.plots(frame, 'empty'):
@@ -425,11 +463,26 @@ class WheatFields:
             return None
         origin = self._known_points[0]
         moved = self.worker._translated_plot(self._known_before, frame, origin, require_visible=False)
+        scaled = False
         if moved is None:
-            return None
-        shift = np.subtract(moved, origin)
-        points = [tuple(map(int, np.add(point, shift)-(0, round(16*frame.height/1080))))
-                  for point in self._known_points]
+            # Startup pinch gestures can settle at a slightly different zoom.
+            # Reproject a previously verified layout only when distributed farm
+            # landmarks agree; every projected crop must then be visibly ripe.
+            from hayday.wheating_restart_camera import farm_transform
+            matrix = farm_transform(self._known_before, frame)
+            if matrix is None:
+                return None
+            projected = np.c_[np.asarray(self._known_points), np.ones(len(self._known_points))] @ matrix.T
+            from hayday.wheating_field_group import lattice_pitch
+            pitch = lattice_pitch(projected)
+            base = frame.height/1080
+            if pitch is None or not (20*base < pitch[0] < 100*base and 10*base < pitch[1] < 60*base):
+                return None
+            scaled = True
+        else:
+            projected = np.asarray(self._known_points)+np.subtract(moved, origin)
+        points = [tuple(map(int, np.rint(point)-(0, round(16*frame.height/1080))))
+                  for point in projected]
         hsv = cv2.cvtColor(_decode(frame.png), cv2.COLOR_BGR2HSV)
         observed = []
         for x, y in points:
@@ -439,8 +492,10 @@ class WheatFields:
             wheat = cv2.inRange(patch, (18, 140, 160), (31, 255, 255))
             if (wheat > 0).mean() >= .4:
                 observed.append((x, y))
-        required = max(3, math.ceil(len(points)*float(minimum)))
+        required = len(points) if scaled else max(3, math.ceil(len(points)*float(minimum)))
         if len(observed) < required:
+            return None
+        if scaled and self.run.vision.wheat_outside(frame, points):
             return None
         return points, observed
 
@@ -450,8 +505,12 @@ class WheatFields:
 
     def _center_field(self, frame):
         for _ in range(3):
-            bounds = self.run.vision.field_bounds(frame)
-            if bounds is None and self._known_before is not None and self._known_points:
+            bounds = None
+            bare_bounds = False
+            # A shop visit can push most of a known field outside the crop
+            # search viewport. Center its complete verified footprint before
+            # asking the clipped foliage detector for a new harvest route.
+            if self._known_before is not None and self._known_points:
                 from hayday.wheating_restart_camera import farm_transform
                 matrix = farm_transform(self._known_before, frame)
                 if matrix is not None:
@@ -459,7 +518,20 @@ class WheatFields:
                     left, top = points.min(axis=0)-35*frame.height/1080
                     right, bottom = points.max(axis=0)+35*frame.height/1080
                     bounds = VisualTarget(int(left), int(top), int(right-left), int(bottom-top), 1.)
-            if bounds is None or (bounds.x > frame.width*.10 and bounds.x+bounds.width < frame.width*.89
+            if bounds is None:
+                bounds = self.run.vision.field_bounds(frame)
+            if bounds is None:
+                bounds = getattr(self.run.vision, 'edge_field_bounds', lambda f: None)(frame)
+            if bounds is None:
+                soil = self.run.vision.plots(frame, 'empty')
+                if soil:
+                    left, top = min(p.x for p in soil), min(p.y for p in soil)
+                    right, bottom = max(p.x+p.width for p in soil), max(p.y+p.height for p in soil)
+                    bounds = VisualTarget(left, top, right-left, bottom-top, 1.)
+                    bare_bounds = True
+            centered = (not bare_bounds or (frame.width*.30 < bounds.center[0] < frame.width*.70
+                                            and frame.height*.28 < bounds.center[1] < frame.height*.70))
+            if bounds is None or (centered and bounds.x > frame.width*.10 and bounds.x+bounds.width < frame.width*.87
                                   and bounds.y > frame.height*.18 and bounds.y+bounds.height < frame.height*.83):
                 return frame
             dx = float(np.clip(.56-bounds.center[0]/frame.width, -.25, .25))
@@ -481,6 +553,52 @@ class WheatFields:
                 prior = current
         return frame
 
+    def bare_seed_reserve(self):
+        """Measure unplanted tiles before selling stock from an untracked field."""
+        frame = self._center_field(self._clear())
+        candidates = self.run.vision.plots(frame, 'empty')
+        if not candidates:
+            return 0
+        fresh = self.run.capture()
+        moved = self.worker._translated_plot(frame, fresh, candidates[0].center)
+        checked = next((p for p in self.run.vision.plots(fresh, 'empty')
+                        if moved is not None and np.linalg.norm(np.subtract(p.center,moved)) < 30), None)
+        if checked is None:
+            return self._conservative_seed_reserve()
+        selected, _, plot, ready = self._select(fresh, checked, 'empty')
+        if not ready or not self.worker.vision.full_outline:
+            self.worker._close(selected)
+            return self._conservative_seed_reserve()
+        origin = self.worker._translated_plot(selected, fresh, plot.center, require_visible=False)
+        if origin is None:
+            self.worker._close(selected)
+            return self._conservative_seed_reserve()
+        from dataclasses import replace
+        shifted = replace(plot, x=origin[0]-plot.width//2, y=origin[1]-plot.height//2)
+        points = self.worker.vision.empty_tiles(fresh, shifted, 512)
+        if not points:
+            self.worker._close(selected)
+            return self._conservative_seed_reserve()
+        self.worker._close(selected)
+        self.run.publish(f'Wheating: reserving {len(points)} wheat seeds for the observed bare plots.')
+        return len(points)
+
+    def _conservative_seed_reserve(self):
+        # An uncertain count can retain surplus temporarily; it must not stop
+        # crops or sell away the seeds needed to finish an obscured section.
+        self.run.publish('Wheating: soil is partly obscured. Retaining wheat seeds and continuing field recovery.')
+        known = max(len(self._known_points), len(getattr(self._group, 'points', [])),
+                    self.worker.field_size)
+        return max(self.run.state.get('seed_reserve', 0), known or 512)
+
+    def protect_bare_seeds(self):
+        """A partial repair must never sell the seeds for its remaining soil."""
+        frame = self._clear()
+        grouped = self._group.seed_reserve
+        reserve = max(grouped, self.bare_seed_reserve()) if self.run.vision.plots(frame, 'empty') else grouped
+        self.run.state['seed_reserve'] = reserve
+        self.run.persist()
+
     def pass_all(self):
         self.last_stock = None
         pending = [key for key, entry in self.worker.state['items'].items() if entry.get('stage') in self.worker._PENDING]
@@ -500,13 +618,14 @@ class WheatFields:
                 pending = []
         for key in pending:
             frame = self.run.capture()
-            if self.worker.state['items'][key].get('stage') == 'harvest_attempted':
-                frame = self._center_field(frame)
+            frame = self._center_field(frame)
             result = self.worker.work_if_recognized(frame, self.run.vision.wheat_icon, key)
             if not result or not self.worker.state['items'][key].get('replanted'):
                 detail = result.message if result else 'No matching field controls were found.'
                 self.run.block(f'An earlier wheat gesture is unresolved. {detail}')
-            gain = 0 if self.worker.state['items'][key].get('externally_replanted') else max(1, len(self.worker.planted_points))
+            entry = self.worker.state['items'][key]
+            gain = (0 if entry.get('externally_replanted') else len(self.worker.planted_points)
+                    if 'recovered_bare' in entry else max(1, len(self.worker.planted_points)))
             self.run.planted += gain
             self.has_fields = True
             self.last_stock = self.worker.remaining_seed_stock

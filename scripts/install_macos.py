@@ -209,7 +209,7 @@ def install(args):
         "1. Open BlueStacks Air and complete its first-run prompts.\n"
         "2. Sign in to the game store and install Hay Day. Open the game and sign in.\n"
         "3. Enable Android Debug Bridge (ADB) in BlueStacks Settings > Advanced.\n"
-        "4. Open Hay Day Automation > BlueStacks, refresh and connect the local endpoint.\n"
+        "4. Open Hay Day Automation > Emulators, refresh and connect the local endpoint.\n"
         "   Use the ADB port displayed in BlueStacks if it differs from 5555.\n"
         "5. Select your device before starting an automation feature.\n\n"
         "You can reopen the tool from your home folder > Applications > Hay Day Automation.\n"

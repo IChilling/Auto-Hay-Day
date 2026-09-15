@@ -21,6 +21,14 @@ class WheatingBlocked(RuntimeError):
     pass
 
 
+class WheatingPrerequisite(WheatingBlocked):
+    """A game requirement that restarting cannot resolve."""
+
+
+class WheatingStaleControl(WheatingBlocked):
+    """Input was refused before sending anything to the device."""
+
+
 class WheatingCancelled(RuntimeError):
     pass
 
@@ -70,6 +78,8 @@ class WheatingRunner:
         self._lock_file = None
         self._captured = 0.
         self._shop_anchor = None
+        self._workspace_zoom_attempted = False
+        self._workspace_needs_restore = True
         self._recovery = None
         self._failsafe = None
         self._reset_restart_cooldown = reset_restart_cooldown
@@ -107,20 +117,39 @@ class WheatingRunner:
                            'collected': self.collected, 'advertisements': self.advertisements,
                            'frame': self.frame})
 
-    def _capture_raw(self, *, fast=False):
+    def _capture_raw(self, *, fast=True, handle_notifications=True):
         self.check()
         if popup := getattr(self._recovery, 'host_popup', None):
             popup.process()
         capture = getattr(self.client, 'capture_fast', None) if fast else None
         frame = capture() if capture is not None else self.client.capture()
         self.check()
+        if (self._size is not None and (frame.height, frame.width) == self._size
+                and (frame.width, frame.height) != self._size
+                and time.monotonic() < getattr(self, '_launch_rotation_until', 0.)):
+            # Android briefly rotates while launching Play Games/Hay Day.
+            # Wait without input; never reinterpret an existing crop route.
+            self.publish('Wheating: waiting for Android to finish rotating during Hay Day launch.')
+            if self.diagnostics:
+                (self.diagnostics/'launch_rotation.png').write_bytes(frame.png)
+            until = min(time.monotonic()+6., self._launch_rotation_until)
+            while (frame.width, frame.height) != self._size and time.monotonic() < until:
+                self.wait(.15)
+                frame = capture() if capture is not None else self.client.capture()
+                self.check()
         if self._size is not None and self._size != (frame.width, frame.height):
             self.block('Device resolution changed during Wheating.')
         self._size = frame.width, frame.height
         self.frame, self._captured = frame, time.monotonic()
+        notifications = getattr(self._recovery, 'notifications', None)
+        if handle_notifications and notifications is not None:
+            frame = notifications.process(frame)
+        play_games = getattr(self._recovery, 'play_games', None)
+        if handle_notifications and play_games is not None:
+            frame = play_games.process(frame)
         return frame
 
-    def capture(self, *, fast=False):
+    def capture(self, *, fast=True):
         frame = self._capture_raw(fast=fast)
         if self._recovery:
             frame = self._recovery.process(frame)
@@ -128,8 +157,17 @@ class WheatingRunner:
 
     def tap(self, point, frame, *, settle=.20):
         self.check()
-        if self.frame is not frame or time.monotonic()-self._captured > 5:
-            self.block('The observed control became stale before input.')
+        age = time.monotonic()-self._captured
+        if self.frame is not frame or age > 5:
+            if self.diagnostics:
+                self.save_json(self.diagnostics/'stale_control.json', {
+                    'age_seconds': age, 'limit_seconds': 5,
+                    'same_frame': self.frame is frame,
+                    'observed_at': frame.captured_at,
+                    'latest_at': self.frame.captured_at if self.frame else None,
+                    'point': list(map(int, point)),
+                })
+            raise WheatingStaleControl('The observed control became stale before input.')
         self.client.tap(*map(int, point), width=frame.width, height=frame.height)
         self.wait(settle)
 
@@ -222,6 +260,15 @@ class WheatingRunner:
             if observation >= 2 and not moved and self._shop_anchor is not None:
                 before, prior = self._shop_anchor
                 point = FarmingWorker._translated_plot(before, frame, prior.center, require_visible=False)
+                if point is None:
+                    # The crop picker can move a distant shop beyond the edge.
+                    # Distributed SIFT landmarks handle that larger displacement;
+                    # this estimate only moves the camera. Fresh counter/deck
+                    # recognition above still supplies the eventual shop tap.
+                    from hayday.wheating_restart_camera import farm_transform
+                    matrix = farm_transform(before, frame)
+                    if matrix is not None:
+                        point = tuple(matrix @ (*prior.center, 1))
                 # Only restore a shop proven to have moved beyond a clear input
                 # area. Failed recognition of an already visible shop never pans.
                 if point is not None and not (frame.width*.13 < point[0] < frame.width*.87
@@ -246,6 +293,10 @@ class WheatingRunner:
             previous = False
             for _ in range(6):
                 frame = self.capture()
+                locked = getattr(self.vision, 'shop_locked_level', lambda _: None)(frame)
+                if locked is not None:
+                    raise WheatingPrerequisite(f'The roadside shop unlocks at level {locked}. '
+                                               'Reach that level before starting wheat sales.')
                 found = is_open(frame)
                 settled = getattr(self.vision, 'shop_layout_current', lambda shot: False)
                 if found and (previous or settled(frame)):
@@ -383,6 +434,9 @@ class WheatingRunner:
             self.wait(.35)
             frame = self.capture()
             self._level_up_dismissed = False
+        prepare = getattr(fields, 'prepare_workspace', None)
+        if prepare is not None:
+            frame = prepare(frame)
         if getattr(fields, 'reconcile_stale_state', lambda _frame: False)(frame):
             frame = self.capture()
         if self.state.get('pending'):
@@ -400,7 +454,10 @@ class WheatingRunner:
         initial = self.vision.shop(frame)
         if initial.kind in {'overview', 'composer', 'edit'}:
             shop.close_to_farm()
+            if prepare is not None:
+                frame = prepare(self.frame)
         if fields.next_harvest > time.monotonic():
+            getattr(fields, 'protect_bare_seeds', lambda: None)()
             self.open_shop()
         while True:
             self.check()
@@ -416,6 +473,7 @@ class WheatingRunner:
                     group = getattr(fields, '_group', None)
                     self.state['seed_reserve'] = group.seed_reserve if group else 0
                     self.persist()
+                getattr(fields, 'protect_bare_seeds', lambda: None)()
                 self.open_shop()
                 stock = getattr(fields, 'last_stock', None)
                 if stock is not None:

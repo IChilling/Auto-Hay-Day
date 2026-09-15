@@ -1,4 +1,4 @@
-"""Relaunch the installed Hay Day icon only on a confirmed BlueStacks home screen."""
+"""Bounded Hay Day relaunch from a verified Android home screen."""
 
 from __future__ import annotations
 
@@ -66,6 +66,61 @@ class LaunchRecovery(ReconnectRecovery):
         self._launches = []
         self._dialog_vision = None
 
+    def _package_home(self):
+        resolver = getattr(self.client, 'launcher_package', None)
+        if resolver is None:
+            return None
+        foreground = self.client.foreground_package()
+        if not foreground or foreground in {'com.uncube.launcher3', 'com.supercell.hayday'}:
+            return None
+        return foreground if foreground == resolver() else None
+
+    def _process_package_home(self, frame, package):
+        """MuMu/custom launchers need no assumptions about icon layout or font."""
+        self.save('launcher_detected', frame)
+        for _ in range(3):
+            self._wait_for_launch()
+            # Confirm two fresh home frames before the fixed-package launch.
+            for _ in range(2):
+                previous = frame
+                frame = self._fresh(previous)
+                if not self._fresh_capture(previous, frame):
+                    raise ReconnectBlocked('App relaunch requires fresh screenshots.')
+                if self._package_home() != package:
+                    if self._returned_game(frame):
+                        return frame
+                    raise ReconnectBlocked('The foreground app changed before Hay Day could be launched.')
+            self._check()
+            if self._package_home() != package:
+                raise ReconnectBlocked('The home screen changed before the Hay Day launch.')
+            self._uncertain = True
+            self._record_launch()
+            self.events.append({'kind': 'app_launcher', 'stage': 'launch_attempted',
+                                'captured_at': frame.captured_at})
+            self.save('launcher_before_launch', frame)
+            self.progress('Opening Hay Day from the confirmed Android home screen.')
+            self.client.launch_hay_day()
+            self._check()
+            self._uncertain = False
+            deadline = self.clock()+60
+            ready_count = 0
+            while self.clock() < deadline:
+                previous = frame
+                frame = self._fresh(previous)
+                if not self._fresh_capture(previous, frame):
+                    raise ReconnectBlocked('App relaunch requires fresh screenshots.')
+                ready_count = ready_count+1 if self._returned_game(frame) else 0
+                if ready_count >= 2:
+                    self.events.append({'kind': 'app_launcher', 'stage': 'launched',
+                                        'captured_at': frame.captured_at})
+                    self.save('launcher_recovered', frame)
+                    return frame
+                if self.clock()-self._launches[-1] >= 10 and self._package_home() == package:
+                    break
+            else:
+                raise ReconnectBlocked('Hay Day did not reach a recognized game screen after relaunch.')
+        raise ReconnectBlocked('Hay Day could not remain open after three launch attempts.')
+
     def _observe(self, frame):
         self._check()
         if self.vision is None:
@@ -105,6 +160,9 @@ class LaunchRecovery(ReconnectRecovery):
         self._check()
         if self._uncertain:
             raise ReconnectBlocked('An earlier Hay Day launch is uncertain; no repeated icon tap was sent.')
+        package = self._package_home()
+        if package:
+            return self._process_package_home(frame, package)
         observed = self._observe(frame)
         if observed is None:
             return frame

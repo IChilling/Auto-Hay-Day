@@ -107,3 +107,24 @@ def test_restart_confirms_final_surplus_sale_from_saved_stock(tmp_path):
     WheatRestart(run).resume_pending(shop)
     assert run.state['silo_recovery'] == {'released': 127, 'surplus_empty': True}
     assert run.state['pending'] is None
+
+
+def test_untracked_bare_field_is_reserved_before_any_silo_sale(tmp_path):
+    run = WheatingRunner(SimpleNamespace(serial='test'),tmp_path)
+    frame = Screenshot(b'farm',1920,1080,'fresh')
+    run._capture_raw = Mock(return_value=frame); run.open_shop = Mock(); run.wait = Mock()
+    run.state['silo_recovery'] = dict(version=1,released=0,reserve=1,harvests={})
+    worker = SimpleNamespace(state={'items':{}},state_path=tmp_path/'fields.json')
+    fields = SimpleNamespace(worker=worker,_known_points=[],next_harvest=0,
+                             bare_seed_reserve=Mock(return_value=9))
+    recovery = WheatSiloFull(run); recovery.observe = Mock(return_value=None)
+    shop = SimpleNamespace(observe=Mock(return_value=(frame,ShopView('overview'))),close_to_farm=Mock())
+    def service(**kwargs):
+        fields.bare_seed_reserve.assert_called_once()
+        assert run.state['seed_reserve'] == 9
+        assert run.state['silo_recovery']['reserve_verified']
+        run.state['silo_recovery'].update(released=18,surplus_empty=True)
+        return False
+    shop.service = service
+    assert recovery.recover(fields,shop)
+    assert run.state['seed_reserve'] == 9

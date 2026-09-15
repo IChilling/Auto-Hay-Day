@@ -1,0 +1,254 @@
+{
+  "unlocked": [
+    {
+      "text": "Congratulations, goujusb unlocked",
+      "bounds": [
+        853,
+        388,
+        816,
+        48
+      ]
+    },
+    {
+      "text": "bhe Event Board!",
+      "bounds": [
+        1063,
+        448,
+        397,
+        36
+      ]
+    }
+  ],
+  "board": [
+    {
+      "text": "3490",
+      "bounds": [
+        1556,
+        21,
+        204,
+        79
+      ]
+    }
+  ],
+  "posters": [
+    {
+      "text": "Here gou can Find inpormabion about",
+      "bounds": [
+        832,
+        359,
+        859,
+        45
+      ]
+    },
+    {
+      "text": "events! Tap on bhe highlighted",
+      "bounds": [
+        908,
+        418,
+        706,
+        45
+      ]
+    },
+    {
+      "text": "poster bo unveil what's inside!",
+      "bounds": [
+        903,
+        477,
+        716,
+        45
+      ]
+    }
+  ],
+  "unveil_poster": [
+    {
+      "text": "EVENT BOARD",
+      "bounds": [
+        828,
+        49,
+        261,
+        47
+      ]
+    },
+    {
+      "text": "Check everg dag Por new events!",
+      "bounds": [
+        699,
+        120,
+        527,
+        31
+      ]
+    },
+    {
+      "text": "UPCOMiN6",
+      "bounds": [
+        889,
+        208,
+        137,
+        36
+      ]
+    },
+    {
+      "text": "FAUORiTE",
+      "bounds": [
+        1182,
+        208,
+        123,
+        35
+      ]
+    },
+    {
+      "text": "NEW!",
+      "bounds": [
+        553,
+        254,
+        57,
+        17
+      ]
+    }
+  ],
+  "animated_poster": [
+    {
+      "text": "EVENT BOARD",
+      "bounds": [
+        828,
+        49,
+        261,
+        47
+      ]
+    }
+  ],
+  "info": [
+    {
+      "text": "Tap on the inpo bubbon bo show",
+      "bounds": [
+        897,
+        388,
+        729,
+        45
+      ]
+    },
+    {
+      "text": "more details and rewards!",
+      "bounds": [
+        950,
+        447,
+        622,
+        37
+      ]
+    }
+  ],
+  "open_details": [
+    {
+      "text": "EVENT BOARD",
+      "bounds": [
+        828,
+        49,
+        261,
+        47
+      ]
+    },
+    {
+      "text": "DESiGN FEStiUAL",
+      "bounds": [
+        174,
+        372,
+        274,
+        42
+      ]
+    },
+    {
+      "text": "Euenb unlocks ab leuel 23",
+      "bounds": [
+        136,
+        977,
+        360,
+        22
+      ]
+    }
+  ],
+  "close_details": [
+    {
+      "text": "NE",
+      "bounds": [
+        553,
+        254,
+        27,
+        16
+      ]
+    },
+    {
+      "text": "DESiGN FEStiUAL",
+      "bounds": [
+        174,
+        372,
+        274,
+        42
+      ]
+    },
+    {
+      "text": "Euenb unlocks ab leuel 23",
+      "bounds": [
+        136,
+        977,
+        360,
+        22
+      ]
+    },
+    {
+      "text": "DESiGN fESTiUAL",
+      "bounds": [
+        911,
+        120,
+        308,
+        45
+      ]
+    },
+    {
+      "text": "Take us bo gour Farmers' Market!",
+      "bounds": [
+        739,
+        374,
+        648,
+        36
+      ]
+    },
+    {
+      "text": "Top Rewards",
+      "bounds": [
+        964,
+        615,
+        203,
+        30
+      ]
+    },
+    {
+      "text": "Leaves in: h 7 min",
+      "bounds": [
+        880,
+        889,
+        354,
+        28
+      ]
+    }
+  ],
+  "complete": [
+    {
+      "text": "Remember bo check back everg dag",
+      "bounds": [
+        845,
+        389,
+        832,
+        44
+      ]
+    },
+    {
+      "text": "Por new and exciting events!",
+      "bounds": [
+        923,
+        447,
+        676,
+        45
+      ]
+    }
+  ]
+}

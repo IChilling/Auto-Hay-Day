@@ -7,9 +7,10 @@ from hayday.resource_vision import VisualTarget, _decode
 
 
 def tracked_grid(worker, frame):
-    if not worker.harvest_plan or not worker.harvest_plot_centers:
+    plan = getattr(worker, 'harvest_grid_plan', None) or (worker.harvest_plan if worker.harvest_plot_centers else None)
+    if not plan:
         return None
-    before, points = worker.harvest_plan
+    before, points = plan
     if len(points) < 4 or CameraNavigator._modal_visible(frame):
         return None
     origin = points[0]
@@ -59,7 +60,7 @@ def tracked_soil(worker, frame):
         # Only this soil tap is authorized here. Planting separately verifies
         # the wheat picker and aligns the entire known grid; every plot still
         # has to confirm growth after the one planting sweep.
-        before, original = worker.harvest_plan
+        before, original = getattr(worker, 'harvest_grid_plan', None) or worker.harvest_plan
         original = [(x, y+round(16*frame.height/1080)) for x, y in original]
         worker._replant_grid = before, original, (dx, dy)
         worker._replant_origin = original[index]
@@ -77,7 +78,7 @@ def saved_grid(worker, entry):
         return None
     frame = worker._saved_frame(proof)
     points, pitch = proof.get('points'), proof.get('pitch')
-    if frame is None or not isinstance(points, list) or not 4 <= len(points) <= 98:
+    if frame is None or not isinstance(points, list) or not 4 <= len(points) <= 512:
         return None
     if (any(not isinstance(p, list) or len(p) != 2 or any(type(n) is not int for n in p)
             or not 0 < p[0] < frame.width or not 0 < p[1] < frame.height for p in points)

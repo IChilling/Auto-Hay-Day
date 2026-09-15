@@ -14,6 +14,7 @@ from hayday.farming import FarmingWorker
 from hayday.game_scene import farm_scene_vision
 from hayday.quantities import read_count
 from hayday.resource_vision import ResourceVision, VisualTarget, _decode
+from hayday.soil_vision import distinct_soil_targets, soil_references
 from hayday.wheating_numbers import read_number
 from hayday.wheating_shop_building import ShopBuildingVision
 from hayday.wheating_sold import SoldReceiptVision
@@ -59,6 +60,7 @@ class WheatingVision:
         self.root = Path(__file__).parent/'assets/wheating'
         self.specs = json.loads((self.root/'manifest.json').read_text('utf-8'))['features']
         self.refs = {path.stem: _decode(path.read_bytes(), True) for path in self.root.glob('*.png')}
+        self.refs.update(soil_references())
         # Cropping tools may save the title as RGB. The matcher requires an
         # alpha mask; include every pixel when the title has no transparency.
         header = self.refs.get('shop_header')
@@ -108,6 +110,10 @@ class WheatingVision:
             native = 1080 if name in {'soil', 'wheat_ripe', 'wheat_seed'} else 1041 if name in {'shop_header', 'shop_close', 'empty_sale', 'sold'} else 1045
             native = self.specs.get(name, {}).get('reference_height', native)
             exact = np.array([decoded.shape[0]/native])
+            if name == 'shop_header':
+                # A few raster pixels of title scaling vary across emulator
+                # displays. Keep the correlation threshold; sample nearby sizes.
+                exact = np.linspace(.96, 1.04, 17)*exact[0]
             peaks = 24 if name in {'empty_sale', 'sold', 'sold_live', 'wheat_sale'} else 8
             hits = self.matcher._search(image, self.refs[name], exact, threshold, self.cancel, peaks)
             if not hits:
@@ -141,6 +147,8 @@ class WheatingVision:
             vision = self._crop_controls
             harvest = vision.harvest(frame.png)
             seed = None if harvest else vision.page_next(frame.png)
+            if seed is None and harvest is None and vision.seed_menu(frame.png):
+                seed = vision.empty_plot(frame.png)
             growing = None if harvest or seed else vision.growing(frame.png)
             self._cache['crop_controls'] = (('harvest', harvest.tool) if harvest else
                 ('seed', seed) if seed else ('growing', growing) if growing else None)
@@ -155,6 +163,12 @@ class WheatingVision:
         close_region = (round(frame.width*.75), 0, round(frame.width*.20), round(frame.height*.23))
         close = self.one(frame.png, 'shop_close', region=close_region)
         return close is not None and close.x > header.x+header.width
+
+    def shop_locked_level(self, frame):
+        """The complete unlock banner is evidence of a game prerequisite."""
+        region = (round(frame.width*.20), round(frame.height*.15),
+                  round(frame.width*.65), round(frame.height*.30))
+        return 7 if self.matches(frame.png, 'shop_locked', threshold=.95, region=region) else None
 
     def shop_layout_current(self, frame):
         """The overview's fixed controls still occupy their settled positions."""
@@ -182,6 +196,14 @@ class WheatingVision:
         """Candidates only. Selected farming controls authorize the actual gesture."""
         region = (round(frame.width*.10), round(frame.height*.20),
                   round(frame.width*.79), round(frame.height*.62))
+        if kind == 'empty':
+            # Always inspect both orientations, including mixed fields. Finding
+            # one old-orientation patch must not suppress the other references.
+            targets = [target for name in ('soil_texture', 'soil_orientation_1', 'soil_orientation_2')
+                       for target in self.matches(frame.png, name, threshold=.90, world=True, region=region)]
+            found = distinct_soil_targets(targets) or self.matches(
+                frame.png, 'soil', threshold=.91, world=True, region=region)
+            return found or self._isolated_soil(frame, region)
         if kind == 'ripe':
             textures = self._ripe_textures(frame)
             if textures:
@@ -192,6 +214,33 @@ class WheatingVision:
                              threshold=.90, world=True, region=region)
         return found or self.matches(frame.png, 'soil' if kind == 'empty' else 'wheat_ripe',
                                     threshold=.91, world=True, region=region)
+
+    def _isolated_soil(self, frame, region):
+        """Find a last bare tile whose edges are covered by neighboring wheat."""
+        from hayday.wheating_crop import WheatFarmingVision
+        image = self._image_for(frame.png)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        x, y, w, h = region
+        base = frame.height/1080
+        found = []
+        for name in ('soil_orientation_1', 'soil_orientation_2'):
+            ref = self.refs[name]
+            rh, rw = ref.shape[:2]
+            interior = ref[rh//2-6:rh//2+6, rw//2-12:rw//2+12]
+            for hit in self.matcher._search(image[y:y+h, x:x+w], interior,
+                    np.array([.96, 1., 1.04, 1.08])*base, .93, self.cancel, 8):
+                target = VisualTarget(hit.x+x, hit.y+y, hit.width, hit.height, hit.score)
+                pixels = WheatFarmingVision.tile_pixels(hsv, target.center, 50*base, 25*base)
+                if pixels is None:
+                    continue
+                hue, saturation, value = pixels.T
+                soil = (hue >= 8) & (hue <= 18) & (saturation >= 65) & (value < 245)
+                if (soil.mean() >= .93 and all(np.linalg.norm(np.subtract(target.center, prior.center))
+                                               > 35*base for prior in found)):
+                    found.append(target)
+        # These are selection candidates only; a fresh seed picker and stock
+        # confirmation still establish both crop identity and planting inputs.
+        return tuple(found)
 
     def _ripe_textures(self, frame):
         self._image_for(frame.png)
@@ -247,7 +296,13 @@ class WheatingVision:
             native = tuple(VisualTarget(t.x+x, t.y+y, t.width, t.height, t.score)
                            for name in names for t in self.matcher._search(crop, self.refs[name],
                                np.array([frame.height/1080]), .82, self.cancel, 8))
-        textures = tuple(t for t in native if t.score >= .90)
+        def supported(hits):
+            labels, _, identified = self._wheat_components(frame, hits)
+            return tuple(t for t in hits if labels[t.center[1], t.center[0]] in identified)
+
+        # Tiny references can match an isolated leaf with a high score. Such a
+        # hit must not suppress the wider search for actual connected foliage.
+        textures = supported(tuple(t for t in native if t.score >= .90))
         if textures:
             return textures
         shop = self.shop_building(frame)
@@ -264,7 +319,11 @@ class WheatingVision:
             x, y, w, h, area = stats[component]
             gap = np.hypot(max(0, x-shop.x-shop.width, shop.x-x-w),
                            max(0, y-shop.y-shop.height, shop.y-y-h))
-            if area < 1500*(frame.height/1080)**2 or area/(w*h) < .35 or gap > frame.width*.20:
+            # At the current farm zoom, even the attached field may span well
+            # away from the counter. Measure proximity against its visible
+            # width as well as the screen; crop controls still gate the drag.
+            if (area < 1500*(frame.height/1080)**2 or area/(w*h) < .35
+                    or gap > max(frame.width*.20, w*1.5)):
                 continue
             separate = []
             hits = []
@@ -282,8 +341,8 @@ class WheatingVision:
             # references. Retain the original strict search for that rare case.
             original = (round(frame.width*.10), round(frame.height*.20),
                         round(frame.width*.79), round(frame.height*.62))
-            return tuple(t for name in names for t in self.matches(
-                frame.png, name, threshold=.90, world=True, region=original))
+            return supported(tuple(t for name in names for t in self.matches(
+                frame.png, name, threshold=.90, world=True, region=original)))
         if accepted or broad:
             return tuple(accepted)
         return self._find_ripe_textures(frame, broad=True)
@@ -345,6 +404,38 @@ class WheatingVision:
         right, bottom = max(s[0]+s[2] for s in parts), max(s[1]+s[3] for s in parts)
         return VisualTarget(int(left), int(top), int(right-left), int(bottom-top), 1.)
 
+    def edge_field_bounds(self, frame):
+        """Locate clipped wheat for camera positioning, never for crop input."""
+        image = self._image_for(frame.png)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv, (18, 155, 180), (31, 255, 255))
+        # Search all four edges for camera recovery, excluding the fixed HUD
+        # corners. Normal crop targeting retains its stricter inner viewport.
+        mask[:round(frame.height*.04)] = 0
+        mask[round(frame.height*.94):] = 0
+        for rows in (slice(None, round(frame.height*.28)), slice(round(frame.height*.79), None)):
+            mask[rows, :round(frame.width*.22)] = 0
+            mask[rows, round(frame.width*.78):] = 0
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+        _, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
+        base = frame.height/1080
+        for label, (x, y, w, h, area) in enumerate(stats[1:], 1):
+            if (area < 2500*base**2 or area/(w*h) < .45 or w < 80*base
+                    or not (x < frame.width*.12 or x+w > frame.width*.87
+                            or y < frame.height*.20 or y+h > frame.height*.82)):
+                continue
+            crop = image[y:y+h, x:x+w]
+            hits = [t for name in ('ripe_texture', 'ripe_texture_dense', 'ripe_full_a', 'ripe_full_b')
+                    for t in self.matcher._search(crop, self.refs[name], np.linspace(.75, 1.3, 12)*base, .82, self.cancel, 8)
+                    if labels[y+t.center[1], x+t.center[0]] == label]
+            separate = []
+            for target in hits:
+                if all(np.linalg.norm(np.subtract(target.center, p)) > 20*base for p in separate):
+                    separate.append(target.center)
+            if len(separate) >= 2:
+                return VisualTarget(int(x), int(y), int(w), int(h), min(t.score for t in hits))
+        return None
+
     def harvest_sweep(self, frame):
         self._image_for(frame.png)
         if 'harvest_sweep' not in self._cache:
@@ -392,9 +483,13 @@ class WheatingVision:
             changed = False
             for label, (x, y, w, h, area) in enumerate(stats[1:], 1):
                 if (label in selected or area < 900*(frame.height/1080)**2 or w/h < .65
+                        or area/(w*h) < .35
                         or x < frame.width*.12 or x+w > frame.width*.88
                         or y < frame.height*.2 or y+h > frame.height*.90):
                     continue
+                # Sparse gold board trim can bridge the field to chicken feed
+                # and other yellow decorations. Only dense foliage may expand
+                # the route from the independently identified wheat patch.
                 for known in tuple(selected):
                     sx, sy, sw, sh, _ = stats[known]
                     gap_x = max(0, x-sx-sw, sx-x-w)
@@ -404,21 +499,10 @@ class WheatingVision:
                         changed = True
                         break
         field = np.isin(labels, tuple(selected))
-        ys, _ = np.nonzero(field)
-        if not len(ys):
-            return []
-        step = max(10, round(24*frame.height/1080))
-        rows = list(range(int(ys.min()+step//2), int(ys.max()), step))
-        if len(rows)*2+2 > 98:
-            return []
-        path = []
-        for row, y in enumerate(rows):
-            xs = np.nonzero(field[y])[0]
-            if len(xs) < 8:
-                continue
-            endpoints = [(int(xs[2]), y), (int(xs[-3]), y)]
-            path.extend(reversed(endpoints) if row % 2 else endpoints)
-        return path
+        from hayday.wheating_routes import diagonal_mask_sweep
+        base = frame.height/1080
+        return diagonal_mask_sweep(field, step=max(8, round(16*base)),
+                                   margin=max(3, round(10*base)))
 
     def wheat_at(self, frame, target):
         """Check ripe wheat texture locally; yellow color alone is insufficient."""

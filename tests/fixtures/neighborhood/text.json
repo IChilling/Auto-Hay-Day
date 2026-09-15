@@ -1,0 +1,41 @@
+{
+  "introduction": [
+    {
+      "text": "My, mg what do we have here?",
+      "bounds": [
+        901,
+        329,
+        721,
+        45
+      ]
+    },
+    {
+      "text": "Repair gour neighborhood house bo",
+      "bounds": [
+        854,
+        388,
+        814,
+        45
+      ]
+    },
+    {
+      "text": "chab and plag with gour closest",
+      "bounds": [
+        890,
+        447,
+        742,
+        45
+      ]
+    },
+    {
+      "text": "Friends!",
+      "bounds": [
+        1167,
+        506,
+        189,
+        37
+      ]
+    }
+  ],
+  "farm": []
+}

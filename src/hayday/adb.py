@@ -1,4 +1,4 @@
-"""Local BlueStacks discovery, screenshots, and bounded device input.
+"""Local emulator discovery, screenshots, and bounded device input.
 
 ADB server commands are unscoped; every device command uses ``-s``. Touch input
 uses explicit screenshot bounds; pinch gestures use discovered multitouch slots.
@@ -22,6 +22,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from PIL import Image
+
+from hayday.emulators import adb_provider, mumu_adb_paths
 
 
 class AdbError(RuntimeError):
@@ -71,16 +73,28 @@ class TouchDevice:
     x_max: int
     y_min: int
     y_max: int
+    name: str = 'BlueStacks Virtual Touch'
+    buttons: tuple[int, ...] = (330,)
+
+    def button_events(self, down: bool) -> list[tuple[int, int, int]]:
+        return [(1, code, int(down)) for code in self.buttons]
+
+    def coordinates(self, x, y, width, height, rotation=0):
+        u, v = x/(width-1), y/(height-1)
+        u, v = ((u, v), (1-v, u), (1-u, 1-v), (v, 1-u))[rotation]
+        return (round(self.x_min+u*(self.x_max-self.x_min)),
+                round(self.y_min+v*(self.y_max-self.y_min)))
 
 
 def parse_touch_device(output: str) -> TouchDevice:
-    """Select the unique BlueStacks type-B touchscreen from getevent -pl."""
+    """Select one direct type-B touchscreen; reject ambiguous/unsupported input."""
     found = []
     for path, block in re.findall(
         r"add device \d+: (/dev/input/event[0-9]+)\s*\n(.*?)(?=add device \d+:|\Z)",
         output, re.DOTALL,
     ):
-        if not re.search(r'name:\s*"BlueStacks Virtual Touch"', block):
+        name = re.search(r'name:\s*"([^"\r\n]+)"', block)
+        if not name or ('INPUT_PROP_DIRECT' not in block and name[1] != 'BlueStacks Virtual Touch'):
             continue
         axes = {
             name: (int(low), int(high)) for name, low, high in re.findall(
@@ -92,13 +106,33 @@ def parse_touch_device(output: str) -> TouchDevice:
         y = axes.get("ABS_MT_POSITION_Y", (0, 0))
         tracking = axes.get("ABS_MT_TRACKING_ID", (0, 0))
         if (slot[0] != 0 or slot[1] < 1 or not (0 <= x[0] < x[1] <= 2**31-1)
-                or not (0 <= y[0] < y[1] <= 2**31-1) or tracking[1] < 2
-                or "BTN_TOUCH" not in block):
+                or not (0 <= y[0] < y[1] <= 2**31-1) or tracking[1] < 2):
             continue
-        found.append(TouchDevice(path, *x, *y))
+        buttons = tuple(code for label, code in (('BTN_TOUCH', 330), ('BTN_TOOL_FINGER', 325))
+                        if re.search(r'\b'+label+r'\b', block))
+        found.append(TouchDevice(path, *x, *y, name[1], buttons))
     if len(found) != 1:
-        raise AdbError("Could not identify one compatible BlueStacks multitouch device for zoom.")
+        raise AdbError("Could not identify one compatible direct multitouch device for drags and zoom.")
     return found[0]
+
+
+def touch_rotation(output: str, touch: TouchDevice, width: int, height: int) -> int:
+    """Read the selected touch mapper's display, not an unrelated mouse viewport."""
+    blocks = re.findall(r'^  Device \d+: ([^\r\n]+)\r?\n(.*?)(?=^  Device |\Z)',
+                        output, re.M | re.S)
+    matches = [block for name, block in blocks if name.strip() == touch.name]
+    if len(matches) != 1:
+        raise AdbError('Could not identify the touchscreen display mapping.')
+    block = matches[0]
+    view = re.search(r'Viewport INTERNAL: displayId=0,.*?orientation=([0-3]), '
+                     r'logicalFrame=\[0, 0, (\d+), (\d+)\]', block)
+    if not view or (int(view[2]), int(view[3])) != (width, height):
+        raise AdbError('Touchscreen display does not match the current screenshot resolution.')
+    if 'OrientationAware: false' in block:
+        return 0
+    if 'OrientationAware: true' not in block:
+        raise AdbError('Could not establish touchscreen orientation handling.')
+    return int(view[1])
 
 
 def _registry_directories() -> tuple[list[Path], list[Path]]:
@@ -142,8 +176,9 @@ def _known_install_roots() -> list[Path]:
 
 
 def discover_adb_executables() -> list[AdbExecutable]:
-    """Find installed ADB binaries; prefer BlueStacks' own compatible binary."""
+    """Find installed emulator and Android SDK ADB binaries."""
     candidates: list[tuple[Path, str]] = []
+    candidates.extend((path, 'MuMu Player') for path in mumu_adb_paths())
     if sys.platform == "darwin":
         for applications in (Path("/Applications"), Path.home() / "Applications"):
             for name in ("BlueStacks.app", "BlueStacks Air.app"):
@@ -240,10 +275,13 @@ class AdbClient:
         raw_path = str(executable).strip()
         resolved = shutil.which(raw_path) if raw_path and not Path(raw_path).is_file() else raw_path
         if not resolved or not Path(resolved).is_file():
-            raise AdbError(f"ADB executable was not found: {raw_path or '(empty path)'}. Browse to BlueStacks HD-Adb.exe.")
+            raise AdbError(f"ADB executable was not found: {raw_path or '(empty path)'}. Browse to your emulator or Android SDK ADB executable.")
         if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
             raise AdbError("ADB timeout must be a positive, finite number of seconds.")
         self.executable = Path(resolved).resolve()
+        # BlueStacks ships ADB 1.0.36; current MuMu ships 1.0.41. Separate
+        # servers prevent either binary from restarting the other's sessions.
+        self.server_port = 5038 if adb_provider(self.executable) == 'MuMu' else 5037
         self.timeout_seconds = timeout_seconds
         self._lock = threading.RLock()
         self._input_lock = threading.RLock()
@@ -277,9 +315,11 @@ class AdbClient:
                 if self._closed and not _release:
                     raise AdbError("ADB session is closed. Connect again to start a new session.")
                 args = [str(self.executable)]
+                if self.server_port != 5037:
+                    args.extend(['-P', str(self.server_port)])
                 if device:
                     if not self._serial:
-                        raise AdbError("Select an online BlueStacks device before using device commands.")
+                        raise AdbError("Select an online emulator device before using device commands.")
                     args.extend(["-s", self._serial])
                 args.extend(command)
                 process = subprocess.Popen(
@@ -307,7 +347,7 @@ class AdbClient:
                 with suppress(OSError, subprocess.TimeoutExpired):
                     process.communicate(timeout=2)
                 raise AdbError(
-                    f"ADB command timed out after {timeout:g}s. Check that BlueStacks is running and ADB is enabled."
+                    f"ADB command timed out after {timeout:g}s. Check that the emulator is running and ADB is enabled."
                 ) from exc
             with self._lock:
                 if self._closed and not _release:
@@ -328,9 +368,9 @@ class AdbClient:
         detail = detail.strip()[:1200]
         lowered = detail.lower()
         if "unauthorized" in lowered:
-            raise AdbError("Device is unauthorized. Accept the Android debugging prompt in BlueStacks, then refresh devices.")
+            raise AdbError("Device is unauthorized. Accept the Android debugging prompt in the emulator, then refresh devices.")
         if "offline" in lowered:
-            raise AdbError("Device is offline. Open BlueStacks and reconnect its local ADB endpoint, then refresh devices.")
+            raise AdbError("Device is offline. Open the emulator and reconnect its local ADB endpoint, then refresh devices.")
         if "no devices" in lowered or "not found" in lowered:
             raise AdbError(f"Selected device is unavailable. Refresh devices and select an online instance. {detail}")
         raise AdbError(detail or "ADB command failed without an error message.")
@@ -358,7 +398,7 @@ class AdbClient:
         )
         if not match or not 1 <= int(match.group(2)) <= 65535:
             raise AdbError(
-                "Use a local BlueStacks endpoint: 127.0.0.1:PORT, localhost:PORT, "
+                "Use a local emulator endpoint: 127.0.0.1:PORT, localhost:PORT, "
                 "or [::1]:PORT (port 1–65535)."
             )
         endpoint = endpoint.lower()
@@ -366,13 +406,13 @@ class AdbClient:
         message = "\n".join(part.decode("utf-8", errors="replace").strip() for part in (stdout, stderr) if part).strip()
         lowered = message.lower()
         if "connected to" not in lowered or any(word in lowered for word in ("cannot connect", "failed", "unable", "refused")):
-            self._raise_error(message or f"Could not connect to {endpoint}. Enable Android Debug Bridge in BlueStacks settings.")
+            self._raise_error(message or f"Could not connect to {endpoint}. Enable Android Debug Bridge in the emulator settings.")
         return message
 
     def capture(self) -> Screenshot:
         stdout, _ = self._run(["exec-out", "screencap", "-p"], device=True)
         if not stdout.startswith(b"\x89PNG\r\n\x1a\n"):
-            raise AdbError("ADB did not return a PNG screenshot. Check the selected BlueStacks device.")
+            raise AdbError("ADB did not return a PNG screenshot. Check the selected emulator device.")
         try:
             with Image.open(io.BytesIO(stdout)) as picture:
                 if picture.format != "PNG":
@@ -449,9 +489,9 @@ class AdbClient:
                   time_factors: tuple[float, ...] | None = None,
                   keep_device_open: bool = True) -> None:
         """Hold one contact through a bounded path, always releasing on exit."""
-        if (not isinstance(points, (tuple, list)) or not 2 <= len(points) <= 100
+        if (not isinstance(points, (tuple, list)) or not 2 <= len(points) <= 2049
                 or any(not isinstance(p, (tuple, list)) or len(p) != 2 for p in points)):
-            raise AdbError('Drag path requires between 2 and 100 coordinate pairs.')
+            raise AdbError('Drag path requires between 2 and 2049 coordinate pairs.')
         self._validate_touch_bounds(tuple(v for p in points for v in p), width, height)
         if type(duration_ms) is not int or not 250 <= duration_ms <= 12000:
             raise AdbError('Drag path duration must be between 250 and 12000 milliseconds.')
@@ -479,11 +519,10 @@ class AdbClient:
 
         with self._input_lock:
             checkpoint()
-            raw, _ = self._run(['shell', 'getevent', '-pl'], device=True)
-            touch = parse_touch_device(raw.decode('utf-8', errors='replace'))
+            touch, rotation = self._touch_configuration(width, height)
             elf, _ = self._run(['exec-out', 'dd', 'if=/system/bin/sh', 'bs=6', 'count=1'], device=True)
             if len(elf) < 6 or elf[:4] != b'\x7fELF' or elf[4] not in (1, 2) or elf[5] != 1:
-                raise AdbError('Cannot establish the BlueStacks input-event ABI for a drag.')
+                raise AdbError('Cannot establish the Android input-event ABI for a drag.')
             event_format = '<qqHHi' if elf[4] == 2 else '<iiHHi'
 
             def command(events, *, shared=False):
@@ -493,14 +532,15 @@ class AdbClient:
                 destination = '>&9' if shared else f'> {touch.path}'
                 return f"printf '%b' '{encoded}' {destination}"
 
-            release = command([(3, 47, 0), (3, 57, -1), (1, 330, 0), (0, 0, 0)])
+            release_events = [(3, 47, 0), (3, 57, -1), *touch.button_events(False), (0, 0, 0)]
+            release = command(release_events)
             script = ['set -e', f'trap {shlex.quote(release)} EXIT HUP INT TERM']
             if keep_device_open:
                 # BlueStacks charges substantial latency for each evdev open.
                 # Keep one descriptor through the gesture, including its trap
                 # release. The separate finally release remains a fallback.
                 script.append(f'exec 9>{touch.path}')
-                shared_release = command([(3, 47, 0), (3, 57, -1), (1, 330, 0), (0, 0, 0)], shared=True)
+                shared_release = command(release_events, shared=True)
                 script.append(f'trap {shlex.quote(shared_release)} EXIT HUP INT TERM')
             samples = [points[0]]
             delays = []
@@ -522,9 +562,8 @@ class AdbClient:
             for index, (px, py) in enumerate(samples):
                 events = [(3, 47, 0)]
                 if index == 0:
-                    events.extend(((1, 330, 1), (3, 57, 1)))
-                x = round(touch.x_min+px/(width-1)*(touch.x_max-touch.x_min))
-                y = round(touch.y_min+py/(height-1)*(touch.y_max-touch.y_min))
+                    events.extend([*touch.button_events(True), (3, 57, 1)])
+                x, y = touch.coordinates(px, py, width, height, rotation)
                 events.extend(((3, 53, x), (3, 54, y), (0, 0, 0)))
                 script.append(command(events, shared=keep_device_open))
                 delay = delays[index] if index < len(delays) else 0.
@@ -547,12 +586,42 @@ class AdbClient:
             finally:
                 self._run(['shell', release], device=True, _release=True)
 
+    def is_bluestacks(self) -> bool:
+        raw, _ = self._run(['shell', 'getevent', '-pl'], device=True)
+        return bool(re.search(rb'name:\s*"BlueStacks Virtual Touch"', raw))
+
+    def _touch_configuration(self, width, height):
+        raw, _ = self._run(['shell', 'getevent', '-pl'], device=True)
+        touch = parse_touch_device(raw.decode('utf-8', errors='replace'))
+        # Preserve BlueStacks' display-aligned virtual device mapping.
+        rotation = 0
+        if touch.name != 'BlueStacks Virtual Touch':
+            raw, _ = self._run(['shell', 'dumpsys', 'input'], device=True)
+            rotation = touch_rotation(raw.decode('utf-8', errors='replace'), touch, width, height)
+        self._run(['shell', f'test -w {touch.path} || '
+                   '{ echo "Touch input is not writable by ADB; check emulator input permissions." >&2; exit 1; }'],
+                  device=True)
+        return touch, rotation
+
     def foreground_package(self) -> str | None:
         """Read the focused Android window; unknown focus never implies a crash."""
         raw, _ = self._run(['shell', 'dumpsys', 'window', 'windows'], device=True)
-        matches = re.findall(r'mCurrentFocus=Window\{[^\r\n}]*\bu\d+\s+([A-Za-z0-9_.]+)/',
-                             raw.decode('utf-8', errors='replace'))
+        pattern = r'mCurrentFocus=Window\{[^\r\n}]*\bu\d+\s+([A-Za-z0-9_.]+)/'
+        matches = re.findall(pattern, raw.decode('utf-8', errors='replace'))
+        if not matches:
+            # Android 15 omits display focus from the `windows` subcommand.
+            raw, _ = self._run(['shell', 'dumpsys', 'window'], device=True)
+            matches = re.findall(pattern, raw.decode('utf-8', errors='replace'))
         return matches[0] if len(matches) == 1 else None
+
+    def launcher_package(self) -> str | None:
+        """Resolve Android's default HOME activity without opening it."""
+        raw, _ = self._run(['shell', 'cmd', 'package', 'resolve-activity', '--brief',
+                           '-a', 'android.intent.action.MAIN', '-c', 'android.intent.category.HOME'],
+                          device=True)
+        matches = re.findall(r'^([A-Za-z0-9_.]+)/[A-Za-z0-9_.$]+\s*$',
+                             raw.decode('utf-8', errors='replace'), re.M)
+        return matches[0] if len(matches) == 1 and matches[0] != 'android' else None
 
     def back(self) -> None:
         """Send exactly one Android Back action; callers verify the current UI."""
@@ -570,7 +639,7 @@ class AdbClient:
             self._run(['shell', 'am', 'force-stop', 'com.supercell.hayday'], device=True)
 
     def launch_hay_day(self) -> None:
-        """Launch Hay Day directly inside BlueStacks without changing Windows focus."""
+        """Launch Hay Day directly inside the selected emulator without changing Windows focus."""
         with self._input_lock:
             self._run(['shell', 'monkey', '-p', 'com.supercell.hayday',
                        '-c', 'android.intent.category.LAUNCHER', '1'], device=True)
@@ -640,14 +709,13 @@ class AdbClient:
 
         with self._input_lock:
             checkpoint()
-            raw, _ = self._run(["shell", "getevent", "-pl"], device=True)
-            touch = parse_touch_device(raw.decode("utf-8", errors="replace"))
+            touch, rotation = self._touch_configuration(width, height)
             checkpoint()
             # input_event timeval fields follow the writing process ABI. The
             # shell's ELF class/data identify it without guessing from host CPU.
             elf, _ = self._run(["exec-out", "dd", "if=/system/bin/sh", "bs=6", "count=1"], device=True)
             if len(elf) < 6 or elf[:4] != b"\x7fELF" or elf[4] not in (1, 2) or elf[5] != 1:
-                raise AdbError("Cannot establish the BlueStacks input-event ABI for a synchronized pinch.")
+                raise AdbError("Cannot establish the Android input-event ABI for a synchronized pinch.")
             event_format = "<qqHHi" if elf[4] == 2 else "<iiHHi"
             checkpoint()
             # All synchronized frames share one shell and one open evdev
@@ -658,7 +726,8 @@ class AdbClient:
                 destination = '>&9' if shared else f'> {touch.path}'
                 return f"printf '%b' '{encoded}' {destination}"
 
-            release = [(3, 47, 0), (3, 57, -1), (3, 47, 1), (3, 57, -1), (1, 330, 0), (0, 0, 0)]
+            release = [(3, 47, 0), (3, 57, -1), (3, 47, 1), (3, 57, -1),
+                       *touch.button_events(False), (0, 0, 0)]
             release_command = command(release)
             active = False
             try:
@@ -670,10 +739,9 @@ class AdbClient:
                     radius = span/2 * (1-(1-.05/.22)*amount)
                     events = []
                     if step == 0:
-                        events.append((1, 330, 1))
+                        events.extend(touch.button_events(True))
                     for slot, pixel in enumerate((cx-radius, cx+radius)):
-                        x = round(touch.x_min + pixel/(width-1) * (touch.x_max-touch.x_min))
-                        y = round(touch.y_min + cy/(height-1) * (touch.y_max-touch.y_min))
+                        x, y = touch.coordinates(pixel, cy, width, height, rotation)
                         events.append((3, 47, slot))
                         if step == 0:
                             events.append((3, 57, slot+1))

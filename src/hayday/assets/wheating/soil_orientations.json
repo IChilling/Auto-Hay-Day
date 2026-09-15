@@ -1,0 +1,14 @@
+{
+  "references": {
+    "soil_orientation_1.png": {
+      "source": "SoilRef1.png",
+      "sha256": "bf0a06250afaf3fc01d85197eb4b07620740cac159f553632f5bdebed5cd449f",
+      "note": "User-provided soil orientation reference, original pixels retained."
+    },
+    "soil_orientation_2.png": {
+      "source": "SoilRef2.png",
+      "sha256": "2f1d044a2c51eb5bedac4b86b25a281948f3ca9937c9e75bc444509d7f4077f9",
+      "note": "User-provided soil orientation reference, original pixels retained."
+    }
+  }
+}

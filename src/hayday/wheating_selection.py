@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+
+import cv2
 
 from hayday.adb import Screenshot
+from hayday.camera import CameraNavigator
 from hayday.farming import FarmingWorker
 from hayday.farming_vision import HarvestTarget
+from hayday.wheating import WheatingPrerequisite, WheatingStaleControl
 
 
 def same_harvest(first, second, frame):
@@ -39,12 +43,54 @@ class PreparedHarvest:
                 and 0 <= time.monotonic()-self.observed_at <= 1.)
 
 
+def _wheat_at(run, frame, point):
+    """Use the same local crop evidence as the verified-layout selector."""
+    x, y = map(int, point)
+    if not (frame.width*.12 < x < frame.width*.88 and frame.height*.20 < y < frame.height*.83):
+        return False
+    image = run.vision._image_for(frame.png)
+    patch = cv2.cvtColor(image[y-8:y+9, x-12:x+13], cv2.COLOR_BGR2HSV)
+    return float((cv2.inRange(patch, (18, 140, 160), (31, 255, 255)) > 0).mean()) >= .4
+
+
+def _tap_fresh_wheat(run, worker, before, target):
+    # Layout projection and route building can outlive the input deadline under
+    # fleet load. Keep that route anchored to its original proof, but reobserve
+    # the selection point after those calculations. Do not recompute the whole
+    # layout in the final capture-to-tap interval.
+    previous_stamp = before.captured_at
+    for attempt in range(3):
+        run.check()
+        fresh = run.capture(fast=True)
+        distinct = bool(fresh.captured_at) and fresh.captured_at != previous_stamp
+        previous_stamp = fresh.captured_at
+        if (not distinct or (fresh.width, fresh.height) != (before.width, before.height)
+                or not run.vision.farm(fresh) or CameraNavigator._modal_visible(fresh)
+                or run.client.foreground_package() != 'com.supercell.hayday'):
+            continue
+        point = worker._translated_plot(before, fresh, target.center)
+        if point is None or not _wheat_at(run, fresh, point):
+            continue
+        checked = replace(target, x=point[0]-target.width//2, y=point[1]-target.height//2)
+        if run.client.foreground_package() != 'com.supercell.hayday':
+            continue
+        try:
+            run.tap(checked.center, fresh, settle=.25)
+        except WheatingStaleControl:
+            # This exception is raised only before input. ADB errors or an
+            # uncertain post-tap outcome must never repeat the selection tap.
+            run.publish(f'Wheating: refreshing expired wheat selection ({attempt+1}/3); no tap was sent.')
+            continue
+        return fresh, checked
+    raise WheatingPrerequisite('A fresh wheat selection could not be confirmed after three observations; no selection tap was sent.')
+
+
 def select_wheat(run, worker, before, target):
     """Two actual captures confirm the tool/crop; the last one owns the route."""
     worker._prepared_harvest = None
     # The sickle expands for about 200 ms when opening. Capturing during that
     # animation forces a broad scale search and another stabilization frame.
-    run.tap(target.center, before, settle=.25)
+    before, target = _tap_fresh_wheat(run, worker, before, target)
     previous_frame = previous = None
     last_capture = 0.
     for _ in range(6):

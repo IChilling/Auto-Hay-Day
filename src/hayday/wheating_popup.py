@@ -16,7 +16,8 @@ class WheatHostPopup:
         if desktop is None and os.name == 'nt' and isinstance(run.client, AdbClient):
             local = re.fullmatch(r'emulator-\d+|(?:127\.0\.0\.1|localhost|\[::1\]):\d+', run.serial)
             executable = run.client.executable
-            if local and executable.name.lower() == 'hd-adb.exe' and executable.with_name('HD-Player.exe').is_file():
+            if (local and executable.name.lower() == 'hd-adb.exe'
+                    and executable.with_name('HD-Player.exe').is_file() and run.client.is_bluestacks()):
                 from hayday.bluestacks_popup import SmartDownloadsDesktop
                 self.desktop = SmartDownloadsDesktop(executable)
 

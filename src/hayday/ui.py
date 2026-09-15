@@ -64,7 +64,7 @@ class MainWindow(WheatingUI):
         self.preview_stop = asyncio.Event()
         self.jobs: set[asyncio.Task] = set()
         self.reference_shown = True
-        self.last_message = "Ready to connect. Choose your BlueStacks instance to get started."
+        self.last_message = "Ready to connect. Choose your emulator instance to get started."
         self.message_error = False
         self.board_testing = False
         self.board_cancel: threading.Event | None = None
@@ -174,7 +174,7 @@ class MainWindow(WheatingUI):
         p.on_disconnect = self._disconnect_event
 
     async def initialize(self):
-        await self.job("Discovering BlueStacks", self.services.discover, category="connection")
+        await self.job("Discovering emulators", self.services.discover, category="connection")
 
     def button(self, text, icon, handler, primary=False, disabled=False):
         disabled = disabled or self.busy
@@ -195,7 +195,7 @@ class MainWindow(WheatingUI):
         self.route = route
         items = [
             ("overview", "Overview", ft.Icons.DASHBOARD_OUTLINED),
-            ("devices", "BlueStacks", ft.Icons.DEVICES_ROUNDED),
+            ("devices", "Emulators", ft.Icons.DEVICES_ROUNDED),
             ("captures", "Capture library", ft.Icons.PHOTO_LIBRARY_OUTLINED),
             ("activity", "Activity", ft.Icons.RECEIPT_LONG_OUTLINED),
             ("settings", "Settings", ft.Icons.TUNE_ROUNDED),
@@ -218,6 +218,8 @@ class MainWindow(WheatingUI):
             for key, title, icon in items
         ]
         self.status.value = (
+            f"WHEATING  ·  {len(self.services.settings.wheating_instances)} FARMS SELECTED"
+            if self.services.settings.wheating_instances else
             f"CONNECTED  ·  {self.services.connected_serial}"
             if self.services.connected_serial
             else "NO DEVICE SELECTED"
@@ -292,11 +294,11 @@ class MainWindow(WheatingUI):
                 gapless_playback=True,
                 semantics_label="Reference farm screenshot"
                 if using_reference
-                else "Captured BlueStacks screen",
+                else "Captured emulator screen",
                 expand=True,
             )
             if source
-            else label("Connect BlueStacks to see your farm.", 16, MUTED)
+            else label("Connect an emulator to see your farm.", 16, MUTED)
         )
         self.preview_image = preview
         self.resolution_text = label(
@@ -391,6 +393,7 @@ class MainWindow(WheatingUI):
                     ),
                     ft.Row([self.order_status, self.order_count], spacing=12),
                     ft.Row([self.wheating_status, self.wheating_count], spacing=12),
+                    self.wheating_instances_panel,
                     ft.Container(
                         preview,
                         bgcolor="#E8EDDF",
@@ -430,8 +433,10 @@ class MainWindow(WheatingUI):
                             ft.Icon(ft.Icons.DEVICES_OUTLINED, color=GREEN),
                             ft.Column(
                                 [
-                                    label("BLUESTACKS", 9, MUTED, True),
+                                    label("EMULATOR", 9, MUTED, True),
                                     label(
+                                        f'{len(svc.settings.wheating_instances)} farms selected'
+                                        if svc.settings.wheating_instances else
                                         "Connected" if connected else "Awaiting device",
                                         17,
                                         INK,
@@ -466,7 +471,8 @@ class MainWindow(WheatingUI):
                             ft.Column(
                                 [
                                     label("SESSION MODE", 9, MUTED, True),
-                                    label("Orders running" if self.orders_running else "Ready", 17, INK, True),
+                                    label("Wheating running" if self.wheating_running else
+                                          "Orders running" if self.orders_running else "Ready", 17, INK, True),
                                 ],
                                 spacing=4,
                             ),
@@ -543,7 +549,7 @@ class MainWindow(WheatingUI):
         self.adb_field = ft.TextField(
             label="ADB executable",
             value=s.adb_path,
-            hint_text=r"C:\Program Files\BlueStacks_nxt\HD-Adb.exe" if os.name == "nt" else "/path/to/platform-tools/adb",
+            hint_text="Choose a discovered instance or browse to adb.exe" if os.name == "nt" else "/path/to/platform-tools/adb",
             expand=True,
             text_size=13,
             border_color=LINE,
@@ -552,6 +558,26 @@ class MainWindow(WheatingUI):
             label="Local ADB endpoint", value=s.endpoint, width=260, text_size=13, border_color=LINE
         )
         rows = []
+        instance_rows = []
+        for instance in self.services.instances:
+            def select_wheating(e, key=instance.key):
+                selected = list(self.services.settings.wheating_instances)
+                if e.control.value and key not in selected:
+                    selected.append(key)
+                elif not e.control.value and key in selected:
+                    selected.remove(key)
+                self.services.select_wheating_instances(selected)
+
+            async def connect_known(e, key=instance.key):
+                await self.stop_preview()
+                await self.job('Connecting emulator', lambda: self.services.connect_instance(key), 'connection')
+
+            instance_rows.append(ft.Row([
+                ft.Checkbox(label='Wheat', value=instance.key in s.wheating_instances,
+                            on_change=select_wheating, disabled=self.wheating_running),
+                label(f'{instance.emulator} · {instance.display_name} · {instance.endpoint}', expand=True),
+                self.button('Connect instance', ft.Icons.LINK_ROUNDED, connect_known),
+            ]))
         for device in self.services.devices:
 
             async def use(e, serial=device.serial):
@@ -597,18 +623,32 @@ class MainWindow(WheatingUI):
             self.disconnect_button.disabled = False
             self.disconnect_button.bgcolor = PALE
             self.disconnect_button.color = GREEN
+
+        def choose_wheat(keys):
+            self.services.select_wheating_instances(keys)
+            self.navigate('devices')
+
         return ft.Column(
             [
                 self.heading(
                     "Connection",
                     "Connect your farm.",
-                    "Read device screens directly through BlueStacks ADB.",
+                    "Connect BlueStacks or MuMu Player through ADB.",
                     self.button("Discover", ft.Icons.SEARCH_ROUNDED, self.discover),
                 ),
                 card(
                     ft.Column(
                         [
                             label("1  ·  Choose the connection", 17, INK, True),
+                            label('Select Wheat for each farm to automate together. Start them from Overview.', 12, MUTED),
+                            ft.Row([
+                                self.button('Select all for wheat', ft.Icons.CHECK_BOX_OUTLINED,
+                                    lambda e: choose_wheat([i.key for i in self.services.instances]),
+                                    disabled=self.wheating_running or not self.services.instances),
+                                self.button('Clear selection', ft.Icons.CHECK_BOX_OUTLINE_BLANK,
+                                    lambda e: choose_wheat([]), disabled=self.wheating_running),
+                            ]),
+                            *instance_rows,
                             ft.Row(
                                 [
                                     self.adb_field,
@@ -635,7 +675,7 @@ class MainWindow(WheatingUI):
                                 wrap=True,
                             ),
                             label(
-                                "Open BlueStacks → Settings → Advanced → Android Debug Bridge, then enable ADB.\nUse the discovered local endpoint if no devices appear below.",
+                                "BlueStacks: enable Android Debug Bridge in Settings → Advanced.\nMuMu: start the Android device, then Discover and Connect instance. For manual setup, use its reported ADB port.",
                                 12,
                                 MUTED,
                             ),
@@ -666,7 +706,7 @@ class MainWindow(WheatingUI):
                         else [
                             label("2  ·  Select an online instance", 17, INK, True),
                             label(
-                                "No devices found. Start BlueStacks, enable ADB, and connect the local endpoint.",
+                                "No devices found. Start BlueStacks or MuMu, enable ADB, then Discover or connect its local endpoint.",
                                 13,
                                 MUTED,
                             ),
@@ -944,7 +984,7 @@ class MainWindow(WheatingUI):
             self.navigate(self.route)
 
     async def discover(self, e=None):
-        await self.job("Discovering BlueStacks", self.services.discover, "connection")
+        await self.job("Discovering emulators", self.services.discover, "connection")
 
     async def refresh_devices(self, e=None):
         await self.stop_preview()
@@ -956,7 +996,7 @@ class MainWindow(WheatingUI):
 
         def apply():
             if not Path(value).is_file():
-                raise ValueError("Choose an existing HD-Adb.exe or adb.exe file.")
+                raise ValueError("Choose an existing ADB executable (HD-Adb.exe, adb.exe, or adb_server.exe).")
             self.services.disconnect()
             self.services.save_settings(replace(self.services.settings, adb_path=value))
             return self.services.refresh_devices()
@@ -1112,7 +1152,7 @@ class MainWindow(WheatingUI):
 
     async def browse_adb(self, e=None):
         result = await ft.FilePicker().pick_files(
-            dialog_title="Select BlueStacks HD-Adb.exe" if os.name == "nt" else "Select ADB executable",
+            dialog_title="Select emulator ADB executable" if os.name == "nt" else "Select ADB executable",
             allow_multiple=False,
             file_type=ft.FilePickerFileType.CUSTOM if os.name == "nt" else ft.FilePickerFileType.ANY,
             allowed_extensions=["exe"] if os.name == "nt" else None,

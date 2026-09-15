@@ -419,6 +419,10 @@
         715
       ],
       "reference_height": 1080
+    },
+    "shop_locked": {
+      "reference_height": 1080,
+      "source": "MuMu live level-7 shop unlock banner; original pixels"
     }
   },
   "provenance": "Original RGB pixels from user references and existing farm captures; alpha masks exclude surroundings. No farm coordinates are input targets."

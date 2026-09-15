@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "hayday-automation"
 version = "0.1.1"
-description = "A Python desktop workspace for Hay Day on BlueStacks"
+description = "A Python desktop workspace for Hay Day on BlueStacks and MuMu Player"
 readme = "README (IMPORTANT INSTRUCTIONS).txt"
 requires-python = ">=3.11"
 dependencies = [

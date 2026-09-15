@@ -94,6 +94,22 @@ class ShopBuildingVision:
             hits = self._search(image, np.array([base]), detail=True)
         if not hits:
             hits = self._search(image, np.geomspace(base*.35, base*1.5, 23))
+        if not hits:
+            # Coarse world scales can straddle the counter's fine plank lines.
+            # A weak peak only proposes a neighborhood: the refined match must
+            # pass the original score, counter and platform checks.
+            proposals = self.matcher._search(image, self.refs['shop'],
+                np.geomspace(base*.35, base*1.5, 23), .75, self.cancel, max_peaks=2)
+            refined = []
+            for proposal in proposals:
+                pad = round(proposal.width*.15)
+                left, top = max(0, proposal.x-pad), max(0, proposal.y-pad)
+                right = min(width, proposal.x+proposal.width+pad)
+                bottom = min(height, proposal.y+proposal.height+pad)
+                scale = proposal.width/self.refs['shop'].shape[1]
+                refined.extend(self._search(image, np.linspace(.95,1.05,21)*scale,
+                    (left,top,right-left,bottom-top)))
+            hits = tuple(sorted(refined, key=lambda t: -t.score))
         target = self._unique(hits)
         if target:
             self._previous, self._size = target, (width, height)

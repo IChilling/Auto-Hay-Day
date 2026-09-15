@@ -162,7 +162,7 @@ function Invoke-HayDaySetup {
         & $venvPython -I scripts/ui_smoke.py --hidden --seconds-per-route 0.2 --report .setup/ui-check.json
         if ($LASTEXITCODE -ne 0) { throw 'The desktop interface check failed. See .setup\ui-check.json.' }
         Write-Host 'Setup complete. Use Launch Hay Day.cmd to open the app.'
-        Write-Host 'BlueStacks with Hay Day and ADB enabled is required for game automation.'
+        Write-Host 'BlueStacks or MuMu Player with Hay Day and ADB enabled is required for game automation.'
         if (-not $NoLaunch) {
             Start-Process -FilePath (Join-Path $environment 'Scripts\pythonw.exe') -ArgumentList ('-I "{0}"' -f (Join-Path $root 'app.py')) -WorkingDirectory $env:TEMP -WindowStyle Hidden | Out-Null
         }

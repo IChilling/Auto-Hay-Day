@@ -13,12 +13,18 @@ class WheatingUI:
         self.wheating_cancel = None
         self.wheating_message = 'Wheating plants wheat, refills the shop, and uses free advertisements.'
         self.wheating_listed = self.wheating_planted = 0
+        self._fleet_status_controls = {}
+        self._fleet_buttons = {}
 
     def build_wheating_controls(self):
         self.wheating_button = self.button(
             'Stop wheating' if self.wheating_running else 'Start wheating',
             ft.Icons.STOP_ROUNDED if self.wheating_running else ft.Icons.GRASS_ROUNDED,
-            self.start_wheating, True, not self.services.connected_serial or self.orders_running or self.board_testing)
+            self.start_wheating, True,
+            not (self.services.connected_serial or self.services.settings.wheating_instances)
+            or self.orders_running or self.board_testing)
+        if not self.wheating_running and self.services.settings.wheating_instances:
+            self.wheating_button.content = f'Start wheating ({len(self.services.settings.wheating_instances)})'
         if self.wheating_running:
             self.wheating_button.disabled = False
             self.wheating_button.bgcolor = '#AF4A3B'
@@ -33,8 +39,47 @@ class WheatingUI:
         # background operation.
         if self.wheating_running:
             self.wheating_reset_button.disabled = False
+        self.wheating_reset_button.visible = not bool(self.services.settings.wheating_instances)
         self.wheating_status = ft.Text(self.wheating_message, size=12, color='#758074', expand=True)
         self.wheating_count = ft.Text(self._wheating_count_text(), size=12, color='#377651', weight=ft.FontWeight.W_600)
+        self.wheating_instances_panel = self.build_wheating_instances()
+
+    @staticmethod
+    def _instance_status(state):
+        return (f'{state.get("status", "selected").capitalize()} · '
+                f'Planted {state.get("planted", 0)} · Listed {state.get("listed", 0)} · '
+                f'Collected {state.get("collected", 0)}\n{state.get("message", "Ready to start") }')
+
+    def build_wheating_instances(self):
+        self._fleet_status_controls = {}
+        self._fleet_buttons = {}
+        rows = []
+        states = self.services.wheating_progress.get('instances', {})
+        keys = self.services.settings.wheating_instances
+        for instance in self.services.instances:
+            if instance.key not in keys:
+                continue
+            state = states.get(instance.key, {})
+            status = ft.Text(self._instance_status(state), size=12, color='#758074')
+            self._fleet_status_controls[instance.key] = status
+
+            def view(e, key=instance.key):
+                self.services.select_wheating_preview(key)
+                self.navigate(self.route)
+
+            def stop(e, key=instance.key):
+                self.services.cancel_wheating(key)
+
+            view_button = self.button('View', ft.Icons.VISIBILITY_OUTLINED, view)
+            view_button.disabled = not bool(state.get('frame'))
+            stop_button = self.button('Stop', ft.Icons.STOP_ROUNDED, stop)
+            stop_button.disabled = not self.wheating_running or state.get('status') not in {'starting', 'running'}
+            self._fleet_buttons[instance.key] = view_button, stop_button
+            rows.append(ft.Row([ft.Column([ft.Text(f'{instance.display_name} · {instance.endpoint}', size=13,
+                weight=ft.FontWeight.W_600), status], expand=True), view_button, stop_button]))
+        if not rows:
+            rows.append(ft.Text('Choose one or more farms on the Emulators page.', size=12, color='#758074'))
+        return ft.Column(rows, spacing=10)
 
     def _wheating_count_text(self):
         return f'Planted {self.wheating_planted} · Listed {self.wheating_listed} wheat'
@@ -76,6 +121,12 @@ class WheatingUI:
                     self.wheating_message = update.get('message', self.wheating_message)
                 self.wheating_planted = int(update.get('planted', self.wheating_planted))
                 self.wheating_listed = int(update.get('listed', self.wheating_listed))
+                for key, state in update.get('instances', {}).items():
+                    if key in self._fleet_status_controls:
+                        self._fleet_status_controls[key].value = self._instance_status(state)
+                        view_button, stop_button = self._fleet_buttons[key]
+                        view_button.disabled = not bool(state.get('frame'))
+                        stop_button.disabled = state.get('status') not in {'starting', 'running'}
                 self.last_message, self.message_error = self.wheating_message, False
                 if self.route == 'overview':
                     self.wheating_status.value = self.wheating_message
