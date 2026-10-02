@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "features": {
+    "saw": {
+      "box": [
+        409,
+        559,
+        577,
+        724
+      ],
+      "polygon": [
+        [
+          416,
+          670
+        ],
+        [
+          440,
+          652
+        ],
+        [
+          443,
+          635
+        ],
+        [
+          479,
+          599
+        ],
+        [
+          537,
+          576
+        ],
+        [
+          542,
+          563
+        ],
+        [
+          559,
+          562
+        ],
+        [
+          573,
+          579
+        ],
+        [
+          573,
+          597
+        ],
+        [
+          560,
+          599
+        ],
+        [
+          555,
+          583
+        ],
+        [
+          551,
+          585
+        ],
+        [
+          550,
+          616
+        ],
+        [
+          462,
+          705
+        ],
+        [
+          445,
+          698
+        ],
+        [
+          438,
+          720
+        ],
+        [
+          420,
+          711
+        ],
+        [
+          411,
+          688
+        ]
+      ]
+    },
+    "help": {
+      "box": [
+        634,
+        387,
+        742,
+        558
+      ],
+      "polygon": [
+        [
+          639,
+          400
+        ],
+        [
+          736,
+          391
+        ],
+        [
+          733,
+          486
+        ],
+        [
+          702,
+          491
+        ],
+        [
+          702,
+          553
+        ],
+        [
+          681,
+          554
+        ],
+        [
+          680,
+          493
+        ],
+        [
+          646,
+          498
+        ]
+      ]
+    },
+    "arrow": {
+      "box": [
+        483,
+        637,
+        611,
+        737
+      ],
+      "polygon": [
+        [
+          513,
+          641
+        ],
+        [
+          553,
+          671
+        ],
+        [
+          561,
+          657
+        ],
+        [
+          606,
+          726
+        ],
+        [
+          603,
+          732
+        ],
+        [
+          541,
+          716
+        ],
+        [
+          549,
+          701
+        ],
+        [
+          490,
+          694
+        ]
+      ]
+    }
+  },
+  "species": [
+    "apple",
+    "cherry"
+  ],
+  "source": "tests/fixtures/orders/apple_exhausted.png",
+  "sha256": "356c470d1067ccd5e29ba0fdf3f1006d0932b97dc60e1c62ed176d9510def5cd",
+  "purpose": "Read-only deferral. These targets never authorize saw or help input.",
+  "desired": {
+    "source": "tests/fixtures/orders/apple_juice_recipe.png",
+    "box": [
+      1053,
+      554,
+      1133,
+      646
+    ],
+    "sha256": "79ec7ac9f6e64469deffa8dadcbb2ec75f97b55df393c07ec2d258fe416bccad"
+  },
+  "cherry": {
+    "source": "images/fruit/cherry_item.png",
+    "sha256": "a6d6232c969d64e03b397770b5dbb4c83a84f74d3cec11e2dcfb3b3337cffc64",
+    "provenance": "Native fruit crop and alpha from build_fruit_references.py."
+  }
+}

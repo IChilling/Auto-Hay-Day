@@ -52,7 +52,10 @@ class WheatingResult:
 class WheatingRunner:
     def __init__(self, client, diagnostics_root, *, cancel_event=None, progress=None,
                  max_seconds=None, vision=None, fields_factory=None, shop_factory=None,
-                 reset_restart_cooldown=False):
+                 reset_restart_cooldown=False, sell_price='max'):
+        if sell_price not in ('max', 'min'):
+            raise ValueError('Wheating sell price must be max or min.')
+        self.sell_price = sell_price
         if max_seconds is not None and (isinstance(max_seconds, bool)
                 or not isinstance(max_seconds, (float, int)) or not math.isfinite(max_seconds)
                 or max_seconds <= 0):

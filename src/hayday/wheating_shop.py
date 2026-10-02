@@ -1,4 +1,4 @@
-"""Fill empty shop slots with 10 wheat at 36 coins and use free advertisements."""
+"""Fill shop slots at the selected wheat price and use free advertisements."""
 from __future__ import annotations
 
 import time
@@ -11,6 +11,7 @@ from hayday.wheating_vision import SaleSlot
 
 STACK = 10
 MAX_PRICE = 36
+MIN_PRICE = 1
 AD_COOLDOWN = 300
 
 
@@ -31,6 +32,13 @@ class WheatShop:
         self.run = runner
         self._stock_empty_until = float('inf') if runner.state.get('wheat_empty') else 0.
         self._ready_view = None
+
+    @property
+    def _price_control(self):
+        return f'{self.run.sell_price}_price'
+
+    def _sale_price(self, quantity):
+        return MIN_PRICE if self.run.sell_price == 'min' else quantity*MAX_PRICE//STACK
 
     def observe(self):
         frame = self.run.capture()
@@ -203,7 +211,7 @@ class WheatShop:
         self.run.collected += len(targets)
         self.run.confirmed()
 
-    def _select_wheat(self, frame, view, *, maximize_price=False):
+    def _select_wheat(self, frame, view, *, set_price=False):
         if view.silo_tab:
             fresh, checked = self.current(frame, view)
             if checked.kind != 'composer' or not FarmingWorker._same_target(view.silo_tab, checked.silo_tab, fresh):
@@ -232,10 +240,11 @@ class WheatShop:
         if checked.kind != 'composer' or not FarmingWorker._same_target(view.wheat, checked.wheat, fresh):
             self.run.block('The wheat inventory icon moved before selection.')
         self._tap(checked.wheat.center, fresh)
-        if maximize_price and checked.layout_verified and checked.max_price is not None:
+        price_control = getattr(checked, self._price_control)
+        if set_price and checked.layout_verified and price_control is not None:
             # Both positions were verified in this settled dialog. Select wheat
-            # and press max as one bounded pair, then read all resulting values.
-            self._tap(checked.max_price.center, fresh)
+            # and set the price as one bounded pair, then read all resulting values.
+            self._tap(price_control.center, fresh)
         return self._stable_composer()
 
     def _stable_composer(self, *, quantity=None, price=None):
@@ -258,7 +267,7 @@ class WheatShop:
             self.run.block('Invalid wheat sale adjustment.')
         target = getattr(view, name)
         fresh, checked = self.current(frame, view)
-        if (checked.kind != 'composer' or checked.wheat is None or checked.quantity != view.quantity
+        if (target is None or checked.kind != 'composer' or checked.wheat is None or checked.quantity != view.quantity
                 or checked.price != view.price or checked.stock != view.stock
                 or not FarmingWorker._same_target(target, getattr(checked, name), fresh)):
             self.run.block('The wheat sale changed before adjusting it.')
@@ -270,23 +279,26 @@ class WheatShop:
                 self.run.block('The wheat price controls became stale while adjusting them.')
             self.run.client.tap(*getattr(checked, name).center, width=fresh.width, height=fresh.height)
             self.run.wait(.035)
-        if (name in {'plus_quantity', 'minus_quantity'} and checked.max_price is not None
-                and FarmingWorker._same_target(view.max_price, checked.max_price, fresh)):
+        price_control = getattr(checked, self._price_control)
+        if (name in {'plus_quantity', 'minus_quantity'} and price_control is not None
+                and FarmingWorker._same_target(getattr(view, self._price_control), price_control, fresh)):
             # Amount and price share fixed controls. Set both before the next
-            # capture; a missed max tap still falls back to the ordinary check.
-            self._tap(checked.max_price.center, fresh)
+            # capture; a missed price tap still falls back to the ordinary check.
+            self._tap(price_control.center, fresh)
         self.run.wait(.06)
         return self._stable_composer(
             quantity=(view.quantity+count if name == 'plus_quantity' else
                       view.quantity-count if name == 'minus_quantity' else view.quantity),
             price=view.quantity*MAX_PRICE//STACK if name == 'max_price'
-                  else view.price+count if name == 'plus_price' else None)
+                  else MIN_PRICE if name == 'min_price'
+                  else view.price+count if name == 'plus_price'
+                  else view.price-count if name == 'minus_price' else None)
 
     def _list(self, frame, view, slot):
         opened = self._open_slot(frame, view, slot, 'composer')
         if opened is None:
             return False
-        frame, view = self._select_wheat(*opened, maximize_price=True)
+        frame, view = self._select_wheat(*opened, set_price=True)
         reserve = self.run.state['seed_reserve']
         if view.stock is None:
             self.run.block('Wheat stock is unreadable; a listing cannot preserve the reseeding reserve.')
@@ -297,7 +309,7 @@ class WheatShop:
             self.run.wait(.12)
             frame, view = self._stable_composer()
             quantity = sale_quantity(view.stock, reserve)
-        price = quantity*MAX_PRICE//STACK
+        price = self._sale_price(quantity)
         if not quantity:
             self.close(frame, view)
             self._stock_empty_until = time.monotonic()+20
@@ -316,13 +328,15 @@ class WheatShop:
             frame, view = self._increment(frame, view, 'minus_quantity', view.quantity-quantity)
         if view.quantity < quantity:
             frame, view = self._increment(frame, view, 'plus_quantity', quantity-view.quantity)
-        if view.quantity != quantity or view.price is None or not 1 <= view.price <= price:
+        if (view.quantity != quantity or view.price is None
+                or not MIN_PRICE <= view.price <= quantity*MAX_PRICE//STACK):
             self.run.block('The wheat quantity or price could not be read after adjustment.')
-        if view.price < price:
-            if view.max_price:
-                frame, view = self._increment(frame, view, 'max_price', 1)
+        if view.price != price:
+            if getattr(view, self._price_control):
+                frame, view = self._increment(frame, view, self._price_control, 1)
             else:
-                frame, view = self._increment(frame, view, 'plus_price', price-view.price)
+                control = 'plus_price' if view.price < price else 'minus_price'
+                frame, view = self._increment(frame, view, control, abs(price-view.price))
         # Handle ads separately through Edit Sale so the five-minute cooldown
         # never turns into a paid skip hidden in the listing composer.
         if view.ad_checked:
@@ -338,7 +352,7 @@ class WheatShop:
                 or sale_quantity(checked.stock, reserve) != quantity or checked.stock != view.stock
                 or view.ad_checked or checked.ad_checked or checked.submit is None
                 or not FarmingWorker._same_target(view.submit, checked.submit, fresh)):
-            self.run.block('The maximum wheat quantity and price were not confirmed in a fresh listing.')
+            self.run.block('The wheat quantity and selected sell price were not confirmed in a fresh listing.')
         self.run.intent('list', slot=list(slot.target.box), quantity=quantity, price=price, stock=checked.stock)
         self._tap(checked.submit.center, fresh)
         self._await_slot(slot, {'wheat', 'sold'})

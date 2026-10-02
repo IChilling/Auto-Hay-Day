@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "features": {
+    "pig_feed": {
+      "file": "pig_feed.png",
+      "source": "herd_pig-menu.png",
+      "source_sha256": "7482b3d65913c3de8ff07aa37896775b2cae1b9a7e6cf32f7b5d5625146c4906",
+      "box": [
+        983,
+        207,
+        96,
+        87
+      ],
+      "mask": "Original BGR pixels; opaque rectangle or trough inclusion polygon."
+    },
+    "pig_tool": {
+      "file": "pig_tool.png",
+      "source": "herd_pig-menu.png",
+      "source_sha256": "7482b3d65913c3de8ff07aa37896775b2cae1b9a7e6cf32f7b5d5625146c4906",
+      "box": [
+        735,
+        273,
+        123,
+        146
+      ],
+      "mask": "Original BGR pixels; opaque rectangle or trough inclusion polygon."
+    },
+    "pig_trough": {
+      "file": "pig_trough.png",
+      "source": "herd_all-pens.png",
+      "source_sha256": "ecee8e7ff6be8556a1b56343532c33d8e18f1cc901a7e2142da576dc7c44aaf2",
+      "box": [
+        979,
+        393,
+        64,
+        53
+      ],
+      "mask": "Original BGR pixels; opaque rectangle or trough inclusion polygon."
+    },
+    "goat_feed": {
+      "file": "goat_feed.png",
+      "source": "herd_feed-mill.png",
+      "source_sha256": "d7e5a5b6f27f459978d5ab59ddcb12b996f2b89d69f5c1481af544a604128f19",
+      "box": [
+        290,
+        582,
+        97,
+        91
+      ],
+      "mask": "Original BGR pixels; opaque rectangle or trough inclusion polygon."
+    },
+    "goat_feed_inactive": {
+      "file": "goat_feed_inactive.png",
+      "source": "herd_goat-menu.png",
+      "source_sha256": "5aedcd940d3351da148081e1451e58037162c62f4c7d8c853fe4e5b8e008eb83",
+      "box": [
+        1232,
+        217,
+        99,
+        91
+      ],
+      "mask": "Original BGR pixels; opaque rectangle or trough inclusion polygon."
+    },
+    "goat_tool": {
+      "file": "goat_tool.png",
+      "source": "herd_goat-menu.png",
+      "source_sha256": "5aedcd940d3351da148081e1451e58037162c62f4c7d8c853fe4e5b8e008eb83",
+      "box": [
+        1001,
+        291,
+        132,
+        133
+      ],
+      "mask": "Original BGR pixels; opaque rectangle or trough inclusion polygon."
+    },
+    "goat_trough": {
+      "file": "goat_trough.png",
+      "source": "herd_all-pens.png",
+      "source_sha256": "ecee8e7ff6be8556a1b56343532c33d8e18f1cc901a7e2142da576dc7c44aaf2",
+      "box": [
+        1333,
+        373,
+        70,
+        59
+      ],
+      "mask": "Original BGR pixels; opaque rectangle or trough inclusion polygon."
+    },
+    "sheep_trough": {
+      "file": "sheep_trough.png",
+      "source": "herd_winter-cliff.png",
+      "source_sha256": "34332f300d011a6959b5463c968222da45e667658645d2dc83c11a1b828e6887",
+      "box": [
+        424,
+        822,
+        80,
+        66
+      ],
+      "mask": "Original BGR pixels; opaque rectangle or trough inclusion polygon."
+    }
+  },
+  "feed_count": {
+    "pig": [
+      -125,
+      -49,
+      146,
+      89
+    ],
+    "goat": [
+      -106,
+      -56,
+      144,
+      88
+    ]
+  }
+}

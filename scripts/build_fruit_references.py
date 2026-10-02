@@ -86,10 +86,14 @@ def build():
         ('cherry_cluster_large', 'fruit_cherry_before_success.png', [1043, 429, 1090, 466], [.30, 1.55]),
         ('cherry_cluster_slanted', 'fruit_cherry_before_success.png', [1110, 450, 1158, 486], [.30, 1.55]),
         ('cherry_cluster_small', 'fruit_cherry_partly_harvested_guided.png', [969, 551, 992, 569], [.65, 3.3]),
+        ('cherry_cluster_mumu_left', 'tests/fixtures/orders/cherry_small.png', [970, 554, 994, 570], [.65, 3.3]),
+        ('cherry_cluster_mumu_right', 'tests/fixtures/orders/cherry_small.png', [995, 543, 1018, 557], [.65, 3.3]),
         ('cherry_item', 'orders_missing_cherry.png', [1245, 455, 1322, 516], None),
     ]
     for name, capture_name, box, scale_range in specifications:
-        png = (ROOT/'images/reference_captures'/capture_name).read_bytes()
+        capture_path = (ROOT/capture_name if capture_name.startswith('tests/')
+                        else ROOT/'images/reference_captures'/capture_name)
+        png = capture_path.read_bytes()
         pixels = cv2.imdecode(np.frombuffer(png, np.uint8), 1)
         x0, y0, x1, y1 = box
         crop = pixels[y0:y1, x0:x1]

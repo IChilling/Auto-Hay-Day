@@ -1,4 +1,4 @@
-"""Recognize sheep shears and woolly animals independently of farm layout."""
+"""Recognize enabled shears and fenced production pens independently of animal poses."""
 
 from __future__ import annotations
 
@@ -28,8 +28,8 @@ class SheepVision:
         self.matcher = ResourceVision()
 
     @staticmethod
-    def pen(image, animal, *, slope_bounds=(.25, .8), vertices=(4,), close_radius=0):
-        """Find the enclosed soil diamond containing the independently seen sheep."""
+    def pen(image, animal, *, slope_bounds=(.25, .8), vertices=(4,), close_radius=0, fence='white'):
+        """Find fenced soil around an independently recognized animal or trough."""
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         soil = cv2.inRange(hsv, (12, 85, 75), (32, 255, 245))
         if close_radius:
@@ -55,16 +55,74 @@ class SheepVision:
             points = polygon[:, 0]
             edges = np.roll(points, -1, axis=0)-points
             slopes = np.abs(edges[:, 1]/np.maximum(1, np.abs(edges[:, 0])))
+            # The four-corner approximation can cut inside the actual soil
+            # hull as animals move along its edge. Count only this component's
+            # pixels inside the diamond; outside soil cannot inflate occupancy
+            # above 100 percent and make a valid fenced pen disappear.
+            interior = np.zeros((height, width), np.uint8)
+            cv2.fillConvexPoly(interior, points-np.array([x, y]), 1)
+            occupancy = np.count_nonzero((labels[y:y+height, x:x+width] == index)
+                                         & (interior > 0))/max(1, np.count_nonzero(interior))
             if not (np.all((slopes > slope_bounds[0]) & (slopes < slope_bounds[1]))
-                    and .50 < area/cv2.contourArea(polygon) < 1.01):
+                    and occupancy > .50):
                 continue
-            # A soil-colored building or road is insufficient: white pasture
-            # fencing must support the observed diamond's perimeter as well.
+            # Soil alone is insufficient: the requested fence type must also
+            # support the observed diamond's perimeter.
             ring = np.zeros(image.shape[:2], np.uint8)
             cv2.polylines(ring, [polygon], True, 255, max(3, round(animal.width*.45)))
             pixels = image[ring > 0]
-            white = (pixels.min(axis=1) > 175) & (np.ptp(pixels, axis=1) < 65)
-            if white.mean() >= .045:
+            if fence == 'wood':
+                hsv_ring = hsv[ring > 0]
+                supported = ((hsv_ring[:, 0] < 19) & (hsv_ring[:, 1] > 105)
+                             & (hsv_ring[:, 2] > 65)).mean() >= .20
+            elif fence == 'white':
+                white = (pixels.min(axis=1) > 175) & (np.ptp(pixels, axis=1) < 65)
+                supported = white.mean() >= .045
+            else:
+                supported = False
+            if supported:
+                candidates.append(tuple(tuple(map(int, p)) for p in points))
+        return candidates[0] if len(candidates) == 1 else ()
+
+    @staticmethod
+    def fenced_pen(image, trough):
+        """Read the complete white fence even when wool covers its soil corners."""
+        white = ((image.min(axis=2) > 175) & (np.ptp(image, axis=2) < 65)).astype(np.uint8)
+        count, labels, stats, _ = cv2.connectedComponentsWithStats(white)
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        soil = cv2.inRange(hsv, (12, 85, 75), (32, 255, 245))
+        candidates = []
+        for label, (x, y, width, height, area) in enumerate(stats[1:count], 1):
+            if (not 1.5 < width/max(1, height) < 2.6
+                    or not 3 < width/trough.width < 7
+                    or area < trough.width**2
+                    or not x < trough.center[0] < x+width
+                    or not y < trough.center[1] < y+height):
+                continue
+            ys, xs = np.nonzero(labels == label)
+            hull = cv2.convexHull(np.column_stack((xs, ys)))
+            polygon = cv2.approxPolyDP(hull, .045*cv2.arcLength(hull, True), True)
+            if len(polygon) != 4 or cv2.pointPolygonTest(polygon, trough.center, False) <= 0:
+                continue
+            points = polygon[:, 0]
+            edges = np.roll(points, -1, axis=0)-points
+            slopes = np.abs(edges[:, 1]/np.maximum(1, np.abs(edges[:, 0])))
+            if not np.all((slopes > .25) & (slopes < .8)):
+                continue
+            interior = np.zeros(image.shape[:2], np.uint8)
+            cv2.fillConvexPoly(interior, polygon, 255)
+            if (soil[interior > 0] > 0).mean() < .25:
+                continue
+            # All four sides need white fence pixels, rather than a large
+            # white animal or a neighboring building supplying the hull.
+            supported = True
+            for first, second in zip(points, np.roll(points, -1, axis=0), strict=True):
+                edge = np.zeros_like(interior)
+                cv2.line(edge, tuple(first), tuple(second), 255, max(3, round(trough.width*.25)))
+                if white[edge > 0].mean() < .15:
+                    supported = False
+                    break
+            if supported:
                 candidates.append(tuple(tuple(map(int, p)) for p in points))
         return candidates[0] if len(candidates) == 1 else ()
 
@@ -107,6 +165,8 @@ class SheepVision:
         source = self.manifest['features']['shears']['box']
         guides = []
         for shears in (*matches['shears'], *matches.get('shears_disabled', ())):
+            if not feeding and not self._shears_enabled(image, shears):
+                continue
             scale = shears.width/self.references['shears'].shape[1]
             evidence = []
             for name in ('arrow', 'feed'):
@@ -124,21 +184,19 @@ class SheepVision:
                 tx, ty = self.manifest['tool_point']
                 tool = VisualTarget(round(shears.x+(tx-source[0])*scale)-6,
                                     round(shears.y+(ty-source[1])*scale)-6, 12, 12, shears.score)
-                guides.append((shears, tool, evidence[0], scale))
+                guides.append((shears, tool, evidence[0], scale, evidence[1]))
         if len(guides) != 1 or cancel():
             return None
-        shears, tool, arrow, scale = guides[0]
-        # World animals have their own zoom. Search the whole frame; neither
+        shears, tool, arrow, scale, feed = guides[0]
+        # World pens have their own zoom. Search the whole frame; neither
         # the farm's layout nor the tool menu predicts the pasture's position.
         sizes = np.unique(np.r_[np.geomspace(base*.55, base*2.3, 32), base])
-        animals = (() if feeding else self.matcher._search(
-            image, self.references['ready'], sizes, .91, cancel, max_peaks=8))
         troughs = self.matcher._search(image, self.references['pen_trough'], sizes, .91,
                                        cancel, max_peaks=6)
         supported = []
         for trough in troughs:
-            polygon = self.pen(image, trough)
-            if not polygon and pen_hint is not None:
+            polygon = self.fenced_pen(image, trough) or self.pen(image, trough)
+            if pen_hint is not None:
                 old = _decode(pen_hint[0])
                 previous = pen_hint[1]
                 if old.shape == image.shape and len(previous) == 4:
@@ -148,8 +206,15 @@ class SheepVision:
                                  and abs(m.width-trough.width) <= 3*base for m in old_troughs)
                     mask = np.zeros(image.shape[:2], np.uint8)
                     cv2.fillConvexPoly(mask, np.array(previous, np.int32), 255)
+                    from hayday.farming_vision import FarmingVision
+                    timer = FarmingVision(cancel=cancel).growing(png)
+                    original_area = np.count_nonzero(mask)
+                    if timer:
+                        x, y, w, h = timer.box
+                        mask[max(0, y-round(50*base)):min(image.shape[0], y+h+round(30*base)),
+                             max(0, x-round(20*base)):min(image.shape[1], x+w+round(250*base))] = 0
                     pixels = np.max(np.abs(image.astype(np.int16)-old.astype(np.int16)), axis=2)[mask > 0]
-                    if (stable and len(pixels) and np.mean(pixels < 30) >= .55
+                    if (stable and len(pixels) >= original_area*.25 and np.mean(pixels < 30) >= .55
                             and cv2.pointPolygonTest(np.array(previous, np.int32),
                                                     trough.center, True) >= -trough.width*.25):
                         # A timer may cover the lower fence. A just-observed
@@ -158,29 +223,23 @@ class SheepVision:
                         polygon = previous
             if not polygon:
                 continue
-            contour = np.array(polygon, np.int32)
             center = np.mean(polygon, axis=0)
             # The location link's active tool menu must point into this pen.
             # A matching animal elsewhere cannot redirect a harvest.
             if not (tool.center[0] < center[0] < tool.center[0]+650*scale
                     and arrow.center[1] < center[1] < arrow.center[1]+420*scale):
                 continue
-            if feeding:
-                # Feeding sweeps the enclosure even when sheep turn or overlap.
-                # The wool identity, sheep feed guide, wooden trough, and white
-                # fence already establish its species; individual poses do not.
-                supported.append((trough, polygon))
-            else:
-                supported.extend((animal, polygon) for animal in animals
-                                 if cv2.pointPolygonTest(contour, animal.center, True) >= -animal.width*.35
-                                 and .65 <= trough.width/animal.width <= 1.65)
+            # The wool identity, feed guide, wooden trough and white fence
+            # identify production sheep. Enabled blue shears establish readiness;
+            # costumes, movement and overlapping animals do not change that.
+            supported.append((trough, polygon))
         animals = tuple(animal for animal, _ in supported)
         if cancel():
             return None
         target = min(animals, key=lambda m: np.linalg.norm(np.subtract(m.center, tool.center)),
                      default=None)
         polygon = next((p for a, p in supported if a is target), ())
-        path = self.sweep(polygon, target.width*(.55 if feeding else 1)) if polygon else ()
+        path = self.sweep(polygon, target.width*.55) if polygon else ()
         if not path:
             target = None
         stock = None
@@ -193,14 +252,51 @@ class SheepVision:
             tx, ty = self.manifest['feed_point']
             tool = VisualTarget(round(shears.x+(tx-source[0])*scale)-6,
                                 round(shears.y+(ty-source[1])*scale)-6, 12, 12, shears.score)
-        return FruitTarget(tool, target, min(shears.score, arrow.score), scale, arrow,
-                           'wool', animals, path, polygon, 'feed' if feeding else 'harvest', stock)
+        enabled = True
+        if feeding:
+            patch = image[feed.y:feed.y+feed.height, feed.x:feed.x+feed.width]
+            mask = cv2.resize(self.references['feed'][:, :, 3], (feed.width, feed.height)) > 200
+            saturation = cv2.cvtColor(patch, cv2.COLOR_BGR2HSV)[:, :, 1]
+            enabled = bool(np.mean(saturation[mask] > 60) > .18)
+        guide = FruitTarget(tool, target, min(shears.score, arrow.score), scale, arrow,
+                            'wool', animals, path, polygon, 'feed' if feeding else 'harvest', stock,
+                            enabled=enabled)
+        if not feeding and target is not None:
+            from hayday.animal_groups import grouped_harvest
+            pens = list(self.enclosures(png, cancel))
+            if pen_hint is not None and polygon == pen_hint[1]:
+                from hayday.cows import CowVision
+                pens = [p for p in pens if not CowVision.same_pen(p[2], polygon)]
+                pens.append((target, target, polygon))
+            seeds = [pen for pen in pens if pen[2] == polygon]
+            if len(seeds) == 1:
+                return grouped_harvest(guide, pens, seeds[0], .55)
+        return guide
+
+    def _shears_enabled(self, image, shears):
+        reference = self.references['shears']
+        hsv = cv2.cvtColor(reference[:, :, :3], cv2.COLOR_BGR2HSV)
+        handle = ((reference[:, :, 3] > 0) & (hsv[:, :, 0] >= 90) & (hsv[:, :, 0] <= 120)
+                  & (hsv[:, :, 1] > 90) & (hsv[:, :, 2] > 90)).astype(np.uint8)
+        mask = cv2.resize(handle, (shears.width, shears.height), interpolation=cv2.INTER_NEAREST)
+        mask = cv2.erode(mask, np.ones((3, 3), np.uint8)) > 0
+        patch = image[shears.y:shears.y+shears.height, shears.x:shears.x+shears.width]
+        if patch.shape[:2] != mask.shape or np.count_nonzero(mask) < 30:
+            return False
+        pixels = cv2.cvtColor(patch, cv2.COLOR_BGR2HSV)[mask]
+        return bool(((pixels[:, 0] >= 90) & (pixels[:, 0] <= 120)
+                     & (pixels[:, 1] > 70) & (pixels[:, 2] > 70)).mean() >= .60)
 
     def enclosure(self, png, desired_icon, cancel):
         """Find one production-sheep trough in a clear farm view to reopen its menu."""
         if not self.matcher.find_item(desired_icon, self.item, min_scale=.45,
                                       max_scale=2.2, threshold=.93, cancel=cancel):
             return None
+        found = self.enclosures(png, cancel)
+        return (found[0][1], found[0][2]) if len(found) == 1 else None
+
+    def enclosures(self, png, cancel):
+        """All complete production-sheep floors, without inspecting animal poses."""
         image = _decode(png)
         base = image.shape[0]/self.manifest['reference_height']
         sizes = np.unique(np.r_[np.geomspace(base*.55, base*2.3, 32), base])
@@ -210,7 +306,7 @@ class SheepVision:
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         clear_soil = cv2.inRange(hsv, (18, 100, 150), (30, 245, 245))
         for trough in troughs:
-            polygon = self.pen(image, trough)
+            polygon = self.fenced_pen(image, trough) or self.pen(image, trough)
             if not polygon:
                 continue
             mask = np.zeros(image.shape[:2], np.uint8)
@@ -223,5 +319,5 @@ class SheepVision:
             if radius >= max(5, trough.width*.08):
                 # Trough artwork projects into the pen behind it. Tap clear
                 # soil inside the actual enclosure to avoid its neighbor.
-                found.append((VisualTarget(point[0]-5, point[1]-5, 10, 10, trough.score), polygon))
-        return found[0] if len(found) == 1 and not cancel() else None
+                found.append((trough, VisualTarget(point[0]-5, point[1]-5, 10, 10, trough.score), polygon))
+        return tuple(found) if not cancel() else ()

@@ -10,7 +10,12 @@
     "populated/devices",
     "populated/captures",
     "populated/activity",
-    "populated/settings"
+    "populated/settings",
+    "multi-running/overview",
+    "multi-running/devices",
+    "multi-running/captures",
+    "multi-running/activity",
+    "multi-running/settings"
   ],
   "errors": []
 }

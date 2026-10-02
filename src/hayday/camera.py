@@ -126,6 +126,8 @@ class CameraNavigator:
         self._actions: list[str] = []
         self._deadline = math.inf
         self._tapped = False
+        self.home_recovery = None
+        self._home_returned = False
 
     def _check(self):
         if self.cancel_event.is_set():
@@ -163,10 +165,10 @@ class CameraNavigator:
             frame = self._observe()
             if self._modal_visible(frame):
                 return frame
-            current = self._view(frame)
-            if previous is not None and self._same_view(previous, current):
+            if (previous is not None and previous.captured_at != frame.captured_at
+                    and self._same_farm_position(previous, frame)):
                 return frame
-            previous = current
+            previous = frame
         raise TimeoutError("Camera kept moving after the gesture; no target input was sent.")
 
     def _result(self, status, message, match=None, panel=None):
@@ -194,19 +196,41 @@ class CameraNavigator:
         return float(np.median(difference)) < 2.5 and float(np.quantile(difference, .8)) < 7
 
     @classmethod
+    def _same_farm_position(cls, before: Screenshot, after: Screenshot) -> bool:
+        # Clouds and an accidentally opened picker change many pixels at a
+        # camera edge. A broad, stable world transform still establishes that
+        # the farm did not move; UI changes must not restart the edge search.
+        from hayday.farming import FarmingWorker
+        center = (before.width//2, before.height//2)
+        projected = FarmingWorker._translated_plot(before, after, center, require_visible=False)
+        if projected is not None:
+            return bool(np.linalg.norm(np.subtract(projected, center)) < 5)
+        return cls._same_view(cls._view(before), cls._view(after))
+
+    @classmethod
     def _modal_visible(cls, frame: Screenshot) -> bool:
         """A large opaque cream dialog is not farm ground, even with grass at its edges."""
         image = cls._decode(frame)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        h, w = hsv.shape[:2]
+        # Illustrated popovers may contain grass-colored artwork rather than
+        # cream panels. The game's fixed blue corner HUD dims behind them.
+        hud = hsv[round(h*.014):round(h*.144), round(w*.013):round(w*.0875)]
+        blue = hud[(hud[:, :, 0] > 90) & (hud[:, :, 0] < 125) & (hud[:, :, 1] > 75)]
+        if len(blue) > hud.shape[0]*hud.shape[1]*.015 and np.quantile(blue[:, 2], .9) < 190:
+            return True
         cream = cv2.inRange(hsv, (15, 0, 165), (45, 115, 255))
         h, w = cream.shape
         cream = cv2.morphologyEx(cream, cv2.MORPH_CLOSE, np.ones((15, 15), np.uint8))
         count, _, stats, _ = cv2.connectedComponentsWithStats(cream)
-        return any(sw > w*.4 and sh > h*.3 and area > w*h*.16
+        # Snow and a long diagonal cliff can connect into one cream component
+        # across the whole viewport. A dialog also occupies its own rectangle.
+        return any(sw > w*.4 and sh > h*.3 and area > w*h*.16 and area > sw*sh*.5
                    for _, _, sw, sh, area in stats[1:count])
 
     @classmethod
-    def _grass_start(cls, frame: Screenshot, dx: float, dy: float) -> tuple[int, int, int, int] | None:
+    def _grass_start(cls, frame: Screenshot, dx: float, dy: float, *,
+                     exclude_regions=()) -> tuple[int, int, int, int] | None:
         """Choose an observed open patch whose entire drag stays away from HUD."""
         image = cls._decode(frame)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -224,12 +248,45 @@ class CameraNavigator:
         top, bottom = max(y0, y0-move_y), min(y1, y1-move_y)
         allowed = np.zeros_like(grass)
         allowed[max(0, top):max(0, bottom), max(0, left):max(0, right)] = 255
-        grass &= allowed
-        distance = cv2.distanceTransform(grass, cv2.DIST_L2, 3)
+        for x, y, region_width, region_height in exclude_regions:
+            grass[max(0,y):min(height,y+region_height),
+                  max(0,x):min(width,x+region_width)] = 0
+        surface = cv2.distanceTransform(grass, cv2.DIST_L2, 3)
+        distance = cv2.distanceTransform(grass & allowed, cv2.DIST_L2, 3)
+        # MuMu can select an object at release when a synthetic camera swipe
+        # crosses an unscrollable shore. Its endpoint must also be clear grass,
+        # otherwise repeatedly ending on the boat reopens its destination page.
+        rows = np.clip(np.arange(height)+move_y, 0, height-1)
+        columns = np.clip(np.arange(width)+move_x, 0, width-1)
+        distance = np.minimum(distance, surface[np.ix_(rows, columns)])
         _, radius, _, (x, y) = cv2.minMaxLoc(distance)
         if radius < max(3, min(width, height)*.005):
             return None
         return x, y, x+move_x, y+move_y
+
+    @classmethod
+    def _search_drag(cls, frame: Screenshot, dx: float, dy: float):
+        """Shorten movement to fit narrow verified ground near farm edges."""
+        for fraction in (1., .5, .25, .125, .0625):
+            drag = cls._grass_start(frame, dx*fraction, dy*fraction)
+            if drag is not None:
+                return drag
+        return None
+
+    @classmethod
+    def _menu_ground(cls, frame: Screenshot, scene):
+        """Keep dismissal taps outside a producer's translucent item palette."""
+        excluded = []
+        if scene.empty_slots:
+            scale = float(np.median([slot.width for slot in scene.empty_slots]))/132
+            left = min(slot.x for slot in scene.empty_slots)
+            right = max(slot.x+slot.width for slot in scene.empty_slots)+round(240*scale)
+            top = min(slot.y for slot in scene.empty_slots)-round(140*scale)
+            bottom = max(slot.y+slot.height for slot in scene.empty_slots)+round(140*scale)
+            excluded.append((0, 0, left+round(100*scale), bottom))
+            excluded.append((left-round(60*scale), top, right-left+round(60*scale), bottom-top))
+        excluded.extend(popup.box for popup in scene.popups)
+        return cls._grass_start(frame, 0, 0, exclude_regions=excluded)
 
     @classmethod
     def _pinch_area(cls, frame: Screenshot) -> tuple[tuple[int, int], int] | None:
@@ -346,6 +403,13 @@ class CameraNavigator:
 
     def _try_open(self, frame: Screenshot):
         self._check()
+        if self.home_recovery is None:
+            from hayday.farm_home import FarmHomeRecovery
+            self.home_recovery = FarmHomeRecovery(self.client, capture=self._observe,
+                cancel_event=self.cancel_event, check=self._check, progress=self._record)
+        returned = self.home_recovery.process(frame, allow_input=self.allow_dialog_recovery)
+        self._home_returned = self._home_returned or returned is not frame
+        frame = returned
         panel = self.verifier.verify(frame.png, cancel=self.cancel_event.is_set)
         self._check()
         if panel.verified:
@@ -389,7 +453,8 @@ class CameraNavigator:
         """Allow one fresh navigation tap when the first collected truck rewards.
 
         This never retries an order-send action. It requires the original board
-        to remain visible and pass a new full search plus local revalidation.
+        to remain visible and pass two fresh local feature checks. A full
+        search is only needed when the first local check cannot find it.
         A failed input command is handled outside this method and never retried.
         """
         frame = self._observe()
@@ -406,7 +471,13 @@ class CameraNavigator:
             self._check()
             if panel.verified:
                 return self._verify_open(panel, match=previous)
-        report = self.detector.detect(frame.png, cancel=self.cancel_event.is_set)
+        # Reward animation can hide a support just enough that a coarse
+        # whole-screen peak is missed. Revalidate the already known position
+        # with the same acceptance thresholds before doing another broad search.
+        report = self.detector.revalidate(frame.png, previous, cancel=self.cancel_event.is_set)
+        self._check()
+        if report.match is None:
+            report = self.detector.detect(frame.png, cancel=self.cancel_event.is_set)
         self._check()
         if report.match is None or not self._same_target(previous, report.match):
             return self._result("unverified", "Order panel is unconfirmed and the same board is no longer safely visible. No additional tap sent.", previous)
@@ -450,6 +521,7 @@ class CameraNavigator:
             result = self._try_open(frame)
             if result:
                 return result
+            frame = self.frame
             # A smooth grass origin is required before issuing camera gestures.
             # Unknown overlays with no usable farm surface stop recovery.
             if self._grass_start(frame, 0, 0) is None:
@@ -467,9 +539,13 @@ class CameraNavigator:
             result = self._try_open(frame)
             if result:
                 return result
+            frame = self.frame
             scan = FarmScan()
             for index in range(1, self.max_pan_steps+1):
                 self._check()
+                if self._home_returned:
+                    scan = FarmScan()
+                    self._home_returned = False
                 if self._modal_visible(frame):
                     recovered = self._recover_dialog(frame)
                     if isinstance(recovered, CameraResult):
@@ -478,26 +554,23 @@ class CameraNavigator:
                     result = self._try_open(frame)
                     if result:
                         return result
+                    frame = self.frame
                 dx, dy = scan.direction
-                drag = None
-                for fraction in (1., .5, .25):
-                    drag = self._grass_start(frame, dx*fraction, dy*fraction)
-                    if drag is not None:
-                        break
+                drag = self._search_drag(frame, dx, dy)
                 if drag is None:
                     return self._result('blocked', 'No clear drag origin for the next search row; farm scan is incomplete.')
-                before_view = self._view(frame)
+                before_frame = frame
                 self._record(f"{scan.description} ({index}/{self.max_pan_steps}).")
                 self._check()
                 self.client.swipe(*drag, width=frame.width, height=frame.height, duration_ms=250)
                 frame = self._settled_observe()
-                current = self._view(frame)
-                scan.observe(moved=not self._same_view(before_view, current))
+                scan.observe(moved=not self._same_farm_position(before_frame, frame))
                 # Search even revisited views: a previously clipped board or
                 # one hidden by an animation can now be recognizable.
                 result = self._try_open(frame)
                 if result:
                     return result
+                frame = self.frame
                 if scan.phase == 'done':
                     return self._result('not_found', f'Board not found after sweeping {scan.row} rows between observed camera edges.')
             return self._result("not_found", "Board not found before the camera gesture limit; farm scan is incomplete.")

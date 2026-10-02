@@ -42,6 +42,90 @@
       ],
       "source_capture": "resource_cookie_ready.png",
       "mask": "Original pixels with polygon alpha masks; surrounding farm and menu pixels excluded."
+    },
+    {
+      "name": "Brown Sugar",
+      "machine": "Sugar Mill",
+      "identifier": "brown_sugar_identifier.png",
+      "title": "brown_sugar_title.png",
+      "features": {
+        "anchor": {
+          "file": "sugar_mill_rollers.png",
+          "box": [
+            814,
+            430,
+            73,
+            78
+          ]
+        },
+        "support": {
+          "file": "sugar_mill_barrel.png",
+          "box": [
+            862,
+            513,
+            45,
+            54
+          ]
+        },
+        "output": {
+          "file": "brown_sugar_ready.png",
+          "box": [
+            833,
+            542,
+            37,
+            44
+          ]
+        }
+      },
+      "tap": [
+        839,
+        491
+      ],
+      "source_capture": "resource_brown_sugar_ready.png",
+      "source_sha256": "84f84471a62a152516872730ee66a1337852d79d44cddcd71e835c935559cf1b",
+      "mask": "Original pixels with polygon alpha masks; surrounding farm pixels excluded."
+    },
+    {
+      "name": "Blue Woolly Hat",
+      "machine": "Loom",
+      "identifier": "blue_woolly_hat_identifier.png",
+      "title": "blue_woolly_hat_title.png",
+      "features": {
+        "anchor": {
+          "file": "loom_frame.png",
+          "box": [
+            944,
+            523,
+            70,
+            116
+          ]
+        },
+        "support": {
+          "file": "loom_cloth.png",
+          "box": [
+            909,
+            574,
+            94,
+            81
+          ]
+        },
+        "output": {
+          "file": "blue_woolly_hat_ready.png",
+          "box": [
+            943,
+            657,
+            38,
+            36
+          ]
+        }
+      },
+      "tap": [
+        969,
+        606
+      ],
+      "source_capture": "resource_wool_hat_ready.png",
+      "source_sha256": "dbb756e576f7af316a3833b40efbf1b179863cefb6a078a6739b4d127f4cf29f",
+      "mask": "Original pixels with polygon alpha masks; surrounding farm pixels excluded."
     }
   ]
 }

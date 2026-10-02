@@ -1,4 +1,4 @@
-"""Locate laying hens in their observed enclosure, using the egg resource guide."""
+"""Recognize global egg-basket readiness and adjacent fenced chicken pens."""
 from __future__ import annotations
 
 import json
@@ -43,6 +43,8 @@ class ChickenVision:
         guides = []
         source = self.guide_spec['features']['basket']['box']
         for basket in baskets:
+            if not self._basket_enabled(image, basket):
+                continue
             scale = basket.width/self.guide_refs['basket'].shape[1]
             expected = FruitVision._relative(self.guide_spec['features']['arrow']['box'], basket, source, scale)
             matches = [a for a in arrows if np.linalg.norm(np.subtract(a.center, expected.center)) <= 15*scale
@@ -83,48 +85,24 @@ class ChickenVision:
         selected = min(nearby, key=lambda c: np.linalg.norm(np.subtract(c.center, guide.tool.center)), default=None)
         if selected is None:
             return self._target(guide, [])
-        supported = [(probe, polygon) for coop, probe, polygon in self.enclosures(png, cancel)
-                     if selected is not None and np.linalg.norm(np.subtract(coop.center, selected.center)) < 10*guide.scale
-                     and guide.tool.center[0] < np.mean(polygon, axis=0)[0] < guide.tool.center[0]+650*guide.scale
-                     and guide.arrow.center[1] < np.mean(polygon, axis=0)[1] < guide.arrow.center[1]+420*guide.scale]
-        if supported:
-            observed = self._target(guide, supported)
-            if self.ready_neighbors(image, observed.pen_polygon,
-                                    selected.width/self.references['coop'].shape[1], cancel):
-                return observed
-            # Retain the selected enclosure so care can feed it and exclude it
-            # while searching another pen; no harvest path is authorized.
-            return replace(observed, target=None, sweep_path=(), fruit_features=())
-        sizes = np.unique(np.r_[np.geomspace(base*.55, base*2.3, 32), base])
-        hens = []
-        for name, reference in self.references.items():
-            if not name.startswith('ready'):
-                continue
-            for artwork in (reference, cv2.flip(reference, 1)):
-                hens.extend(self.matcher._search(image, artwork, sizes, .93, cancel, max_peaks=12))
-        supported = []
-        for hen in hens:
-            if selected is not None and not (
-                    selected.x-100*guide.scale < hen.center[0] < selected.x+205*guide.scale
-                    and selected.y+70*guide.scale < hen.center[1] < selected.y+215*guide.scale):
-                continue
-            # Gray/white livestock can resemble a masked hen in grayscale.
-            # Its comb must also retain independently observed saturated red.
-            patch = image[hen.y:hen.y+hen.height, hen.x:hen.x+hen.width]
-            hsv = cv2.cvtColor(patch, cv2.COLOR_BGR2HSV)
-            red = ((hsv[:, :, 0] < 12) | (hsv[:, :, 0] > 170)) & (hsv[:, :, 1] > 140) & (hsv[:, :, 2] > 120)
-            if np.count_nonzero(red[:max(1, hen.height//2)]) < max(6, hen.width*hen.height*.02):
-                continue
-            # The coop cuts off the back corner of its soil diamond, making
-            # that visible edge steeper than the unobstructed sheep pasture.
-            polygon = SheepVision.pen(image, hen, slope_bounds=(0, 1.3), vertices=(4, 5, 6))
-            if not polygon:
-                continue
-            center = np.mean(polygon, axis=0)
-            if (guide.tool.center[0] < center[0] < guide.tool.center[0]+650*guide.scale
-                    and guide.arrow.center[1] < center[1] < guide.arrow.center[1]+420*guide.scale):
-                supported.append((hen, polygon))
-        return self._target(guide, supported)
+        pens = self.enclosures(png, cancel)
+        supported = [pen for pen in pens
+                     if np.linalg.norm(np.subtract(pen[0].center, selected.center)) < 10*guide.scale]
+        if len(supported) != 1:
+            return self._target(guide, [])
+        from hayday.animal_groups import grouped_harvest
+        return grouped_harvest(replace(guide, species='egg'), pens, supported[0], .55)
+
+    def _basket_enabled(self, image, basket):
+        reference = self.guide_refs['basket']
+        hsv = cv2.cvtColor(reference[:, :, :3], cv2.COLOR_BGR2HSV)
+        colored = ((reference[:, :, 3] > 0) & (hsv[:, :, 1] > 100)
+                   & (hsv[:, :, 2] > 100)).astype(np.uint8)
+        mask = cv2.resize(colored, (basket.width, basket.height), interpolation=cv2.INTER_NEAREST)
+        mask = cv2.erode(mask, np.ones((3, 3), np.uint8)) > 0
+        patch = image[basket.y:basket.y+basket.height, basket.x:basket.x+basket.width]
+        return bool(patch.shape[:2] == mask.shape and np.count_nonzero(mask) >= 30
+                    and np.mean(cv2.cvtColor(patch, cv2.COLOR_BGR2HSV)[:, :, 1][mask] > 70) >= .60)
 
     @staticmethod
     def _target(guide, supported):
@@ -135,22 +113,6 @@ class ChickenVision:
         return replace(guide, species='egg', target=hen,
                        fruit_features=tuple(h for h, p in supported if p == polygon),
                        pen_polygon=polygon, sweep_path=SheepVision.sweep(polygon, hen.width))
-
-    def ready_neighbors(self, image, polygon, scale, cancel):
-        """Require a laying-hen pose inside the pen before an egg sweep."""
-        points = np.array(polygon, np.int32)
-        left, top = points.min(axis=0)
-        right, bottom = points.max(axis=0)
-        top = max(0, top-round(45*scale))
-        region = image[top:bottom+1, left:right+1]
-        sizes = np.unique(np.r_[np.linspace(scale*.82, scale*1.18, 9), scale])
-        for name in ('ready', 'ready_facing'):
-            for reference in (self.references[name], cv2.flip(self.references[name], 1)):
-                for target in self.matcher._search(region, reference, sizes, .93, cancel, max_peaks=5):
-                    point = (target.center[0]+int(left), target.center[1]+int(top))
-                    if cv2.pointPolygonTest(points, point, True) >= -target.width*.2:
-                        return True
-        return False
 
     def coops(self, image, cancel):
         base = image.shape[0]/self.manifest['reference_height']

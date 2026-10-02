@@ -379,6 +379,7 @@ class MainWindow(WheatingUI):
                             self.board_button,
                             self.order_button,
                             self.wheating_button,
+                            self.wheating_price_dropdown,
                             self.wheating_reset_button,
                         ],
                         wrap=True,

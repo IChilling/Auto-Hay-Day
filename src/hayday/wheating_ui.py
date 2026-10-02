@@ -17,6 +17,15 @@ class WheatingUI:
         self._fleet_buttons = {}
 
     def build_wheating_controls(self):
+        self.wheating_price_dropdown = ft.Dropdown(
+            label='Sell price', value=self.services.settings.wheating_sell_price,
+            options=[ft.DropdownOption(key='max', text='Max'),
+                     ft.DropdownOption(key='min', text='Min')],
+            width=140, dense=True, text_size=13,
+            tooltip='Wheating sell price: maximum or minimum coins per listing.',
+            disabled=self.wheating_running,
+            on_select=self.change_wheating_sell_price,
+        )
         self.wheating_button = self.button(
             'Stop wheating' if self.wheating_running else 'Start wheating',
             ft.Icons.STOP_ROUNDED if self.wheating_running else ft.Icons.GRASS_ROUNDED,
@@ -43,6 +52,14 @@ class WheatingUI:
         self.wheating_status = ft.Text(self.wheating_message, size=12, color='#758074', expand=True)
         self.wheating_count = ft.Text(self._wheating_count_text(), size=12, color='#377651', weight=ft.FontWeight.W_600)
         self.wheating_instances_panel = self.build_wheating_instances()
+
+    def change_wheating_sell_price(self, e):
+        try:
+            if not self.wheating_running:
+                self.services.select_wheating_sell_price(e.control.value)
+        except Exception as exc:
+            self.last_message, self.message_error = str(exc), True
+        self.navigate(self.route)
 
     @staticmethod
     def _instance_status(state):

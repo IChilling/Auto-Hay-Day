@@ -137,6 +137,64 @@ def test_nonwritable_touch_sends_no_events(tmp_path):
     assert all('printf' not in ' '.join(args) for args in calls)
 
 
+@pytest.mark.parametrize('failure', ['none', 'observer', 'cancel', 'bounds', 'timeout', 'command'])
+def test_feedback_contact_is_rotated_and_released_on_every_exit(tmp_path, monkeypatch, failure):
+    client = fake_adb(tmp_path)
+    cancel = threading.Event()
+    monkeypatch.setattr(cancel, 'wait', lambda seconds: cancel.is_set())
+    calls, observations = [], []
+    now = [0.]
+    monkeypatch.setattr('hayday.adb.time.monotonic', lambda: now[0])
+
+    def run(args, **options):
+        calls.append((args, options))
+        if args == ['shell', 'getevent', '-pl']:
+            return MUMU_TOUCH.encode(), b''
+        if args == ['shell', 'dumpsys', 'input']:
+            return MUMU_INPUT.encode(), b''
+        if args[:2] == ['exec-out', 'dd']:
+            return b'\x7fELF\x02\x01', b''
+        if failure == 'command' and 'printf' in args[-1] and not options.get('_release'):
+            raise AdbError('connection lost')
+        return b'', b''
+
+    def update(point, elapsed):
+        observations.append(point)
+        if failure == 'observer':
+            raise RuntimeError('observer failed')
+        if failure == 'cancel':
+            cancel.set()
+        if failure == 'bounds':
+            return (-1,0)
+        if failure == 'timeout':
+            now[0] = 61
+        return (1919,1079) if len(observations) == 1 else None
+
+    client._run = run
+    if failure == 'none':
+        client.drag_feedback((0,0),update,width=1920,height=1080,cancel_event=cancel)
+        assert observations == [(0,0),(1919,1079)]
+    else:
+        with pytest.raises((RuntimeError,AdbError)):
+            client.drag_feedback((0,0),update,width=1920,height=1080,cancel_event=cancel)
+    commands = [(args[-1], options) for args, options in calls if 'printf' in args[-1]]
+    raw = bytes(int(value,8) for value in re.findall(r'\\0([0-7]{3})', commands[0][0]))
+    events = [values[2:] for values in struct.iter_unpack('<qqHHi',raw)]
+    assert (3,53,1080) in events and (3,54,0) in events and (1,325,1) in events
+    assert commands[-1][1]['_release'] is True
+    release = bytes(int(value,8) for value in re.findall(r'\\0([0-7]{3})',commands[-1][0]))
+    assert (3,57,-1) in [values[2:] for values in struct.iter_unpack('<qqHHi',release)]
+
+
+def test_feedback_precancelled_sends_no_input(tmp_path):
+    client = fake_adb(tmp_path)
+    cancel = threading.Event()
+    cancel.set()
+    client._run = lambda *a, **kw: pytest.fail('Cancelled gesture contacted device')
+    with pytest.raises(AdbError,match='cancelled'):
+        client.drag_feedback((0,0),lambda *a: None,width=1920,height=1080,cancel_event=cancel)
+
+
 def test_mumu_discovery_custom_install_and_runtime_ports(tmp_path, monkeypatch):
     import hayday.emulators as emulators
     root = tmp_path/'Custom emulator'

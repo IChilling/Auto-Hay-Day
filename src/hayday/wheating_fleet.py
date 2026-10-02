@@ -49,8 +49,11 @@ class WheatingFleetResult:
 
 class WheatingFleet:
     def __init__(self, instances, root, *, progress=None, cancel_event=None,
-                 max_seconds=None, reset_restart_cooldown=False,
+                 max_seconds=None, reset_restart_cooldown=False, sell_price='max',
                  client_factory=AdbClient, runner_factory=WheatingRunner):
+        if sell_price not in ('max', 'min'):
+            raise ValueError('Wheating sell price must be max or min.')
+        self.sell_price = sell_price
         self.instances = tuple(instances)
         if not self.instances or len(self.instances) > 32:
             raise AdbError('Select between 1 and 32 emulator instances for Wheating.')
@@ -114,7 +117,8 @@ class WheatingFleet:
                     raise AdbError('This emulator endpoint is not online.')
                 runner = self.runner_factory(client, self.root,
                     cancel_event=stop, progress=lambda u: self._publish(instance, {'status': 'running', **u}),
-                    max_seconds=self.max_seconds, reset_restart_cooldown=self.reset_restart_cooldown)
+                    max_seconds=self.max_seconds, reset_restart_cooldown=self.reset_restart_cooldown,
+                    sell_price=self.sell_price)
                 with self._lock:
                     self._runners[instance.key] = runner
                     if stop.is_set() or self.cancel_event.is_set():

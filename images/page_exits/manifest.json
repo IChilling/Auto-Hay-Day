@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "size": [
+    1920,
+    1080
+  ],
+  "pages": {
+    "achievements": {
+      "source": "page_achievements.png",
+      "sha256": "dd70805939dd866d1a6bbea92140600cb988ace77725b60b48406abb61acced3",
+      "artifact": "artifacts/orders-cow-recovery/milk_141152/0100.png",
+      "features": [
+        {
+          "file": "achievements_0.png",
+          "box": [
+            756,
+            66,
+            420,
+            84
+          ]
+        },
+        {
+          "file": "achievements_1.png",
+          "box": [
+            231,
+            213,
+            249,
+            66
+          ]
+        },
+        {
+          "file": "achievements_2.png",
+          "box": [
+            1614,
+            36,
+            138,
+            141
+          ]
+        }
+      ]
+    },
+    "county_fair_tutorial": {
+      "source": "page_county_fair_tutorial.png",
+      "sha256": "bf4389bfbbd29c68de59851189a9fde0d4ca3c67afc32613a01497bb6865cb17",
+      "artifact": "artifacts/orders-cow-recovery/fair-before.png",
+      "features": [
+        {
+          "file": "county_fair_tutorial_0.png",
+          "box": [
+            654,
+            72,
+            612,
+            81
+          ]
+        },
+        {
+          "file": "county_fair_tutorial_1.png",
+          "box": [
+            702,
+            273,
+            159,
+            33
+          ]
+        },
+        {
+          "file": "county_fair_tutorial_2.png",
+          "box": [
+            1662,
+            54,
+            129,
+            138
+          ]
+        }
+      ]
+    },
+    "county_fair": {
+      "source": "page_county_fair.png",
+      "sha256": "b0e44b0fc38ae03ea7a4912c4a05532991879fa14163ecbb6f65ad2533cfa63d",
+      "artifact": "artifacts/orders-cow-recovery/fair-main.png",
+      "features": [
+        {
+          "file": "county_fair_0.png",
+          "box": [
+            159,
+            201,
+            906,
+            30
+          ]
+        },
+        {
+          "file": "county_fair_1.png",
+          "box": [
+            1392,
+            843,
+            234,
+            30
+          ]
+        },
+        {
+          "file": "county_fair_2.png",
+          "box": [
+            1776,
+            33,
+            114,
+            111
+          ]
+        }
+      ]
+    },
+    "farm_expansion": {
+      "source": "page_farm_expansion.png",
+      "sha256": "a0bb91cdcb5624e968be1cd2865b06da9d09cea430be4e6374bac416df33d943",
+      "artifact": "artifacts/orders-cow-recovery/accidental-popup.png",
+      "features": [
+        {
+          "file": "farm_expansion_0.png",
+          "box": [
+            618,
+            63,
+            690,
+            111
+          ]
+        },
+        {
+          "file": "farm_expansion_1.png",
+          "box": [
+            1200,
+            294,
+            420,
+            135
+          ]
+        },
+        {
+          "file": "achievements_2.png",
+          "box": [
+            1605,
+            36,
+            138,
+            141
+          ]
+        }
+      ]
+    },
+    "catalog": {
+      "source": "page_catalog.png",
+      "sha256": "98b97d5322e68792262020d4b2493085174022ea18be18f76618c2fb0f2903ac",
+      "artifact": "artifacts/orders-cow-recovery/grouped-pens/20261001T161556_977074Z/0018.png",
+      "features": [
+        {
+          "file": "catalog_0.png",
+          "box": [
+            537,
+            209,
+            350,
+            66
+          ]
+        },
+        {
+          "file": "catalog_1.png",
+          "box": [
+            501,
+            514,
+            278,
+            62
+          ]
+        },
+        {
+          "file": "achievements_2.png",
+          "box": [
+            1717,
+            76,
+            111,
+            114
+          ]
+        }
+      ]
+    }
+  }
+}

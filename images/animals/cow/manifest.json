@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "reference_height": 1080,
+  "desired_item": "milk_item.png",
+  "desired_variants": [
+    {
+      "file": "milk_recipe_item.png",
+      "source": "red_berry_cake_recipe.png",
+      "box": [
+        905,
+        532,
+        990,
+        626
+      ],
+      "source_sha256": "00e9db37fc047ebdd4811f3f62e4833f71ec9b46588a77ab49cdbe620da7313e"
+    }
+  ],
+  "tool_point": [
+    886,
+    352
+  ],
+  "feed_point": [
+    1112,
+    263
+  ],
+  "feed_count_box": [
+    946,
+    167,
+    137,
+    84
+  ],
+  "features": {
+    "bucket": {
+      "file": "bucket.png",
+      "source": "cow_ready_pen.png",
+      "box": [
+        811,
+        275,
+        954,
+        436
+      ],
+      "source_sha256": "0b369cef8e887d41e3ad7289de0be4ac2cb1e8119882bb14e4cf3ca3e58a4a05"
+    },
+    "feed_inactive": {
+      "file": "feed_inactive.png",
+      "source": "cow_ready_pen.png",
+      "box": [
+        1060,
+        224,
+        1163,
+        303
+      ],
+      "source_sha256": "0b369cef8e887d41e3ad7289de0be4ac2cb1e8119882bb14e4cf3ca3e58a4a05"
+    },
+    "feed": {
+      "file": "feed.png",
+      "source": "cow_edge_menu.png",
+      "box": [
+        1536,
+        273,
+        1639,
+        352
+      ],
+      "source_sha256": "594048deb18892c17d2b07a9b09d5b8f35018653e95a74a413019422607751b9"
+    },
+    "trough": {
+      "file": "trough.png",
+      "source": "cow_ready_pen.png",
+      "box": [
+        1130,
+        531,
+        1198,
+        583
+      ],
+      "source_sha256": "0b369cef8e887d41e3ad7289de0be4ac2cb1e8119882bb14e4cf3ca3e58a4a05"
+    },
+    "trough_wide": {
+      "file": "trough_wide.png",
+      "source": "cow_wide_cloud.png",
+      "box": [
+        1498,
+        582,
+        1558,
+        628
+      ],
+      "source_sha256": "fdb318d485fa082589a5502a52132ea74710fb1553c1ab6b6268c29df45d1b76"
+    },
+    "trough_rim": {
+      "file": "trough_rim.png",
+      "source": "cow_wide_cloud.png",
+      "box": [
+        1498,
+        582,
+        1558,
+        628
+      ],
+      "source_sha256": "fdb318d485fa082589a5502a52132ea74710fb1553c1ab6b6268c29df45d1b76"
+    }
+  }
+}

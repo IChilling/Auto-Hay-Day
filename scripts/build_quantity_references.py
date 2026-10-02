@@ -27,7 +27,7 @@ def main():
         ('orders_slot_5.png', (1424,525,69,35), '4/1'),
     ]
     manifest = {
-        'version': 1, 'source': 'Original BlueStacks ADB captures',
+        'version': 1, 'source': 'Original BlueStacks and MuMu ADB captures',
         'normalization_shape': [40, 32],
         'label_policy': 'Labels are transcribed from inspected live captures; untrained glyphs remain unknown.',
         'features': [],
@@ -47,16 +47,19 @@ def main():
         ('outlined', 'resource_chicken_relocated.png', (1408,182,15,47), ('1',)),
         ('outlined', 'resource_chicken_fed.png', (652,225,32,54), ('9',)),
         ('quantity', 'resource_pancake_eggs_collected.png', (1149,519,70,34), tuple('7/3')),
+        ('outlined', 'tests/fixtures/orders/fishing_lure_stock_one.png', (702,341,137,78), ('1',)),
+        ('outlined', 'tests/fixtures/orders/herd_goat-menu.png', (1128,162,143,87), ('7',)),
     ]
     # Exact deterministic resamplings preserve the real outline font at common
     # screenshot resolutions. Very small broken outlines are deliberately absent.
     samples = [(font, source, box, expected, scale)
                for font, source, box, expected in samples
-               for scale in ((1,) if box[2] <= 20 else
+               for scale in ((1,) if box[2] <= 20 or source.startswith('tests/') else
                              (1, 1.25, 1.5) if source.startswith('resource_chicken_') else
                              (1, .66, .75, 1.25, 1.5) if font == 'outlined' and box[2] > 20 else (1,))]
     for font, source, box, expected, scale in samples:
-        source_data = (root/'images'/'reference_captures'/source).read_bytes()
+        source_path = root/source if source.startswith('tests/') else root/'images'/'reference_captures'/source
+        source_data = source_path.read_bytes()
         source_image = cv2.imdecode(np.frombuffer(source_data, np.uint8), cv2.IMREAD_COLOR)
         data = source_data
         reading_box = box

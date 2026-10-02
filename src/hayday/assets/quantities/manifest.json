@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "source": "Original BlueStacks ADB captures",
+  "source": "Original BlueStacks and MuMu ADB captures",
   "normalization_shape": [
     40,
     32
@@ -1854,6 +1854,62 @@
         27
       ],
       "processing": "Brown/red glyph mask, isolated component, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_1_66.png",
+      "glyph": "1",
+      "font": "outlined",
+      "source": "tests/fixtures/orders/fishing_lure_stock_one.png",
+      "source_sha256": "95314042feb830464508bb89cc954584f0765588d382ad49f69bcc379e4bb940",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        702,
+        341,
+        137,
+        78
+      ],
+      "expected_quantity": "1",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        764,
+        358,
+        15,
+        45
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
+    },
+    {
+      "file": "outlined_7_67.png",
+      "glyph": "7",
+      "font": "outlined",
+      "source": "tests/fixtures/orders/herd_goat-menu.png",
+      "source_sha256": "5aedcd940d3351da148081e1451e58037162c62f4c7d8c853fe4e5b8e008eb83",
+      "source_size": [
+        1920,
+        1080
+      ],
+      "quantity_xywh": [
+        1128,
+        162,
+        143,
+        87
+      ],
+      "expected_quantity": "7",
+      "source_resize_scale": 1,
+      "component_coordinate_space": "Source screenshot resampled by source_resize_scale",
+      "glyph_index": 0,
+      "component_xywh": [
+        1184,
+        182,
+        23,
+        47
+      ],
+      "processing": "Value < 90 black outline mask, enclosed dark components retained, aspect-preserving 40x32 normalization"
     }
   ],
   "trained_glyphs": {
@@ -1877,6 +1933,7 @@
       "4",
       "5",
       "6",
+      "7",
       "9"
     ]
   }

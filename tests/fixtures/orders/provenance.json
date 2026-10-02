@@ -1,0 +1,574 @@
+{
+  "source": "MuMu Android screenshots captured through project AdbClient",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "transformations": "None; original full screenshot pixels.",
+  "captures": {
+    "cherry_cloud.png": {
+      "source": "HayDayAutomation/diagnostics/orders/20261001T032526_e4cdc4c9/0018_resource.png",
+      "sha256": "13cb167040ebc6622190ebb5642324bcc71421a862546249d69aa55e1a26b6fd"
+    },
+    "cherry_small.png": {
+      "source": "artifacts/orders-mumu/drag-probe/located.png, recorded before the held-touch test",
+      "sha256": "f7ecaa1401944aab71f78791b42674149b0c887312c970f8d9ddef9527fad72d"
+    },
+    "fishing_lures.png": {
+      "source": "artifacts/orders-mumu/frames/20261001T033646_050390Z/0013.png",
+      "sha256": "e9edd9084386f1cc3e561df6a7e7802fb2181b51c11daddb88bf87a770f51527"
+    },
+    "fishing_menu.png": {
+      "source": "artifacts/orders-fishing/menu8.png",
+      "sha256": "2989c769fc395c8eb70fdc0d8e4d944c063069174f6722e6dfee9b676f4333ed"
+    },
+    "fish_item.png": {
+      "source": "artifacts/orders-fishing/fish_item.png",
+      "sha256": "91e43b73806e976013f80196e5d4610cd7b5ea8dc83027cb49bd791698198cc0"
+    },
+    "fishing_hooked.png": {
+      "source": "artifacts/orders-fishing/tracking12/021.png",
+      "sha256": "259c2532dbc9a6418eeb561525d162451dd00dc4d2c5831a2cecfefe230325d2"
+    },
+    "fishing_near_catch.png": {
+      "source": "artifacts/orders-fishing/tracking12/027.png",
+      "sha256": "813dcb8645283796c6f88a597884379f8dea89bacd15f381cfc4cbe094736d61"
+    },
+    "fishing_photo.png": {
+      "source": "artifacts/orders-fishing/tracking12/039.png",
+      "sha256": "d9d97f27313ad86bb448ca527013439dafc7091003fdef085308843f4550de78"
+    },
+    "fishing_cooldown.png": {
+      "source": "artifacts/orders-fishing/revisit/lures.png",
+      "sha256": "2f545885e0669ad9c308689e82ebf70f35fdb92066da4b0e3018722cc0222de3"
+    },
+    "fishing_workbench.png": {
+      "source": "artifacts/orders-fishing/workbench.png",
+      "sha256": "72bf97bc27665d3074974a392eccea8b3a08334963c60b90834a5f9f4fce82b0"
+    },
+    "fishing_empty_lures.png": {
+      "source": "artifacts/orders-fishing/live empty-lure worker capture",
+      "sha256": "9727e3e637b9cdf362688f4efce7157df71d8ce93da153ca098ff4e1078a051f"
+    },
+    "fishing_lure_location.png": {
+      "source": "artifacts/orders-fishing/empty-lure-popup.png",
+      "sha256": "617b76e4a94b2dd6167e06c5046286525da63152b25bae3c61862efb09aace7c"
+    },
+    "fishing_workbench_empty.png": {
+      "source": "artifacts/orders-fishing/lure-workbench-stable.png",
+      "sha256": "d5074105cfbbb8f07792adf6dfcfb377f0840a289782dee0731e9f1f3920566d"
+    },
+    "fishing_free_lure_recipe.png": {
+      "source": "artifacts/orders-fishing/lure-free-recipe.png",
+      "sha256": "b20f537b1ae8d10c6d89ff2005273d870b2d5899b746aa74e99d2f378b0a25b3"
+    },
+    "fishing_lure_queued.png": {
+      "source": "artifacts/orders-fishing/lure-queued-live.png",
+      "sha256": "1d969f07826af40ac62a0d9d49f3ca06c8a6fa6a4111900a0400c5a60473e467"
+    },
+    "sheep_feed_before.png": {
+      "source": "artifacts/orders-fishing/replenishment-orders/20261001T045737_572273Z/0033.png",
+      "sha256": "31acecacc174e090c075142e21c1f52df5be951a4e1fdf5693bbdd5531df98f9"
+    },
+    "sheep_feed_shifted.png": {
+      "source": "artifacts/orders-fishing/replenishment-orders/20261001T045737_572273Z/0034.png",
+      "sha256": "e06fa5e86c384ab0d44948297e0d84a655f41f7960b28ce93fa2c60062f3d562"
+    },
+    "sheep_pen_clear.png": {
+      "source": "artifacts/orders-fishing/replenishment-orders/20261001T045737_572273Z/0036.png",
+      "sha256": "a7c8c7be8200ee338ef55f5c0d34c6aed02b59e9abbe988cfe43ab60f6fa4542"
+    },
+    "sheep_fed_timer.png": {
+      "source": "artifacts/orders-fishing/sheep-live2/006.png",
+      "sha256": "20a634deabdf74e6d3c0f50b80089cd87efbf5907801ba53eae4ca017ba362f3"
+    },
+    "cow_clear.png": {
+      "source": "artifacts/orders-milk/current.png",
+      "sha256": "6b1091f2c5b4b8146c0df910d3141c152e61427f83fce6f6d84c767e50968ebf"
+    },
+    "cow_ready_pen.png": {
+      "source": "artifacts/orders-milk/trough_051924/menu.png",
+      "sha256": "0b369cef8e887d41e3ad7289de0be4ac2cb1e8119882bb14e4cf3ca3e58a4a05"
+    },
+    "cow_ready_timer.png": {
+      "source": "artifacts/orders-milk/menu_051826/menu.png",
+      "sha256": "5758b0ea7c13929657f0ff98f106cd10851af74322f84f22b5d93f565e83197f"
+    },
+    "cow_edge_menu.png": {
+      "source": "artifacts/orders-fishing/sheep-orders/20261001T050730_845066Z/0051.png",
+      "sha256": "594048deb18892c17d2b07a9b09d5b8f35018653e95a74a413019422607751b9"
+    },
+    "cow_butter_recipe.png": {
+      "source": "artifacts/orders-fishing/sheep-orders/20261001T050730_845066Z/0050.png",
+      "sha256": "a1c4cc28b8f18a0834877c220e388e18a5e4e9dd10745d8ed043391e94e37aed"
+    },
+    "cow_ready_moving.png": {
+      "source": "artifacts/orders-milk/live-orders/20261001T053335_738490Z/0021.png",
+      "sha256": "13fccd5c6023ac2fd835d5fea14feb551b3be44fad1eb74058daa883c868b367"
+    },
+    "cow_after_harvest.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\fruit_evidence\\7fb31e5e47e24b40b5726f8acb02e09b_after.png",
+      "sha256": "b09414a8b4dd7f99959750424888295f30cdcd387f84381c580eb5ebe76982e0"
+    },
+    "cow_feed_before.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\fruit_evidence\\552727abe04542ae87c9208b023c1615_feed_before.png",
+      "sha256": "833c433aec6ad43afb9748c39491abedd01fcecb8d8884cd06d6fafb15776526"
+    },
+    "cow_feed_after.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\fruit_evidence\\552727abe04542ae87c9208b023c1615_feed_after.png",
+      "sha256": "1004e32e06b53e15f1ef7400d833c2e76efd70925912b322229fadbf5232af2a"
+    },
+    "cow_milk_confirmed.png": {
+      "source": "artifacts\\orders-milk\\milk_work_053807\\038.png",
+      "sha256": "e0ae077d30773dc5d006fda9082a602f7e8496c8ead16aef69f0b6589aca13b1"
+    },
+    "fishing_workbench_closed_wide.png": {
+      "source": "artifacts/orders-milk/lure_shore_054623/shore.png",
+      "sha256": "076a39a2a3a371be2e407d7b4f20f68638e75934d244f338f3ca6feb5bac040f"
+    },
+    "fishing_lure_queued_wide.png": {
+      "source": "artifacts/orders-milk/lure_verified_054826/bench.png",
+      "sha256": "6178596be1b8402e8bdd7ff228fb8ecbb42feb549751a0498674ec042e7079f8"
+    },
+    "fishing_workbench_closed_shifted.png": {
+      "source": "artifacts\\orders-milk\\lure_final_055452\\015.png",
+      "sha256": "c112174dce09d12b706f86ca1a9d6caae5a0f0a9fcbb6824bd041c06aa66ef90"
+    },
+    "blueberry_cheesecake_location.png": {
+      "source": "artifacts/orders-next/live-orders/20261001T060508_026701Z/0011.png",
+      "sha256": "e1ecef677c2c1114c0591507bb218a134f36f62c98c067c029ffa63a105b5a7c"
+    },
+    "blueberry_cheesecake_recipe.png": {
+      "source": "artifacts/orders-next/live-orders/20261001T060508_026701Z/0015.png",
+      "sha256": "a7c332fa95d7d5fbbf6f3b34fad6a64113ef12a860ac19d01ff7d96a436031ed"
+    },
+    "fishing_workbench_completed.png": {
+      "source": "artifacts/orders-milk/fishing_integrated_062222/021.png",
+      "sha256": "2a585c4f9437be88687df2cc360a8634108ade379b1282d0f9515df15cc5921b"
+    },
+    "fishing_workbench_sway.png": {
+      "source": "artifacts/orders-milk/fishing_integrated_062222/020.png",
+      "sha256": "5208c0ea9348d4617facfee719f9d3770f9ae0a3885b1f0327c3a13754ba04c2"
+    },
+    "fishing_lure_stock_one.png": {
+      "source": "artifacts/orders-milk/fishing_integrated_063615/022.png",
+      "sha256": "95314042feb830464508bb89cc954584f0765588d382ad49f69bcc379e4bb940"
+    },
+    "fishing_lure_stock_one_fresh.png": {
+      "source": "artifacts/orders-milk/fishing_integrated_063615/023.png",
+      "sha256": "da5807ffb0245c228d2b28dc18f62d7cdc4a5510eaca0a8ce252e956e5eeb738"
+    },
+    "fishing_bent_line_bobber.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\fishing_evidence\\d6a3651a07244a45b8aa205a1ef0ebd2_hooked.png",
+      "sha256": "c51f9424f674069b06aa06acfa99b7e3d4cdf2779e889d51a23b4f41562e2ea8"
+    },
+    "fishing_other_spot.png": {
+      "source": "artifacts\\orders-milk\\fishing_integrated_065329\\022.png",
+      "sha256": "70f42c1751df229293b2d4b80e265df83cd304530ffd74c52930a99bff991283"
+    },
+    "apple_exhausted.png": {
+      "source": "artifacts/orders-apple/baseline/20261001T071350_987235Z/0017.png",
+      "sha256": "356c470d1067ccd5e29ba0fdf3f1006d0932b97dc60e1c62ed176d9510def5cd"
+    },
+    "apple_exhausted_earlier.png": {
+      "source": "artifacts/orders-next/recipe-fixed/20261001T061023_351459Z/0044.png",
+      "sha256": "4694659dfd48b8107768d59c2748bb2a5710fec68b1b4b94afc981678293fa3d"
+    },
+    "apple_juice_recipe.png": {
+      "source": "artifacts/orders-apple/baseline/20261001T071350_987235Z/0015.png",
+      "sha256": "79ec7ac9f6e64469deffa8dadcbb2ec75f97b55df393c07ec2d258fe416bccad"
+    },
+    "apple_tree_dismissed.png": {
+      "source": "artifacts/orders-apple/baseline/20261001T071350_987235Z/0018.png",
+      "sha256": "b7d05f4660511ac65110d6129810c808489276e9bf739714c48f30ec472e8b1d"
+    },
+    "red_berry_location.png": {
+      "source": "artifacts/orders-apple/defer-live/20261001T071900_041500Z/0031.png",
+      "sha256": "dab861342b072b31e376e75609ad97270f3971ffc8e34c6865e2c9f5e6f7de85"
+    },
+    "red_berry_location_fresh.png": {
+      "source": "artifacts/orders-apple/defer-live/20261001T071900_041500Z/0032.png",
+      "sha256": "59aef852aaeb8fe724175c07b2a8b620b20a7ac1b50128c921dd8589d4410ea2"
+    },
+    "red_berry_location_joined.png": {
+      "source": "artifacts/orders-apple/title-fixed/20261001T072414_339044Z/0006.png",
+      "sha256": "bcc2b0ad3e76c8781336e7c9551eb7c8c5319a47aa8c2fbc2c26da0854b15aa9"
+    },
+    "cherry_exhausted.png": {
+      "source": "artifacts/orders-apple/verified-navigation/20261001T072738_130476Z/0012.png",
+      "sha256": "70223063427f0a1f113f0a65af96054c2db1c2c7bda88227609916b99d65f7f7"
+    },
+    "red_berry_cake_recipe.png": {
+      "source": "artifacts/orders-apple/continue-tickets/20261001T073015_730822Z/0057.png",
+      "sha256": "00e9db37fc047ebdd4811f3f62e4833f71ec9b46588a77ab49cdbe620da7313e"
+    },
+    "cow_ready_from_recipe.png": {
+      "source": "artifacts/orders-apple/continue-tickets/20261001T073015_730822Z/0059.png",
+      "sha256": "220f5840dacf043478988772bd1fb88338850449adc8b6db81d479fae84b2c48"
+    },
+    "cow_wide_cloud.png": {
+      "source": "HayDayAutomation/diagnostics/orders/20261001T073742_48732329/0018_resource.png",
+      "sha256": "fdb318d485fa082589a5502a52132ea74710fb1553c1ab6b6268c29df45d1b76"
+    },
+    "cow_wide_clear.png": {
+      "source": "HayDayAutomation/diagnostics/orders/20261001T073742_48732329/0002_camera.png",
+      "sha256": "7afa105770bc550bcae2a29c18a5a2e803126f27721d235e9da7b75b7cbc3bb8"
+    },
+    "cow_accessory_wedge.png": {
+      "source": "artifacts/orders-cow-recovery/milk_132857/0012.png",
+      "sha256": "a4fd0b6704a7aa28d21b57ee75d64fa3f0465c21eff39faca61cc5eb36a49173"
+    },
+    "cow_accessory_clear.png": {
+      "source": "artifacts/orders-cow-recovery/milk_133959/0039.png",
+      "sha256": "321a0bf7646f5285f1e6b3220cf4fd922d5cbbec7226f22c52d4bd1ae9c16ee9"
+    },
+    "cow_accessory_bucket.png": {
+      "source": "artifacts/orders-cow-recovery/milk_133959/0042.png",
+      "sha256": "7fb0c2adb4bf7c7be467bf877fd0dd1434c16a6eb31de526f37e967a573a23ab"
+    },
+    "cow_timer_clear.png": {
+      "source": "artifacts/orders-cow-recovery/milk_135425/0050.png",
+      "sha256": "8e05fdba6f5e5ac150df7e82a9237be5d409b6bf3a64ea42f850115beb4febf8"
+    },
+    "cow_timer_bucket.png": {
+      "source": "artifacts/orders-cow-recovery/milk_135425/0052.png",
+      "sha256": "0ae4802fa5966b8a8e58281d859d1bccf90f985d2860ed3068f5816625ef7562"
+    },
+    "cow_accessory_grey_bucket.png": {
+      "source": "artifacts/orders-cow-recovery/current-bucket.png",
+      "sha256": "2da00640918ca56532becf290514a9487da687442f26d23b63c53df9d3367259"
+    },
+    "sheep_accessory_ready.png": {
+      "source": "HayDayAutomation/diagnostics/orders/20261001T133811_56c116e8/0029_resource.png",
+      "sha256": "c9acc335abc47cda3627b33c46b1ab55e67c22cf2ade4d90f928ccdeefd4d94f"
+    },
+    "page_achievements.png": {
+      "source": "artifacts/orders-cow-recovery/milk_141152/0100.png",
+      "sha256": "dd70805939dd866d1a6bbea92140600cb988ace77725b60b48406abb61acced3"
+    },
+    "page_county_fair_tutorial.png": {
+      "source": "artifacts/orders-cow-recovery/fair-before.png",
+      "sha256": "bf4389bfbbd29c68de59851189a9fde0d4ca3c67afc32613a01497bb6865cb17"
+    },
+    "page_county_fair.png": {
+      "source": "artifacts/orders-cow-recovery/fair-main.png",
+      "sha256": "b0e44b0fc38ae03ea7a4912c4a05532991879fa14163ecbb6f65ad2533cfa63d"
+    },
+    "sheep_pen_before_feed.png": {
+      "source": "artifacts\\orders-cow-recovery\\pen-feeding\\20261001T152051_380123Z\\0012.png",
+      "sha256": "42a71a0582efe3186173bf7d1cbebcbaff7e0c0305b091b91bbf53926d22af7f"
+    },
+    "sheep_feed_illuminated.png": {
+      "source": "artifacts\\orders-cow-recovery\\pen-feeding\\20261001T152051_380123Z\\0014.png",
+      "sha256": "0e183d57e448c7ab5ba03da857ba0efeb4d18d2599a3f6f2e32d7ef1c6688472"
+    },
+    "herd_all-pens.png": {
+      "source": "artifacts\\orders-cow-recovery\\feed-study\\all-pens.png",
+      "sha256": "ecee8e7ff6be8556a1b56343532c33d8e18f1cc901a7e2142da576dc7c44aaf2"
+    },
+    "herd_feed-mill.png": {
+      "source": "artifacts\\orders-cow-recovery\\feed-study\\feed-mill.png",
+      "sha256": "d7e5a5b6f27f459978d5ab59ddcb12b996f2b89d69f5c1481af544a604128f19"
+    },
+    "herd_goat-menu.png": {
+      "source": "artifacts\\orders-cow-recovery\\feed-study\\goat-menu.png",
+      "sha256": "5aedcd940d3351da148081e1451e58037162c62f4c7d8c853fe4e5b8e008eb83"
+    },
+    "herd_pig-menu.png": {
+      "source": "artifacts\\orders-cow-recovery\\feed-study\\pig-menu.png",
+      "sha256": "7482b3d65913c3de8ff07aa37896775b2cae1b9a7e6cf32f7b5d5625146c4906"
+    },
+    "herd_winter-cliff.png": {
+      "source": "artifacts\\orders-cow-recovery\\feeding-integrated\\20261001T150412_391674Z\\0026.png",
+      "sha256": "34332f300d011a6959b5463c968222da45e667658645d2dc83c11a1b828e6887"
+    },
+    "page_county_fair_popup.png": {
+      "source": "artifacts\\orders-cow-recovery\\page-recovery\\20261001T142505_701719Z\\0003.png",
+      "sha256": "19430575b44cd110a4674a4361946c19b1f468f141802dd216e46dc1d1add0f3"
+    },
+    "page_farm_expansion.png": {
+      "source": "artifacts\\orders-cow-recovery\\accidental-popup.png",
+      "sha256": "a0bb91cdcb5624e968be1cd2865b06da9d09cea430be4e6374bac416df33d943"
+    },
+    "wool_hat_after_harvest.png": {
+      "source": "artifacts\\orders-cow-recovery\\shears-ready\\20261001T143022_535014Z\\0036.png",
+      "sha256": "398ebc2208c2e50653135b4a1f5a1b5ee862303bd5bfd287578ce3471bebd474"
+    },
+    "wool_hat_expired_recipe.png": {
+      "source": "artifacts\\orders-cow-recovery\\shears-ready\\20261001T143022_535014Z\\0038.png",
+      "sha256": "1b212ece8ee3418dc3d59125979d7f87b1faae24afca06e38f843ede0f8703ef"
+    },
+    "chicken_feed_menu_before_recipe.png": {
+      "source": "artifacts\\orders-cow-recovery\\popup-and-feeding\\20261001T152644_839916Z\\0089.png",
+      "sha256": "d8ac7b7cc7456fb1c93c64a0f05c83ba8078a5376535fa67755977d7555bedee"
+    },
+    "chicken_feed_recipe_floating.png": {
+      "source": "artifacts\\orders-cow-recovery\\popup-and-feeding\\20261001T152644_839916Z\\0091.png",
+      "sha256": "fc32ed0a63b64ad570116e7e3b7afbad0cee0cfbef58b7d46764a677ec64f1a5"
+    },
+    "sheep_partial_feed_clear.png": {
+      "source": "artifacts\\orders-cow-recovery\\feed-replenishment\\20261001T153401_947267Z\\0015.png",
+      "sha256": "d9e782bff88989b90c3a9f226d923ee3615e54d35f48f3c2a66a98dc47ff48f9"
+    },
+    "sheep_partial_feed_timer.png": {
+      "source": "artifacts\\orders-cow-recovery\\feed-replenishment\\20261001T153401_947267Z\\0017.png",
+      "sha256": "c7a9040382d9b8c2c4afe467bd22ccf382189ba17887e2058628fe11af420a30"
+    },
+    "dimmed_illustrated_popup.png": {
+      "source": "artifacts\\orders-cow-recovery\\feed-timer-recovery\\20261001T154508_437096Z\\0087.png",
+      "sha256": "5cdf5fc787cb23546c0081b0fcf6c08b3629877de3cf934cc7bf343ad07680b7"
+    },
+    "arranged_cow_menu.png": {
+      "source": "artifacts/orders-cow-recovery/arranged-cow-menu.png",
+      "sha256": "d14423e14ffd6f92ab3852f29ff302008c1a59fceba4f5157f8afb4fb1b4110d"
+    },
+    "arranged_chicken_menu.png": {
+      "source": "artifacts/orders-cow-recovery/arranged-chicken-menu.png",
+      "sha256": "a3ed193f0841a988836f04d5dc65224dcdf9e047f49e30e0ee3028e9289ac56e"
+    },
+    "arranged_group_clear.png": {
+      "source": "artifacts/orders-cow-recovery/arranged-group-clear.png",
+      "sha256": "a090daa1abd3bd22f4f069f5ec66bfa1446e4be7ed49a8bbb85f7d992a17c64b"
+    },
+    "page_catalog.png": {
+      "source": "artifacts/orders-cow-recovery/grouped-pens/20261001T161556_977074Z/0018.png",
+      "sha256": "98b97d5322e68792262020d4b2493085174022ea18be18f76618c2fb0f2903ac"
+    },
+    "page_generic_exit.png": {
+      "source": "artifacts/orders-cow-recovery/grouped-pens-retry/20261001T161951_684364Z/0028.png",
+      "sha256": "bdb2fba573fc3e166085b008dc9d6ad1c10b64f765ece80a8faabcba32d86ff5"
+    },
+    "camera_boat_shore.png": {
+      "source": "artifacts/orders-cow-recovery/grouped-confirmation/20261001T162944_995570Z/0075.png",
+      "sha256": "bd7a5ba5d0bd8770bfb9034c27f032329c8749ca3daf629cf0f2a66ffeb71429"
+    },
+    "grouped_chicken_before.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\fruit_evidence\\0363ae9c523a48d2b0cd5e4fd8b0d448_before.png",
+      "sha256": "ff8ff9c7403add0df54771c0c15a4a3b59f71ecae576fb9b737385d1e6a866bd"
+    },
+    "grouped_chicken_after.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\fruit_evidence\\0363ae9c523a48d2b0cd5e4fd8b0d448_after.png",
+      "sha256": "4dd1e9defc72776d6a4cbf6d3ec72bca54dbfcb78f0bb285e2c966f4a954b993"
+    },
+    "achievements_shifted.png": {
+      "source": "artifacts/orders-cow-recovery/grouped-navigation/20261001T163407_401429Z/0098.png",
+      "sha256": "ded0c4b0b4372fa8cd5a7c7663d26777c05201515d23e748064bd7f685536d72"
+    },
+    "care_board_before_close.png": {
+      "source": "artifacts/orders-cow-recovery/grouped-navigation/20261001T163407_401429Z/0082.png",
+      "sha256": "eb0bccc1b31a64d28f185a9b7048f8abb3958ea42f1e6af2ac56e3a0ceda29ce"
+    },
+    "care_board_fading.png": {
+      "source": "artifacts/orders-cow-recovery/grouped-navigation/20261001T163407_401429Z/0083.png",
+      "sha256": "e354528176cbdba3e29828810e4b5379c1673e0ef159360ca39056ef024db943"
+    },
+    "care_board_closed.png": {
+      "source": "artifacts/orders-cow-recovery/grouped-navigation/20261001T163407_401429Z/0084.png",
+      "sha256": "ebafd007d8daec6a6d4b0dd444eb6d92e5da6aa6df58bbc39c7e4d2c151fa42e"
+    },
+    "care_producer_picker.png": {
+      "source": "artifacts/orders-cow-recovery/feed-after-group/20261001T165158_615993Z/0150.png",
+      "sha256": "678fddb3f860399802b6cf2dc6bd7b77fc4f0350e9e2f0ac562b2e453b7200a2"
+    },
+    "camera_narrow_edge.png": {
+      "source": "artifacts/orders-cow-recovery/feed-after-group/20261001T165158_615993Z/0162.png",
+      "sha256": "73cfd1f30fdcef98750ddc2c2d6a1ed3867466629c317801da67bf299fb088c2"
+    },
+    "home_fishing_edge.png": {
+      "source": "C:/Users/youky/AppData/Local/HayDayAutomation/diagnostics/orders/20261001T170625_ea31206d/0050_resource.png",
+      "sha256": "e3b073f65b0fbdca3ba45ea67778ea542f5e910dbee95b0905b16dc4e94d2d97"
+    },
+    "home_farm.png": {
+      "source": "artifacts/orders-truck/current.png",
+      "sha256": "b1ea483b7f7d008c15b683a2082853775921005f1f75e7db26be0c8363affd74"
+    },
+    "care_camera_59.png": {
+      "source": "artifacts/orders-truck/live/20261001T171821_087336Z/0059.png",
+      "sha256": "23a6c7db487189d3610d702cab2828a83776e2520df83506064b941632158e83"
+    },
+    "care_camera_60.png": {
+      "source": "artifacts/orders-truck/live/20261001T171821_087336Z/0060.png",
+      "sha256": "350143cc13ea3d39b186e4a8953886546f7bd760ce722206330fff86f721409d"
+    },
+    "care_camera_61.png": {
+      "source": "artifacts/orders-truck/live/20261001T171821_087336Z/0061.png",
+      "sha256": "316383beb154ed45316ae64223152aaeb85d1b59352abcaad559cfeeb7c47ea1"
+    },
+    "care_camera_62.png": {
+      "source": "artifacts/orders-truck/live/20261001T171821_087336Z/0062.png",
+      "sha256": "2067e64513183e646972a7a3c7bbd1ba7591bfe21098b8c15bb579f6aae0c14f"
+    },
+    "camera_thin_grass.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T172407_ed336353\\0047_final.png",
+      "sha256": "d6bbdab02bb1dcddc6b479eae44980d5fd2204429aba42259d48398ce9b15447"
+    },
+    "cotton_failed_planting.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T173257_e843133b\\0051_final.png",
+      "sha256": "1072915ba54257b743342788de4d8911ef42407f26fa13fa58dc3924d9eeea21"
+    },
+    "cotton_seed_icon.png": {
+      "source": "images\\learned_items\\e757386c8a7e6ef8480e.png",
+      "sha256": "9c9d52761558c5d1d75282d9c8d5cdb78f25f03aa36d9f893a80351d01a2a3ae",
+      "resolution": [
+        95,
+        101
+      ],
+      "source_kind": "Existing learned-item crop",
+      "transformations": "Copied existing learned icon without modification; not a full screenshot."
+    },
+    "sugar_menu_dismissal.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T174231_dc3c0964\\0018_resource.png",
+      "sha256": "b97dd86a68189d220a29baf692c8171f0b1356bb8be4a2b0dd87a1576a90afcd"
+    },
+    "feed_mill_menu_dismissal.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T174736_86cd0b90\\0116_final.png",
+      "sha256": "475caf49a5fb0ecdc6da7ab23ff76ef717b0cb2ec9655463e35c2142855bd6a0"
+    },
+    "page_expansion_opening.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T182047_a939d603\\0064_page_exit_detected.png",
+      "sha256": "a89990ff4c67a93fc22c391f3e56196b5afd268ffbbed5229b65f373b0259a3d"
+    },
+    "page_expansion_settled.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T182047_a939d603\\0065_final.png",
+      "sha256": "d55011a718d9d258272fa3ef231c797b400af5dcbf34cbd9210b387d835bce70"
+    },
+    "care_saved_sheep.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\animal_care_evidence\\f401d3c5c2f94726b1cbcc1f912b4ff8.png",
+      "sha256": "6a1f4cfc316cba32cb5e5d239c2032c54ba59fac2c55a329a29e6af45e1ee792"
+    },
+    "care_bridge_sheep.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T185615_17402185\\0037_panel.png",
+      "sha256": "611d3e80feebc67a828db71669c26a0df659b042fa78e6ed168ba99cb1da8ed6"
+    },
+    "care_distant_board.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T185615_17402185\\0071_resource.png",
+      "sha256": "ce58bb378ce9e627a54e6a8438c18ac26549e4a2318db153c39ac0a328e737fe"
+    },
+    "sheep_grey_feed_one.png": {
+      "source": "artifacts\\orders-truck\\wool-deferral\\20261001T192457_842198Z\\0018.png",
+      "sha256": "c682237d023812910410fa11449b000d471e2005a9d454e4665aaf80f4b7d12e"
+    },
+    "sheep_grey_feed_two.png": {
+      "source": "artifacts\\orders-truck\\wool-deferral\\20261001T192457_842198Z\\0024.png",
+      "sha256": "7c8eda61a4c59d5c0ab19984673ee954aaae5af896e32cc8eae6c1bd90560e24"
+    },
+    "blueberry_cake_palette_queue.png": {
+      "source": "artifacts\\orders-truck\\recipe-probe\\20261001T195629_397561Z\\0013.png",
+      "sha256": "2208a9d17476ddb214091edc9fca02b93701e884aa2f08d198b34cb2b4c2308e"
+    },
+    "blueberry_cake_palette_settled.png": {
+      "source": "artifacts\\orders-truck\\recipe-probe\\20261001T195629_397561Z\\0014.png",
+      "sha256": "14aec6a256a669ec19e816108687bc890a0ce2566f0c25ca96d34c44345ff0dc"
+    },
+    "blueberry_cake_identifier.png": {
+      "source": "images\\learned_items\\3031a94dce6d1f985263.png",
+      "sha256": "2703dd956d10dab0a74da2137e5aec44aaff7f79f8ea59f1bc6471afd35fcc8c",
+      "transformations": "Copied existing learned icon without modification; not a full screenshot."
+    },
+    "wool_hat_palette_badge.png": {
+      "source": "artifacts\\orders-truck\\delivery-followup\\20261001T200502_591460Z\\0016.png",
+      "sha256": "20f54e8d7e219d60a1910159bab71966b14043d3c7a16e2feeefb303de37b5a5"
+    },
+    "wool_hat_palette_identifier.png": {
+      "source": "images\\learned_items\\f0fc912ca522841ae35d.png",
+      "sha256": "dba4107283563bdd30eac07fd770ab1838c566d2b35268b51db5cf67c3c2ce78",
+      "transformations": "Copied existing learned icon without modification; not a full screenshot."
+    },
+    "board_reward_before.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T201723_b60f2998\\0017_camera.png",
+      "sha256": "00df03ed0f749f3eec45c1029a23f2e1972656cdc3201534f01565e3993d8a4f"
+    },
+    "board_reward_after.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T201723_b60f2998\\0025_final.png",
+      "sha256": "dbb756e576f7af316a3833b40efbf1b179863cefb6a078a6739b4d127f4cf29f"
+    },
+    "cotton_no_effect_before.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\ee32b91ec7864e3c8373c0b7bcb3d6dc_harvest_before.png",
+      "sha256": "4f8c972c2deeacca5db5811ff641ab2842ec63f829e2ba63d21be46f338d1220"
+    },
+    "cotton_no_effect_after_0.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\ee32b91ec7864e3c8373c0b7bcb3d6dc_harvest_after_0.png",
+      "sha256": "0cf9acce5be26358188aefad45e35374c7db7748f325ab6fcd8b0baa011e5022"
+    },
+    "cotton_no_effect_after_1.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\ee32b91ec7864e3c8373c0b7bcb3d6dc_harvest_after_1.png",
+      "sha256": "f01b655392fe73ae90afa2ac3bc41d9047ba140d6e72c4fddd786e88d1a60ff9"
+    },
+    "cotton_cloud_no_effect_before.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\26bd2ad1c843493797211b337d4940bc_harvest_before.png",
+      "sha256": "4ff775d165a57c31059f6976226cb91b0244206cc30e8fa2a90afaea2edd4dd0"
+    },
+    "cotton_cloud_no_effect_after_0.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\26bd2ad1c843493797211b337d4940bc_harvest_after_0.png",
+      "sha256": "4aba6940e3cbc2242e97c4f4514ff7e96741db3dec01ac9f92591f8f14a7b30b"
+    },
+    "cotton_cloud_no_effect_after_1.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\26bd2ad1c843493797211b337d4940bc_harvest_after_1.png",
+      "sha256": "735f752728857231c6be510da8c0fe7bc6f77273286946d11a385abf8e1e5bad"
+    },
+    "cotton_harvested_before.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\9ebe95554df94c80897112bfce9c87a4_harvest_before.png",
+      "sha256": "7c2aedc379e31ac9aacc0d939d6807c444c3ecbfe0780f324d953f0a8c89cc8c"
+    },
+    "cotton_harvested_after_0.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\9ebe95554df94c80897112bfce9c87a4_harvest_after_0.png",
+      "sha256": "3e65021066f5d0f34244057db2fbae40fe4052b9a358732a0be281c0154f7ddf"
+    },
+    "cotton_harvested_after_1.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\device_da09b86341cf0b00\\farming_evidence\\9ebe95554df94c80897112bfce9c87a4_harvest_after_1.png",
+      "sha256": "5fced9fcc6d6c709124c6e2fefcd39f306b4cda298b155ff3393fae64b27a188"
+    },
+    "cotton_seed_palette.png": {
+      "source": "C:\\Users\\youky\\AppData\\Local\\HayDayAutomation\\diagnostics\\orders\\20261001T210027_7019c69d\\0024_final.png",
+      "sha256": "1b49b72eb80df2ec54a98529df8b02b843a50d2dc618980f6953d04a3aefae73"
+    },
+    "cotton_empty_plots_11.png": {
+      "source": "artifacts\\orders-truck\\cotton-direct\\20261001T210411\\0011.png",
+      "sha256": "4833772af18929496c53d6056f785f09786c95a6d9c788dda35b1c8b004a1a03"
+    },
+    "cotton_empty_plots_12.png": {
+      "source": "artifacts\\orders-truck\\cotton-direct\\20261001T210411\\0012.png",
+      "sha256": "8d5acbe0ddf17bd2cbc7d18d8757d95ef9f92c2c2035478b2e1d276778b837d9"
+    },
+    "sheep_ready_timer_arriving.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\resource-before\\0012.png",
+      "sha256": "6ffc7c428a1328707642205489cd638d3809f671eaebfbd4d4193e8383bfaf7d"
+    },
+    "sheep_ready_timer_settled.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\resource-before\\0015.png",
+      "sha256": "a2691eb960035641e50a347261571b1c47b17235747a43be9e3b91675e28438e"
+    },
+    "sheep_woolly_clear_pen.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\resource-before\\0016.png",
+      "sha256": "7c737d8ea8c69acfcbdf5fe483bd1629993d2fd552cd6c9c9e110446ef556d7b"
+    },
+    "cotton_picker_pan_21.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\reproduce\\20261002T000733_131724Z\\0021.png",
+      "sha256": "5f35861e4a67edf10cc6658cf1045410fafd20be0843d301cfa93fa9301a8fb2"
+    },
+    "cotton_picker_pan_22.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\reproduce\\20261002T000733_131724Z\\0022.png",
+      "sha256": "6080989f002808e323a7ebc5f4478ca3833a6276be8fb08ab2214e73b135e379"
+    },
+    "cotton_picker_pan_23.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\reproduce\\20261002T000733_131724Z\\0023.png",
+      "sha256": "249c8ed7d7eab46c18911c63047c5c69385432249a62f1084fd00e5df0527f60"
+    },
+    "cotton_picker_pan_24.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\reproduce\\20261002T000733_131724Z\\0024.png",
+      "sha256": "edc0ca567daeb3956803be28464c04c0c0fd3a1dc4d49f75732367c469958a50"
+    },
+    "cotton_picker_pan_25.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\reproduce\\20261002T000733_131724Z\\0025.png",
+      "sha256": "79d6d8982ae7a005baff5149bfc27df5be1922a4fc6ee9d35317806ce884f073"
+    },
+    "cotton_picker_pan_26.png": {
+      "source": "artifacts\\orders-truck\\sheep-fix\\reproduce\\20261002T000733_131724Z\\0026.png",
+      "sha256": "84e562eaa48f21d99575dd97b0e1c4b620d2ae9b99a60ea60ad0bb1d75098dfc"
+    },
+    "cotton_recovery_zoom.png": {
+      "source": "artifacts\\orders-truck\\continuation\\live1\\20261002T010241_039580Z\\0035.png",
+      "sha256": "c7a54c03c090f3b09aa27eeed3c26481528272625e5bac8597200af6572e1f30"
+    }
+  }
+}

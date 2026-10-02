@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "source": "tests\\fixtures\\orders\\fishing_menu.png",
+  "source_sha256": "2989c769fc395c8eb70fdc0d8e4d944c063069174f6722e6dfee9b676f4333ed",
+  "reference_height": 1080,
+  "features": {
+    "red_lure": [
+      690,
+      389,
+      849,
+      531
+    ],
+    "blue_lure": [
+      653,
+      124,
+      792,
+      265
+    ],
+    "home": [
+      25,
+      910,
+      174,
+      1048
+    ]
+  },
+  "stock_box": [
+    642,
+    342,
+    136,
+    78
+  ],
+  "tool_point": [
+    770,
+    455
+  ],
+  "production": {
+    "workbench_title": {
+      "source": "tests/fixtures/orders/fishing_workbench_empty.png",
+      "box": [
+        1243,
+        380,
+        1646,
+        443
+      ],
+      "sha256": "d5074105cfbbb8f07792adf6dfcfb377f0840a289782dee0731e9f1f3920566d"
+    },
+    "free_red_recipe": {
+      "source": "tests/fixtures/orders/fishing_free_lure_recipe.png",
+      "box": [
+        1120,
+        500,
+        1302,
+        641
+      ],
+      "sha256": "b20f537b1ae8d10c6d89ff2005273d870b2d5899b746aa74e99d2f378b0a25b3"
+    },
+    "red_lure_title": {
+      "source": "tests/fixtures/orders/fishing_lure_location.png",
+      "box": [
+        1032,
+        372,
+        1447,
+        445
+      ],
+      "sha256": "617b76e4a94b2dd6167e06c5046286525da63152b25bae3c61862efb09aace7c"
+    },
+    "queued_red_lure": {
+      "source": "tests/fixtures/orders/fishing_lure_queued.png",
+      "box": [
+        1040,
+        700,
+        1170,
+        815
+      ],
+      "sha256": "1d969f07826af40ac62a0d9d49f3ca06c8a6fa6a4111900a0400c5a60473e467"
+    },
+    "workbench_anchor": {
+      "source": "tests/fixtures/orders/fishing_workbench_empty.png",
+      "box": [
+        1025,
+        420,
+        1187,
+        541
+      ],
+      "sha256": "d5074105cfbbb8f07792adf6dfcfb377f0840a289782dee0731e9f1f3920566d"
+    }
+  }
+}

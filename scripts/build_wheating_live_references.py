@@ -33,6 +33,7 @@ def build(source):
         'free_ad_in': ('live_ad_cooldown.png', (1180, 661, 1342, 711)),
         'quantity_plus': ('live_wheat_selected.png', (1490, 242, 1609, 362)),
         'price_max': ('live_wheat_selected.png', (1407, 534, 1495, 620)),
+        'price_min': ('live_wheat_10_36.png', (1243, 534, 1331, 620)),
         'soil_full': ('live_seed_menu.png', (1000, 577, 1110, 638)),
         'wheat_sale': ('live_wheat_listed.png', (467, 283, 610, 439)),
         'advertise_button_live': ('live_wheat_ad_checked.png', (752, 690, 1145, 744)),
@@ -70,7 +71,7 @@ def build(source):
                 keep = np.zeros(hsv.shape[:2], np.uint8)
                 keep[4:-7, 10:-13] = 255
             mask = Image.fromarray(keep)
-        elif name in {'quantity_plus', 'price_max', 'composer_close'}:
+        elif name in {'quantity_plus', 'price_max', 'price_min', 'composer_close'}:
             mask.paste(0, (0, 0, crop.width, crop.height))
             ImageDraw.Draw(mask).ellipse((5, 5, crop.width-5, crop.height-5), fill=255)
         elif name in {'advertise_button_live', 'composer_submit', 'sold_live'}:

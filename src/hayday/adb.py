@@ -16,6 +16,7 @@ import struct
 import subprocess
 import sys
 import threading
+import time
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -583,6 +584,76 @@ class AdbClient:
                                        + (len(points)-1)*min_waypoint_ms/1000)*max(time_factors)
                                        + (len(samples)*.04 if max_step_px is not None else 0)))
                 checkpoint()
+            finally:
+                self._run(['shell', release], device=True, _release=True)
+
+    def drag_feedback(self, start, update, *, width: int, height: int,
+                      max_seconds: float = 45, cancel_event: threading.Event | None = None):
+        """Keep one contact down while a bounded observer supplies fresh positions.
+
+        ``update(point, elapsed)`` returns the next screen point, or None to lift.
+        The caller owns screen recognition; this method owns bounds, device
+        serialization, cancellation, and unconditional contact release.
+        """
+        if not isinstance(start, (tuple, list)) or len(start) != 2:
+            raise AdbError('Feedback drag requires a starting coordinate pair.')
+        self._validate_touch_bounds(tuple(start), width, height)
+        if (isinstance(max_seconds, bool) or not isinstance(max_seconds, (int, float))
+                or not math.isfinite(max_seconds) or not 0 < max_seconds <= 60):
+            raise AdbError('Feedback drag must be bounded to at most 60 seconds.')
+        if not callable(update):
+            raise AdbError('Feedback drag requires an observation callback.')
+        cancelled = cancel_event if cancel_event is not None else threading.Event()
+
+        def checkpoint():
+            if cancelled.is_set():
+                raise AdbError('Feedback drag cancelled.')
+            if self._closed:
+                raise AdbError('ADB session is closed.')
+
+        with self._input_lock:
+            checkpoint()
+            touch, rotation = self._touch_configuration(width, height)
+            elf, _ = self._run(['exec-out', 'dd', 'if=/system/bin/sh', 'bs=6', 'count=1'], device=True)
+            if len(elf) < 6 or elf[:4] != b'\x7fELF' or elf[4] not in (1, 2) or elf[5] != 1:
+                raise AdbError('Cannot establish the Android input-event ABI for a feedback drag.')
+            event_format = '<qqHHi' if elf[4] == 2 else '<iiHHi'
+
+            def command(events):
+                raw = b''.join(struct.pack(event_format, 0, 0, kind, code, value)
+                               for kind, code, value in events)
+                encoded = ''.join(f'\\0{byte:03o}' for byte in raw)
+                return f"printf '%b' '{encoded}' > {touch.path}"
+
+            release = command([(3, 47, 0), (3, 57, -1), *touch.button_events(False), (0, 0, 0)])
+            point = tuple(start)
+            started = time.monotonic()
+            try:
+                checkpoint()
+                x, y = touch.coordinates(*point, width, height, rotation)
+                down = [(3, 47, 0), *touch.button_events(True), (3, 57, 1),
+                        (3, 53, x), (3, 54, y), (0, 0, 0)]
+                self._run(['shell', command(down)], device=True)
+                cancelled.wait(.12)
+                for _ in range(512):
+                    checkpoint()
+                    elapsed = time.monotonic()-started
+                    if elapsed >= max_seconds:
+                        raise AdbError('Feedback drag reached its time limit.')
+                    following = update(point, elapsed)
+                    checkpoint()
+                    if time.monotonic()-started >= max_seconds:
+                        raise AdbError('Feedback drag observation exceeded its time limit.')
+                    if following is None:
+                        return
+                    if not isinstance(following, (tuple, list)) or len(following) != 2:
+                        raise AdbError('Feedback drag observation returned an invalid coordinate pair.')
+                    self._validate_touch_bounds(tuple(following), width, height)
+                    point = tuple(following)
+                    x, y = touch.coordinates(*point, width, height, rotation)
+                    self._run(['shell', command([(3, 47, 0), (3, 53, x), (3, 54, y), (0, 0, 0)])],
+                              device=True)
+                raise AdbError('Feedback drag reached its observation limit.')
             finally:
                 self._run(['shell', release], device=True, _release=True)
 

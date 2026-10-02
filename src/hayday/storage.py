@@ -33,12 +33,15 @@ class Settings:
     preview_interval_seconds: float = 3.0
     farm_name: str = "My farm"
     wheating_instances: tuple[str, ...] = ()
+    wheating_sell_price: str = "max"
 
     def __post_init__(self) -> None:
         self.validate()
 
     def validate(self) -> None:
         """Validate and normalize fields, including instances edited after creation."""
+        if self.wheating_sell_price not in ('max', 'min'):
+            raise ValueError('wheating_sell_price must be max or min.')
         keys = self.wheating_instances
         if (not isinstance(keys, (list, tuple)) or len(keys) > 32
                 or any(not isinstance(k, str) or not k or len(k) > 1024
@@ -118,20 +121,35 @@ class AppData:
         self._closed = False
         for directory in (self.root, self.captures_dir, self.exports_dir, self.logs_dir):
             directory.mkdir(parents=True, exist_ok=True)
-        self._database = sqlite3.connect(self.logs_dir / "activity.sqlite3", check_same_thread=False, timeout=10)
-        self._database.row_factory = sqlite3.Row
-        self._database.execute("PRAGMA journal_mode=WAL")
-        self._database.execute(
-            "CREATE TABLE IF NOT EXISTS activity ("
-            "id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, "
-            "level TEXT NOT NULL, category TEXT NOT NULL, message TEXT NOT NULL)"
-        )
-        self._database.commit()
+        self._database = self._open_activity_database()
         if not self.settings_path.exists():
             try:
                 self.save_settings(Settings())
             except OSError as exc:
                 self.warnings.append(f"Could not create settings; using defaults: {exc}")
+
+    def _open_activity_database(self):
+        for name in ('activity.sqlite3', 'activity-recovered.sqlite3'):
+            database = sqlite3.connect(self.logs_dir / name, check_same_thread=False, timeout=10)
+            try:
+                database.row_factory = sqlite3.Row
+                database.execute('PRAGMA journal_mode=WAL')
+                database.execute(
+                    'CREATE TABLE IF NOT EXISTS activity ('
+                    'id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp TEXT NOT NULL, '
+                    'level TEXT NOT NULL, category TEXT NOT NULL, message TEXT NOT NULL)')
+                database.commit()
+                return database
+            except sqlite3.DatabaseError as exc:
+                database.close()
+                code = getattr(exc, 'sqlite_errorcode', 0) & 0xff
+                if name != 'activity.sqlite3' or code not in (sqlite3.SQLITE_CORRUPT, sqlite3.SQLITE_NOTADB):
+                    raise
+                # Other desktop processes may still hold the original WAL.
+                # Preserve every original file and use a separate durable log.
+                self.warnings.append(
+                    f'The activity log is corrupt and has been preserved at {self.logs_dir / name}. '
+                    'New activity will be stored in activity-recovered.sqlite3.')
 
     def load_settings(self) -> Settings:
         """Read the latest settings, recovering invalid files without losing them.

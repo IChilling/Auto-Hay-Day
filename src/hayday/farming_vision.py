@@ -31,7 +31,7 @@ class FarmingVision:
     """Match generic UI geometry without recognizing or guessing crop species.
 
     A harvest target requires the sickle, its gold drag arrow, and a white
-    selection highlight in agreement. The short drag ends at selected foliage.
+    selection highlight in agreement. The short drag ends near the selection base.
     Replanting uses newly exposed soil observed by the worker after harvesting,
     rather than assuming the foliage and its soil share a fixed offset.
     """
@@ -51,6 +51,10 @@ class FarmingVision:
         for reference in self.references.values():
             if reference.ndim != 3 or reference.shape[2] != 4 or np.count_nonzero(reference[:, :, 3]) < 40:
                 raise ValueError("Farming references require original pixels with an alpha inclusion mask.")
+        # The sickle's bounding-box center is its transparent crescent gap.
+        # Start the contact inside the widest opaque part of the real tool.
+        mask = (self.references['sickle'][:, :, 3] >= 200).astype(np.uint8)
+        _, _, _, self._sickle_contact = cv2.minMaxLoc(cv2.distanceTransform(mask, cv2.DIST_L2, 3))
         # Share the resource reader's mask-aware, coarse-to-fine visual matcher.
         self._matcher = ResourceVision()
         self._last_png: bytes | None = None
@@ -121,7 +125,8 @@ class FarmingVision:
             white = (low > 195) & (high-low < 65)
             if np.count_nonzero(white) < max(20, round(150*scale*scale)):
                 continue
-            tx, ty = geometry["tool_point"]
+            tx = source[0]+self._sickle_contact[0]
+            ty = source[1]+self._sickle_contact[1]
             tool = self._relative((tx-6, ty-6, tx+6, ty+6), sickle, scale, source)
             outlined = self._selected_foliage(image, target, scale)
             if outlined is None:
@@ -143,11 +148,13 @@ class FarmingVision:
         crop colors never count as selection evidence.
         """
         x, y, w, h = expected.box
-        left, top = max(0, x-round(30*scale)), max(0, y-round(110*scale))
+        # The guide-relative estimate can sit right of the actual soil. Include
+        # its entire outline so white cotton bolls cannot replace a clipped ring.
+        left, top = max(0, x-round(90*scale)), max(0, y-round(110*scale))
         right = min(image.shape[1], x+w+round(90*scale))
         bottom = min(image.shape[0], y+h+round(20*scale))
         patch = image[top:bottom, left:right]
-        white = ((patch.min(axis=2) > 225) & (np.ptp(patch, axis=2) < 24)).astype(np.uint8)
+        white = ((patch.min(axis=2) > 205) & (np.ptp(patch, axis=2) < 40)).astype(np.uint8)
         _, labels, stats, _ = cv2.connectedComponentsWithStats(white)
         for label, (px, py, pw, ph, _) in enumerate(stats[1:], 1):
             if (ph > max(30*scale, pw*3) or pw > max(90*scale, ph*4)
@@ -168,7 +175,9 @@ class FarmingVision:
         if not groups or len(groups) > 1 and groups[1][0] >= groups[0][0]*.65:
             return None
         _, xs, ys, bw, bh = groups[0]
-        cx, cy = left+round(float(np.median(xs))), top+round(float(np.percentile(ys, 65)))
+        # Aim near the bottom of the observed selection, where the plot receives
+        # the tool; upper white foliage is not a dependable drop target.
+        cx, cy = left+round(float(np.median(xs))), top+round(float(np.percentile(ys, 85)))
         highlight = VisualTarget(left+int(xs.min()), top+int(ys.min()), bw, bh, expected.score)
         radius = max(4, round(8*scale))
         drag = VisualTarget(cx-radius, cy-radius, radius*2, radius*2, expected.score)
@@ -234,6 +243,33 @@ class FarmingVision:
 
     def seed_menu(self, png: bytes) -> bool:
         return self._seed_controls(png) is not None
+
+    def seed_menu_region(self, png: bytes) -> VisualTarget | None:
+        """Exclude the transparent seed palette when choosing dismissal ground."""
+        controls = self._seed_controls(png)
+        if controls is None:
+            return None
+        _, right = controls
+        scale = right.width/124
+        return VisualTarget(0, 0, round(right.x+right.width+350*scale),
+                            round(right.y+right.height+100*scale), right.score)
+
+    def empty_plots(self, png: bytes) -> tuple[VisualTarget, ...]:
+        """Soil candidates for selection; the seed picker must confirm each one."""
+        from hayday.soil_vision import distinct_soil_targets, soil_references
+        image = self._frame(png)
+        if 'empty_plots' not in self._cache:
+            if not hasattr(self, '_soil_references'):
+                self._soil_references = soil_references()
+            height, width = image.shape[:2]
+            left, top = round(width*.16), round(height*.20)
+            region = image[top:round(height*.82), left:round(width*.84)]
+            scales = np.unique(np.r_[np.geomspace(.35, 1.35, 19), 1.])*height/1080
+            hits = [VisualTarget(t.x+left, t.y+top, t.width, t.height, t.score)
+                    for ref in self._soil_references.values()
+                    for t in self._matcher._search(region, ref, scales, .93, self.cancel, 12)]
+            self._cache['empty_plots'] = distinct_soil_targets(hits)
+        return self._cache['empty_plots']
 
     def page_next(self, png: bytes) -> VisualTarget | None:
         controls = self._seed_controls(png)

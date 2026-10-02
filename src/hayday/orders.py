@@ -99,6 +99,7 @@ class OrderRunner:
         self.ad_text_reader = ad_text_reader
         self.ad_gate_factory = ad_gate_factory
         self.tutorials = tutorials
+        self.page_exits = None
         self.reconnect = reconnect
         self.maintenance = maintenance
         self.launcher = launcher
@@ -123,7 +124,7 @@ class OrderRunner:
         self._receipt_detector = None
         self._receipt_recovery_attempted = False
         self._replacement_seen: dict[str, str] = {}
-        self._routine_capture_labels = frozenset({'camera', 'panel', 'resource', 'fruit_inventory', 'receipt_navigation'})
+        self._routine_capture_labels = frozenset({'camera', 'panel', 'resource', 'fruit_inventory', 'resource_inventory', 'receipt_navigation'})
         self._routine_capture_interval = 20.0
         self._routine_png_budget_bytes = 64 * 1024 * 1024
         self._routine_last_saved: dict[str, float] = {}
@@ -179,7 +180,7 @@ class OrderRunner:
         vision = getattr(self.worker, 'vision', None)
         if (isinstance(vision, ResourceVision) and self._state.get('pending') is None
                 and not any(getattr(recovery, '_uncertain', False)
-                            for recovery in (self.maintenance, self.reconnect, self.tutorials))):
+                            for recovery in (self.maintenance, self.reconnect, self.tutorials, self.page_exits))):
             scene = vision.observe(frame.png, cancel=self.cancel_event.is_set)
             self._check()
             if len(scene.popups) == 1:
@@ -227,7 +228,17 @@ class OrderRunner:
         self._details['tutorials'] = self.tutorials.events
         # Exact free-fuel dismissal is allowed even with an unresolved delivery.
         # Generic dialog recovery remains disabled for receipt/ad navigation.
-        return self.tutorials.process(frame)
+        frame = self.tutorials.process(frame)
+        if self._state.get('pending') is None:
+            if self.page_exits is None:
+                from hayday.page_exits import PageExitRecovery
+                self.page_exits = PageExitRecovery(
+                    self.client, capture=lambda: self._capture_runtime('page_exit_observation', save=False),
+                    cancel_event=self.cancel_event, check=self._check, wait=self._wait,
+                    save=self._save_frame, progress=self._progress)
+            frame = self.page_exits.process(frame)
+            self._details['page_exits'] = self.page_exits.events
+        return frame
 
     def _capture_runtime(self, label, *, save=True):
         frame = self._capture_raw(label, save=save)
@@ -244,9 +255,16 @@ class OrderRunner:
         self._details['launcher'] = self.launcher.events
         return frame
 
-    def _capture_raw(self, label="observation", *, save=True) -> Screenshot:
+    def _capture_fishing_feedback(self):
+        # Recovery handlers may tap dialogs. A held contact must be released
+        # before such recovery, and generic matching is too slow for fishing.
+        # Retain the ordinary deadline/device/resolution checks on every frame.
+        return self._capture_raw('fishing_feedback', save=False, fast=True)
+
+    def _capture_raw(self, label="observation", *, save=True, fast=False) -> Screenshot:
         self._check()
-        frame = self.client.capture()
+        capture = getattr(self.client, 'capture_fast', self.client.capture) if fast else self.client.capture
+        frame = capture()
         # Keep the latest returned image even if cancellation, a device change,
         # or a changed resolution makes this observation unusable for input.
         self.frame = frame
@@ -938,6 +956,7 @@ class OrderRunner:
             from hayday.resources import ResourceWorker
             self.worker = ResourceWorker(
                 self.client, capture=self._capture_resource,
+                feedback_capture=self._capture_fishing_feedback,
                 cancel_event=self.cancel_event, progress=self._progress,
                 state_path=self.device_root / "resources.json",
             )
@@ -973,8 +992,8 @@ class OrderRunner:
                      if self._same_work_ticket(entry, identity)), None)
 
     @staticmethod
-    def _item_waiting(active, item):
-        return any(entry['index'] == item.index and entry['retry_at'] > utc_timestamp()
+    def _item_waiting(active, item, *, include_due=False):
+        return any(entry['index'] == item.index and (include_due or entry['retry_at'] > utc_timestamp())
             and fingerprints_match(entry['fingerprint'], item.fingerprint)
             and entry.get('available') == item.available and entry.get('required') == item.required
             for entry in active.get('deferred_items', []))
@@ -1001,6 +1020,22 @@ class OrderRunner:
         # the oldest due item so low ticket numbers cannot starve later orders.
         return min(due, key=lambda entry: entry[0])[1] if due else None
 
+    @staticmethod
+    def _next_resource_item(active, eligible):
+        last = active.get('last_item_index', -1)
+        if type(last) is not int:
+            last = -1
+        details = (active.get('last_resource') or {}).get('details', {})
+        if details.get('pending_harvest'):
+            previous = next((item for item in eligible if item.index == last or (
+                last == -1 and getattr(item, 'fingerprint', None) == active.get('item_fingerprint')
+                and active.get('item_fingerprint'))), None)
+            if previous is not None:
+                return previous
+        # Care/navigation can take longer than a production revisit delay.
+        # Rotate within the ticket even when its first item is already due.
+        return next((item for item in eligible if item.index > last), eligible[0])
+
     def _resource(self, ticket, observation):
         selected = observation.selected
         if selected is None or not selected.complete or selected.obstructed:
@@ -1024,12 +1059,20 @@ class OrderRunner:
             raise OrdersBlocked("Existing resource work belongs to a different order and has been preserved.")
         if active.get("actions", 0) >= 48:
             raise OrdersBlocked("The active order reached its bounded resource-action limit.")
+        # Fulfilled or changed requirements must not retain an old retry time.
+        # Otherwise an obsolete hold can make this ticket permanently appear
+        # older than every other parked order, even while its actual missing
+        # goods are still growing and no resource action is eligible.
+        active['deferred_items'] = [entry for entry in active.get('deferred_items', [])
+            if any(self._item_waiting({'deferred_items': [entry]}, item, include_due=True)
+                   for item in missing)]
         self._state['active'] = active
         eligible = [item for item in missing if not self._item_waiting(active, item)]
         if not eligible:
             self._park_active()
             return 'parked'
-        item = eligible[0]
+        item = self._next_resource_item(active, eligible)
+        active['last_item_index'] = item.index
         active["item_fingerprint"] = item.fingerprint
         self._state["active"] = active
         self._persist()
@@ -1041,8 +1084,8 @@ class OrderRunner:
         result = query(self.frame, item, item_key=previous_item) if callable(query) else None
         from hayday.resources import ResourceResult
         if isinstance(result, ResourceResult) and result.details.get('inventory_only') is True:
-            result = self._reconcile_fruit_inventory(ticket, observation, item, result, active)
-        elif not isinstance(result, ResourceResult):
+            result = self._reconcile_harvest_inventory(ticket, observation, item, result, active)
+        elif not isinstance(result, ResourceResult) or result.details.get('lure_check_ready'):
             result = self.worker.work(self.frame, item)
         self._check()
         active["last_resource"] = {"status": result.status, "message": result.message, "details": result.details}
@@ -1063,10 +1106,12 @@ class OrderRunner:
                 'retry_at': utc_timestamp()+delay, 'reason': result.message,
             }]
             self._persist()
-            if all(self._item_waiting(active, candidate) for candidate in missing):
+            # Yield after every remaining item has a matching deferral, even
+            # when navigation outlasted an earlier item's revisit delay.
+            if all(self._item_waiting(active, candidate, include_due=True) for candidate in missing):
                 self._park_active()
                 return 'parked'
-            self._progress('This item has work in progress; checking the remaining missing items.')
+            self._progress('This requirement is deferred; checking the remaining missing items.')
             return result.status
         if result.details.get("defer_session") is True:
             return "deferred"
@@ -1077,8 +1122,8 @@ class OrderRunner:
             self._wait(min(30, max(1, wait)))
         return result.status
 
-    def _reconcile_fruit_inventory(self, ticket, observation, item, result, active):
-        """Stay at this order for a bounded stock check; never navigate to its tree."""
+    def _reconcile_harvest_inventory(self, ticket, observation, item, result, active):
+        """Stay at this order for a bounded stock check; never navigate to its source."""
         from hayday.resources import ResourceResult
 
         started = time.monotonic()
@@ -1093,7 +1138,7 @@ class OrderRunner:
             if result.status != 'waiting':
                 return result
             if result.details.get('operation') != operation:
-                return ResourceResult('unsupported', 'The pending fruit intent changed during stock reconciliation; no resource input was sent.')
+                return ResourceResult('unsupported', 'The pending resource intent changed during stock reconciliation; no resource input was sent.')
             observation_id = result.details.get('observation_id')
             if result.details.get('unchanged_stock') is True and observation_id:
                 unchanged_frames.add(observation_id)
@@ -1101,15 +1146,15 @@ class OrderRunner:
                 unchanged_frames.clear()
             elapsed = time.monotonic()-started
             if (elapsed >= 10 and len(unchanged_frames) >= 2) or elapsed >= 30 or attempt == 11:
-                message = ('Fruit stock is still unchanged after the harvest confirmation wait. '
+                message = ('Resource stock is still unchanged after the harvest confirmation wait. '
                            if len(unchanged_frames) >= 2 else
-                           'The fruit harvest could not be confirmed from fresh order stock within the bounded wait. ')
+                           'The resource harvest could not be confirmed from fresh order stock within the bounded wait. ')
                 return ResourceResult('unsupported', message+
-                    'The saved harvest intent is preserved. Inspect the tree and stock before restarting; no repeat drag or location visit was sent.',
+                    'The saved harvest intent is preserved. Inspect the source and stock before restarting; no repeat drag or location visit was sent.',
                     {**result.details, 'wait_elapsed': elapsed, 'unchanged_frames': len(unchanged_frames),
                      'reconciliation_stopped': True})
             self._wait(min(3, 30-elapsed))
-            current = self._observe('fruit_inventory')
+            current = self._observe('resource_inventory')
             current_ticket = self._ticket(current, ticket.slot_id)
             selected = current.selected
             if (not current.panel.verified or selected is None or not selected.complete or selected.obstructed
@@ -1117,15 +1162,17 @@ class OrderRunner:
                     or current_ticket is None or not fingerprints_match(current_ticket.fingerprint, ticket.fingerprint)
                     or not fingerprints_match(selected.fingerprint, observation.selected.fingerprint)):
                 return ResourceResult('unsupported',
-                    'The order changed or became covered during fruit stock confirmation. The harvest intent is preserved; no location visit was sent.')
+                    'The order changed or became covered during resource stock confirmation. The harvest intent is preserved; no location visit was sent.')
             current_item = next((candidate for candidate in selected.items if candidate.index == item.index
                                  and fingerprints_match(candidate.fingerprint, item.fingerprint)), None)
             if current_item is None:
-                return ResourceResult('unsupported', 'The fruit item changed during stock confirmation; its saved harvest intent is preserved.')
+                return ResourceResult('unsupported', 'The resource item changed during stock confirmation; its saved harvest intent is preserved.')
             result = self.worker.pending_reconciliation(self.frame, current_item, item_key=key)
+            if isinstance(result, ResourceResult) and result.details.get('lure_check_ready'):
+                return result
             if not isinstance(result, ResourceResult):
-                return ResourceResult('unsupported', 'The saved fruit harvest could not be reconciled; no new resource input was sent.')
-        raise AssertionError('Fruit inventory reconciliation exceeded its observation bound.')
+                return ResourceResult('unsupported', 'The saved resource harvest could not be reconciled; no new resource input was sent.')
+        raise AssertionError('Harvest inventory reconciliation exceeded its observation bound.')
 
     def _finish(self, status, message):
         if self.frame is not None:
@@ -1196,6 +1243,7 @@ class OrderRunner:
                 if not resolved:
                     return self._finish("uncertain", "An earlier delivery remains unconfirmed. Its saved intent prevents another send.")
             truck_started = None
+            care_due = False
             while self.deliveries < self.max_deliveries:
                 self._check()
                 observation = self._panel()
@@ -1220,6 +1268,17 @@ class OrderRunner:
                         return self._finish("uncertain", "A delivery was attempted once but not confirmed. Saved intent prevents a duplicate send.")
                     truck_started = None
                     continue
+                care = getattr(self.worker, 'care_animals', None)
+                if care_due and care is not None:
+                    care_due = False
+                    result = care(self.frame)
+                    if result is not None:
+                        self._progress(result.message)
+                        if result.status in {'unsupported', 'changed'}:
+                            raise OrdersBlocked(result.message)
+                        # Re-read the board after care. Ready deliveries and
+                        # one resource step always precede another pen search.
+                        continue
                 active = self._state.get("active")
                 if active:
                     ticket = self._ticket(observation, active["slot_id"])
@@ -1231,7 +1290,7 @@ class OrderRunner:
                     ticket = self._next_work_ticket(available)
                     if ticket is None and available:
                         return self._finish('deferred',
-                            'All remaining orders are waiting for queued or growing resources. '
+                            'All remaining orders have deferred resource requirements. '
                             'Their work is saved; later sessions recheck them when due.')
                 if ticket is None:
                     self._progress("Waiting for an available truck-order ticket.")
@@ -1239,6 +1298,7 @@ class OrderRunner:
                     continue
                 ticket, selected = self._select(ticket)
                 status = self._resource(ticket, selected)
+                care_due = True
                 if status == "deferred":
                     active = self._state.get("active") or {}
                     message = (active.get("last_resource") or {}).get("message")

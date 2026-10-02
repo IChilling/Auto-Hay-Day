@@ -36,6 +36,8 @@ class FruitTarget:
     action: str = 'harvest'
     available: int | None = None
     enabled: bool = True
+    pen_polygons: tuple[tuple[tuple[int, int], ...], ...] = ()
+    sweep_paths: tuple[tuple[tuple[int, int], ...], ...] = ()
 
 
 class FruitVision:
@@ -77,6 +79,14 @@ class FruitVision:
         self._matcher = ResourceVision()
         self._sheep = None
         self._chicken = None
+        self._cow = None
+        self._orchard_status = None
+
+    def exhausted_orchard(self, png, desired_icon, cancel):
+        if self._orchard_status is None:
+            from hayday.orchard_status import OrchardStatusVision
+            self._orchard_status = OrchardStatusVision()
+        return self._orchard_status.exhausted(png, desired_icon, cancel)
 
     @staticmethod
     def _relative(box, basket, source, scale):
@@ -107,7 +117,7 @@ class FruitVision:
         self._check(cancel)
         return bool(found and found[0].score >= minimum_score)
 
-    def _clusters(self, roi, reference, scales, cancel):
+    def _clusters(self, roi, reference, scales, cancel, *, min_fruit_fraction=.20):
         """Validate small fruit patterns at native resolution without coarse pruning."""
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         dimensions, found = set(), []
@@ -138,7 +148,14 @@ class FruitVision:
                 offset = np.clip(observed.mean()-gain*expected.mean(), -15., 120.)
                 difference = np.abs(observed-(gain*expected+offset)).mean()
                 score = .8*correlation+.2*max(0., 1.-float(difference)/100.)
-                if score >= .86:
+                # Use the same neutral lighting correction for the independent
+                # color check. Raw channel ratios reject ripe fruit under a
+                # cloud even when the shape and shared RGB fit both match.
+                corrected = (patch.astype(np.float32)-offset)/gain
+                blue, green, red = (corrected[:, :, channel] for channel in range(3))
+                fruit_pixels = ((red > 80) & (red > green*1.6)
+                                & (blue > green*1.2) & (red > blue*1.5))
+                if score >= .86 and np.mean(fruit_pixels) >= min_fruit_fraction:
                     found.append(VisualTarget(x, y, width, height, score))
                 rx, ry = max(3, width//2), max(3, height//2)
                 response[max(0, y-ry):y+ry+1, max(0, x-rx):x+rx+1] = -1
@@ -180,7 +197,8 @@ class FruitVision:
             # when the ordinary full-frame matcher downsamples or prunes peaks.
             sizes = np.unique(np.r_[np.arange(max(8, round(low*scale*reference.shape[1])),
                 round(high*scale*reference.shape[1])+1, .25)/reference.shape[1], scale])
-            found = self._clusters(roi, reference, sizes, cancel)
+            found = self._clusters(roi, reference, sizes, cancel,
+                                   min_fruit_fraction=.12 if species == 'raspberry' else .20)
             for match in found:
                 target = VisualTarget(match.x+left, match.y+top, match.width, match.height, match.score)
                 cx, cy = target.center
@@ -196,12 +214,6 @@ class FruitVision:
                     arrow_right = self.manifest['features']['arrow']['box'][2]
                     boundary = basket.x+(arrow_right-source[0]+8)*scale
                 if cx-target.width/2 < boundary or target.width < 12*scale:
-                    continue
-                patch = image[target.y:target.y+target.height, target.x:target.x+target.width]
-                blue, green, red = (patch[:, :, channel].astype(np.int16) for channel in range(3))
-                fruit_pixels = (red > 80) & (red > green*1.6) & (blue > green*1.2) & (red > blue*1.5)
-                # Raspberry bunches are separated by leaves even when ripe.
-                if np.mean(fruit_pixels) < (.12 if species == 'raspberry' else .20):
                     continue
                 candidates.append(target)
         self._check(cancel)
@@ -233,10 +245,19 @@ class FruitVision:
         return candidate, evidence
 
     def basket(self, png: bytes, cancel: Callable[[], bool] | None = None,
-               desired_icon: bytes | None = None) -> FruitTarget | None:
+               desired_icon: bytes | None = None, *, cow_pen_hint=None, sheep_pen_hint=None) -> FruitTarget | None:
         cancel = cancel or (lambda: False)
         self._check(cancel)
         if desired_icon is not None:
+            if self._cow is None:
+                from hayday.cows import CowVision
+                self._cow = CowVision()
+            cow = self._cow.harvest(png, desired_icon, cancel, pen_hint=cow_pen_hint)
+            if cow is None:
+                cow = self._cow.harvest(png, desired_icon, cancel, feeding=True)
+            self._check(cancel)
+            if cow is not None:
+                return cow
             if self._chicken is None:
                 from hayday.chickens import ChickenVision
                 self._chicken = ChickenVision()
@@ -247,7 +268,7 @@ class FruitVision:
             if self._sheep is None:
                 from hayday.animals import SheepVision
                 self._sheep = SheepVision()
-            sheep = self._sheep.harvest(png, desired_icon, cancel)
+            sheep = self._sheep.harvest(png, desired_icon, cancel, pen_hint=sheep_pen_hint)
             self._check(cancel)
             if sheep is not None:
                 return sheep
@@ -325,6 +346,18 @@ class FruitVision:
     def chicken_enclosure(self, png, icon, cancel):
         return None  # Chicken feeding uses its freshly matched coop and floor.
 
+    def cow_feed(self, png, icon, cancel, **kwargs):
+        if self._cow is None:
+            from hayday.cows import CowVision
+            self._cow = CowVision()
+        return self._cow.harvest(png, icon, cancel, feeding=True, **kwargs)
+
+    def cow_enclosure(self, png, icon, cancel):
+        if self._cow is None:
+            from hayday.cows import CowVision
+            self._cow = CowVision()
+        return self._cow.enclosure(png, icon, cancel)
+
 
 class FruitWorker:
     """One fresh basket drag followed by inventory verification, never a blind retry."""
@@ -368,7 +401,8 @@ class FruitWorker:
 
     def _read(self, frame, icon):
         self._check()
-        result = self.vision.basket(frame.png, cancel=self.cancel_event.is_set, desired_icon=icon)
+        hint = {name:getattr(self,'_'+name,None) for name in ('cow_pen_hint', 'sheep_pen_hint')} if isinstance(self.vision,FruitVision) else {}
+        result = self.vision.basket(frame.png, cancel=self.cancel_event.is_set, desired_icon=icon, **hint)
         self._check()
         return result
 
@@ -384,35 +418,111 @@ class FruitWorker:
     def _same_pen(first, second):
         if first is None or second is None or len(first.pen_polygon) < 4 or len(second.pen_polygon) < 4:
             return False
-        old, new = np.array(first.pen_polygon, np.float32), np.array(second.pen_polygon, np.float32)
-        intersection, _ = cv2.intersectConvexConvex(old, new)
-        return intersection/max(1., cv2.contourArea(old)+cv2.contourArea(new)-intersection) >= .86
+        from hayday.cows import CowVision
+        old = first.pen_polygons or (first.pen_polygon,)
+        new = second.pen_polygons or (second.pen_polygon,)
+        return len(old) == len(new) and all(
+            sum(CowVision.same_pen(a, b) for b in new) == 1 for a in old)
 
     def _feed_sheep(self, frame, icon, key):
         return self._feed_animal(frame, icon, key, 'sheep')
 
+    def _prepare_sheep(self, frame, icon, key):
+        """Expose a complete pen while enabled shears outrank one sheep's timer."""
+        from hayday.camera import CameraNavigator
+        from hayday.cows import CowVision
+        from hayday.herd_vision import HerdVision
+        herd = HerdVision()
+        first = herd.menu(frame.png, 'sheep', self.cancel_event.is_set)
+        fresh = self._frame()
+        second = herd.menu(fresh.png, 'sheep', self.cancel_event.is_set)
+        if (first is None or second is None or first.collection_enabled is not True
+                or second.collection_enabled is not True or frame.captured_at == fresh.captured_at
+                or not self._same(first.collection_tool, second.collection_tool, fresh)):
+            return ResourceResult('changed', 'The enabled shears changed before the sheep pen could be inspected.')
+        scale = fresh.height/1080
+        left = max(0, round(min(second.tool.x, second.collection_tool.x)-80*scale))
+        ground = CameraNavigator._grass_start(fresh, 0, 0,
+            exclude_regions=((left, 0, fresh.width-left, fresh.height),))
+        if ground is None:
+            return ResourceResult('waiting', 'Wool is ready, but no clear ground was verified to inspect its pen.',
+                {'item': key, 'defer_item': True, 'retry_after_seconds': 60})
+        self.progress('The shears are enabled; exposing the sheep pen behind the individual growth timer.')
+        self._check()
+        self.client.tap(*ground[:2], width=fresh.width, height=fresh.height)
+        self.cancel_event.wait(.35)
+        clear = self._frame()
+        vision = self.vision._sheep
+        if herd.menu(clear.png, 'sheep', self.cancel_event.is_set) is not None:
+            return ResourceResult('changed', 'The sheep controls remained open; no shearing drag was sent.')
+        pens = vision.enclosures(clear.png, self.cancel_event.is_set)
+        fresh = self._frame()
+        started = time.monotonic()
+        current = vision.enclosures(fresh.png, self.cancel_event.is_set)
+        stable = [pen for pen in current if any(CowVision.same_pen(pen[2], old[2]) for old in pens)
+                  and min(x for x, y in pen[2]) > fresh.width*.12
+                  and max(x for x, y in pen[2]) < fresh.width*.89
+                  and min(y for x, y in pen[2]) > fresh.height*.18
+                  and max(y for x, y in pen[2]) < fresh.height*.86]
+        if not stable or clear.captured_at == fresh.captured_at:
+            return ResourceResult('waiting', 'Wool is ready, but a complete sheep pen was not verified in both clear views.',
+                {'item': key, 'defer_item': True, 'retry_after_seconds': 60})
+        pen = min(stable, key=lambda p: np.linalg.norm(np.subtract(p[1].center, second.collection_tool.center)))
+        if time.monotonic()-started > 4:
+            return ResourceResult('changed', 'The sheep pen observation became stale before selection.')
+        self._sheep_pen_hint = (fresh.png, pen[2])
+        self._check()
+        self.client.tap(*pen[1].center, width=fresh.width, height=fresh.height)
+        self.cancel_event.wait(.35)
+        opened = self._frame()
+        observed = self._read(opened, icon)
+        if (observed and observed.species == 'wool' and observed.action == 'harvest' and observed.target
+                and CowVision.same_pen(observed.pen_polygon, pen[2])):
+            return opened, observed
+        return ResourceResult('waiting', 'The sheep pen was reopened; checking its collection controls again later.',
+            {'item': key, 'defer_item': True, 'retry_after_seconds': 60})
+
+    def _sheep_controls_idle(self, frame):
+        """Grey tools defer wool work even when no animal timer is open."""
+        from hayday.herd_vision import HerdVision
+        if not hasattr(self, '_herd'):
+            self._herd = HerdVision()
+        first = self._herd.menu(frame.png, 'sheep', self.cancel_event.is_set)
+        if first is None or first.enabled or first.collection_enabled is not False:
+            return False
+        fresh = self._frame()
+        second = self._herd.menu(fresh.png, 'sheep', self.cancel_event.is_set)
+        return (second is not None and not second.enabled and second.collection_enabled is False
+                and fresh.captured_at != frame.captured_at
+                and self._same(first.tool, second.tool, fresh)
+                and self._same(first.collection_tool, second.collection_tool, fresh))
+
     def _feed_animal(self, frame, icon, key, animal):
         """One feed sweep with durable intent and two observed stock decreases."""
         entry = self.state['items'].get(key, {})
-        if animal == 'sheep' and entry.get('feed_stage') == 'attempted':
-            return False
-        read_feed = self.vision.sheep_feed if animal == 'sheep' else self.vision.chicken_feed
-        read_enclosure = self.vision.sheep_enclosure if animal == 'sheep' else self.vision.chicken_enclosure
+        read_feed = getattr(self.vision, animal+'_feed')
+        read_enclosure = getattr(self.vision, animal+'_enclosure')
         pen_hint = None
         observed = read_feed(frame.png, icon, self.cancel_event.is_set)
         if entry.get('feed_stage') == 'attempted':
             # A disabled tool can still show the shared feed stock. Reconcile
             # a prior sweep using two readings before allowing another one.
             before = entry.get('feed_available_before')
-            if observed is not None and type(before) is int and observed.available is not None and observed.available < before:
+            if (observed is not None and type(before) is int and observed.available is not None
+                    and (observed.available < before or observed.available == before and not observed.enabled)):
                 fresh = self._frame()
                 checked = read_feed(fresh.png, icon, self.cancel_event.is_set)
                 if (checked is not None and checked.available == observed.available
+                        and checked.enabled == observed.enabled
+                        and self._same(observed.tool, checked.tool, fresh)
                         and fresh.captured_at != frame.captured_at):
-                    self._record(key, feed_stage='confirmed', feed_available_after=checked.available)
-                    return True
+                    fed = checked.available < before
+                    self._record(key, feed_stage='confirmed', feed_available_after=checked.available,
+                                 feed_outcome='fed' if fed else 'already_fed',
+                                 feed_confirmation=[frame.captured_at, fresh.captured_at])
+                    return fed
             return False
-        if observed is not None and observed.target is None and observed.available:
+        if observed is not None and observed.target is None and observed.enabled:
             # A selected animal's timer can hide the floor and fence. Close
             # that overlay, rediscover the enclosure, and open its trough menu.
             from hayday.camera import CameraNavigator
@@ -436,6 +546,13 @@ class FruitWorker:
                         pen_hint = (fresh.png, second[1])
                         observed = read_feed(frame.png, icon, self.cancel_event.is_set,
                                                          pen_hint=pen_hint)
+        if (observed is not None and observed.enabled and observed.available == 0
+                and observed.pen_polygon):
+            from hayday.animal_care import request_feeding
+            request_feeding(self.state_path.with_name('animal_care.json'), self.serial,
+                animal=animal, frame=frame, polygon=observed.pen_polygon, item_key=key)
+            self._feeding_requested = True
+            return False
         if observed is None or observed.target is None or not observed.available or not observed.enabled:
             return False
         fresh = self._frame()
@@ -454,7 +571,8 @@ class FruitWorker:
             (evidence/(operation+'_feed_pen.png')).write_bytes(pen_hint[0])
         self._record(key, stage=entry.get('stage', 'no_effect'), feed_stage='attempted',
                      feed_operation=operation, feed_available_before=checked.available,
-                     feed_before_capture=before_path.name)
+                     feed_before_capture=before_path.name, feed_available_after=None,
+                     feed_after_capture=None, feed_outcome=None, feed_confirmation=None)
         self._check()
         if time.monotonic()-started > 4:
             self._record(key, feed_stage='not_sent')
@@ -482,7 +600,7 @@ class FruitWorker:
                 after_path = evidence/(operation+'_feed_after.png')
                 after_path.write_bytes(after.png)
                 self._record(key, feed_stage='confirmed', feed_available_after=current.available,
-                             feed_after_capture=after_path.name)
+                             feed_after_capture=after_path.name, feed_outcome='fed')
                 return True
         if animal == 'chicken' and len(unchanged_ids) >= 2:
             self._record(key, feed_stage='no_effect', feed_available_after=checked.available)
@@ -498,6 +616,16 @@ class FruitWorker:
             return ResourceResult('waiting', 'Barn storage is full; animal collection is paused.',
                 {'item':key, 'storage_blocked':True, 'defer_session':True})
         care = ChickenCare(self)
+        if observed.action == 'harvest':
+            # The basket is shared across all chicken pens. Do not feed or
+            # reject a pen because its individual hens do not look ready.
+            if observed.target is not None:
+                return frame, observed
+            switched = care.next_pen(frame, icon, [])
+            if switched is not None and switched[1].action == 'harvest' and switched[1].target is not None:
+                return switched
+            return ResourceResult('waiting', 'Eggs are ready, but a complete neighboring pen was not verified.',
+                                  {'item': key, 'defer_item': True, 'retry_after_seconds': 60})
         excluded = []
         for _ in range(3):
             self._check()
@@ -528,6 +656,9 @@ class FruitWorker:
     def work_if_recognized(self, frame, icon, key, baseline=None):
         self._check()
         self._size = frame.width, frame.height
+        self._cow_pen_hint = None
+        self._sheep_pen_hint = None
+        self._feeding_requested = False
         if self.state['items'].get(key, {}).get('stage') == 'attempted':
             return ResourceResult('waiting',
                 'A harvest remains pending; checking inventory before any repeat gesture.',
@@ -536,15 +667,65 @@ class FruitWorker:
         if observed is None and isinstance(self.vision, FruitVision):
             observed = self.vision.chicken_feed(frame.png, icon, self.cancel_event.is_set)
         if observed is None:
+            read_exhausted = getattr(self.vision, 'exhausted_orchard', None)
+            exhausted = read_exhausted(frame.png, icon, self.cancel_event.is_set) if read_exhausted else None
+            if exhausted is not None:
+                fresh = self._frame()
+                checked = read_exhausted(fresh.png, icon, self.cancel_event.is_set)
+                if (checked is not None and checked.species == exhausted.species
+                        and fresh.captured_at != frame.captured_at
+                        and all(self._same(getattr(exhausted, name), getattr(checked, name), fresh)
+                                for name in ('saw', 'help', 'arrow'))):
+                    return ResourceResult('waiting',
+                        f'The linked {checked.species} tree is exhausted; deferring this requirement and checking other orders.',
+                        {'item': key, 'species': checked.species, 'exhausted_source': True,
+                         'defer_item': True, 'retry_after_seconds': 600})
+                return ResourceResult('changed',
+                    'The exhausted-tree menu changed before it could be confirmed.')
+        if observed is None:
             return None
+        if observed.species == 'milk':
+            from hayday.barn_storage import StorageReader
+            self.storage = self.storage or StorageReader()
+            if self.storage.read(frame.png, self.cancel_event.is_set).full:
+                return ResourceResult('waiting', 'Barn storage is full; milk collection is paused.',
+                    {'item': key, 'storage_blocked': True, 'defer_session': True})
+            if observed.target is None or observed.action == 'feed':
+                from hayday.cows import prepare_cows
+                prepared = prepare_cows(self, frame, icon, key)
+                if isinstance(prepared, ResourceResult):
+                    return prepared
+                frame, observed = prepared
+            if (not isinstance(baseline, dict)
+                    or type(baseline.get('available')) is not int
+                    or type(baseline.get('required')) is not int
+                    or baseline['required'] <= 0):
+                return ResourceResult('unsupported',
+                    'Milk stock must be readable before collection can be verified.')
         if observed.species == 'egg':
-            prepared = self._prepare_chickens(frame, icon, key, observed)
-            if isinstance(prepared, ResourceResult):
-                return prepared
-            frame, observed = prepared
-        if observed.species == 'wool' and observed.target is None:
+            if observed.action != 'harvest' or observed.target is None:
+                prepared = self._prepare_chickens(frame, icon, key, observed)
+                if isinstance(prepared, ResourceResult):
+                    return prepared
+                frame, observed = prepared
+        if observed.species == 'wool' and observed.action == 'harvest':
+            from hayday.farming_vision import FarmingVision
+            if isinstance(self.vision, FruitVision) and (observed.target is None or FarmingVision().growing(frame.png)):
+                prepared = self._prepare_sheep(frame, icon, key)
+                if isinstance(prepared, ResourceResult):
+                    return prepared
+                frame, observed = prepared
+        if observed.species == 'wool' and observed.action == 'feed' and observed.target is None:
             fed = self._feed_sheep(frame, icon, key)
+            if self._feeding_requested:
+                return ResourceResult('waiting',
+                    'This sheep pen needs feed; its Feed Mill task is saved.',
+                    {'item': key, 'defer_item': True, 'retry_after_seconds': 60})
             if not fed:
+                if self._sheep_controls_idle(frame):
+                    return ResourceResult('waiting',
+                        'The shears and sheep feed are grey; checking other requirements.',
+                        {'item': key, 'defer_item': True, 'retry_after_seconds': 600})
                 from hayday.farming_vision import FarmingVision
                 growth = FarmingVision()
                 if growth.growing(frame.png):
@@ -578,10 +759,11 @@ class FruitWorker:
                       and self._same(observed.target, checked.target, fresh)
                       and self._same(observed.arrow, checked.arrow, fresh))
             if (checked is not None and observed is not None
-                    and checked.species == observed.species and checked.species in {'wool', 'egg'}):
+                    and checked.species == observed.species and checked.species in {'wool', 'egg', 'milk'}):
                 # Animals walk and turn during observation. A whole-pen sweep
                 # requires the same enclosure and tool, not an immobile sheep.
                 stable = (checked.target is not None and observed.target is not None
+                          and checked.action == observed.action == 'harvest'
                           and self._same(observed.tool, checked.tool, fresh)
                           and self._same(observed.arrow, checked.arrow, fresh)
                           and len(observed.pen_polygon) >= 4 and len(checked.pen_polygon) >= 4)
@@ -601,9 +783,11 @@ class FruitWorker:
             return ResourceResult('changed',
                 'The collection tool and harvest target did not settle; no drag was sent.')
         self._check()
-        self.progress('Sweeping the shears across the freshly recognized sheep pen.'
+        self.progress('Sweeping the shears across the verified neighboring sheep pens.'
                       if checked.species == 'wool' else
-                      'Sweeping the basket across the freshly recognized chicken pen.'
+                      'Sweeping the milk bucket across the verified neighboring cow pens.'
+                      if checked.species == 'milk' else
+                      'Sweeping the basket across the verified neighboring chicken pens.'
                       if checked.species == 'egg' else
                       'Dragging the basket onto freshly recognized ripe fruit.')
         before = dict(baseline) if isinstance(baseline, dict) else {}
@@ -612,22 +796,46 @@ class FruitWorker:
         evidence.mkdir(parents=True, exist_ok=True)
         before_path = evidence / (operation + '_before.png')
         before_path.write_bytes(fresh.png)
+        pen_evidence = {}
+        pen_hint = (self._cow_pen_hint if checked.species == 'milk' else
+                    self._sheep_pen_hint if checked.species == 'wool' else None)
+        if pen_hint is not None:
+            pen_path = evidence / (operation + '_pen.png')
+            pen_path.write_bytes(pen_hint[0])
+            pen_evidence = {'pen_before_capture':pen_path.name,
+                            'pen_before_sha256':hashlib.sha256(pen_hint[0]).hexdigest()}
         self._record(key, stage='attempted', operation=operation,
                      inventory_before=before, inventory_confirmation=None,
+                     confirmed_available=None, confirmed_required=None, collection_exhausted=None,
                      before_sha256=hashlib.sha256(fresh.png).hexdigest(),
                      before_capture=before_path.name, species=checked.species,
-                     pen_polygon=checked.pen_polygon, harvest_observed_at=fresh.captured_at)
+                     pen_polygon=checked.pen_polygon, pen_polygons=checked.pen_polygons,
+                     harvest_observed_at=fresh.captured_at,
+                     **pen_evidence)
+        if checked.species in {'wool', 'egg', 'milk'}:
+            from hayday.animal_care import request_feeding
+            for index, polygon in enumerate(checked.pen_polygons or (checked.pen_polygon,)):
+                request_feeding(self.state_path.with_name('animal_care.json'), self.serial,
+                    animal={'wool': 'sheep', 'egg': 'chicken', 'milk': 'cow'}[checked.species],
+                    frame=fresh, polygon=polygon, item_key=key,
+                    harvest_operation=operation, pen_index=index)
         self._check()
         if time.monotonic()-started > 4:
             self._record(key, stage='no_effect')
             return ResourceResult('changed', 'Fruit input was deferred because its saved observation became stale.')
         if checked.sweep_path:
-            self.client.drag_path((checked.tool.center, *checked.sweep_path),
-                                  width=fresh.width, height=fresh.height, duration_ms=4500,
+            paths = checked.sweep_paths or (checked.sweep_path,)
+            self.client.drag_path((checked.tool.center, *(point for path in paths for point in path)),
+                                  width=fresh.width, height=fresh.height, duration_ms=min(12000, 4500*len(paths)),
                                   cancel_event=self.cancel_event)
         else:
-            self.client.swipe(*checked.tool.center, *checked.target.center,
-                              width=fresh.width, height=fresh.height, duration_ms=1000)
+            # MuMu can interpret Android's synthetic swipe as camera movement
+            # without picking up the basket. Hold the discovered touch contact
+            # on the tool before moving, and let the game consume the drop.
+            self.client.drag_path((checked.tool.center, checked.tool.center, checked.target.center),
+                                  width=fresh.width, height=fresh.height, duration_ms=1000,
+                                  min_waypoint_ms=120, max_step_px=12,
+                                  cancel_event=self.cancel_event)
         self.cancel_event.wait(.6)
         self._check()
         after = self._frame()
@@ -635,41 +843,29 @@ class FruitWorker:
         after_path.write_bytes(after.png)
         self._record(key, after_capture=after_path.name,
                      after_sha256=hashlib.sha256(after.png).hexdigest())
-        if checked.species == 'egg' and self.storage is not None:
+        if checked.species in {'wool', 'egg', 'milk'} and isinstance(self.vision, FruitVision):
+            from hayday.herd_vision import HerdVision
+            animal = {'wool': 'sheep', 'egg': 'chicken', 'milk': 'cow'}[checked.species]
+            herd = HerdVision()
+            first = herd.menu(after.png, animal, self.cancel_event.is_set)
+            followup = self._frame()
+            second = herd.menu(followup.png, animal, self.cancel_event.is_set)
+            exhausted = (first is not None and second is not None
+                         and first.collection_enabled is False and second.collection_enabled is False
+                         and after.captured_at != followup.captured_at)
+            self._record(key, collection_exhausted=exhausted)
+            self.progress('The collection tool is grey; no more of this animal product is ready.'
+                          if exhausted else 'Checking inventory; the tool has not yet confirmed collection is finished.')
+        if checked.species in {'egg', 'milk'} and self.storage is not None:
             status = self.storage.read(after.png, self.cancel_event.is_set)
             if status.full:
                 return ResourceResult('waiting', 'Barn storage filled during collection; further harvesting is paused.',
                     {'item':key, 'pending_harvest':True, 'storage_blocked':True, 'defer_session':True})
-        if checked.species == 'wool':
-            self._feed_sheep(after, icon, key)
-        elif checked.species == 'egg':
-            self._feed_animal(after, icon, key, 'chicken')
+        # Confirm this harvest before returning to feed this specific pen.
         return ResourceResult('waiting',
             'Harvesting was attempted. Returning to verify the inventory gain.',
             {'wait_seconds': 1, 'pending_harvest': True, 'item': key})
 
     def observe_inventory(self, key, status, available, required, observation_id):
-        """Accept two consistent positive stock observations, including partial gains."""
-        self._check()
-        entry = self.state['items'].get(key)
-        if not entry or entry.get('stage') != 'attempted':
-            return
-        before = entry.get('inventory_before', {})
-        same_requirement = type(required) is int and required > 0 and before.get('required') == required
-        increased = (same_requirement and type(available) is int
-                     and type(before.get('available')) is int and available > before['available'])
-        fulfilled = same_requirement and status == 'fulfilled' and before.get('status') == 'missing'
-        if not observation_id or not (increased or fulfilled):
-            if entry.get('inventory_confirmation'):
-                self._record(key, inventory_confirmation=None)
-            return
-        evidence = [status, available, required]
-        confirmation = entry.get('inventory_confirmation') or {}
-        if confirmation.get('observation_id') == observation_id:
-            return
-        count = confirmation.get('count', 0)+1 if confirmation.get('evidence') == evidence else 1
-        self._record(key, inventory_confirmation={'evidence': evidence, 'count': count,
-                                                  'observation_id': observation_id})
-        if count >= 2:
-            self._record(key, stage='confirmed', inventory_confirmation=None,
-                         confirmed_available=available, confirmed_required=required)
+        from hayday.harvest_inventory import observe_harvest_inventory
+        observe_harvest_inventory(self, key, status, available, required, observation_id)

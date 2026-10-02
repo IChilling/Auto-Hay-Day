@@ -9,7 +9,7 @@ def utc_timestamp() -> float:
 
 
 def retry_delay(result) -> float | None:
-    """Only positively queued/growing work may yield to another requirement."""
+    """Only explicit deferrals may yield; unresolved input intent must stay put."""
     details = result.details
     if result.status not in {"queued", "waiting"} or not isinstance(details, dict):
         return None

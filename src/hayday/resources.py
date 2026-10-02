@@ -56,9 +56,10 @@ class ResourceWorker:
 
     def __init__(self, client, *, capture=None, cancel_event=None, progress=None,
                  state_path: Path, vision=None, fields=None, fruits=None, orchards=None,
-                 max_depth=6):
+                 max_depth=6, fishing=None, feedback_capture=None):
         self.client = client
         self.capture = capture or client.capture
+        self.feedback_capture = feedback_capture or getattr(client, 'capture_fast', self.capture)
         self.cancel_event = cancel_event if cancel_event is not None else threading.Event()
         self.progress = progress or (lambda message: None)
         self.state_path = Path(state_path)
@@ -66,12 +67,14 @@ class ResourceWorker:
         self.fields = fields
         self.fruits = fruits
         self.orchards = orchards
+        self.fishing = fishing
         self.max_depth = max_depth
         if type(max_depth) is not int or not 0 <= max_depth <= 12:
             raise ValueError('Resource dependency depth must be an integer between 0 and 12.')
         self.serial = client.serial
         self._size = None
         self._menu_open = False
+        self._caring_animals = False
         self._state = {'version': 1, 'serial': self.serial, 'items': {}, 'events': []}
         if self.state_path.exists():
             self._state = json.loads(self.state_path.read_text(encoding='utf-8'))
@@ -89,12 +92,35 @@ class ResourceWorker:
             self._ensure_fruit_worker()
         if self.state_path.with_name('orchard.json').is_file():
             self._ensure_orchard_worker()
+        if self.state_path.with_name('fishing.json').is_file():
+            self._ensure_fishing_worker()
+
+    def _ensure_fishing_worker(self):
+        if self.fishing is None:
+            from hayday.fishing import FishingWorker
+            self.fishing = FishingWorker(self.client, self._capture, self.cancel_event, self.progress,
+                                         self.state_path.with_name('fishing.json'),
+                                         feedback_capture=self.feedback_capture)
 
     def _ensure_fruit_worker(self):
         if self.fruits is None:
             from hayday.fruit import FruitWorker
             self.fruits = FruitWorker(self.client, self._capture, self.cancel_event, self.progress,
                                       self.state_path.with_name('fruit.json'))
+
+    def care_animals(self, frame):
+        self._ensure_animal_care()
+        self._ensure_fruit_worker()
+        self._caring_animals = True
+        try:
+            return self._animal_care.step(frame)
+        finally:
+            self._caring_animals = False
+
+    def _ensure_animal_care(self):
+        from hayday.animal_care import AnimalCareWorker
+        if not hasattr(self, '_animal_care'):
+            self._animal_care = AnimalCareWorker(self)
 
     def _ensure_orchard_worker(self):
         if self.orchards is None:
@@ -268,10 +294,11 @@ class ResourceWorker:
         entry = self._state['items'].get(key, {})
         if entry.get('pending_batch') and entry.get('pending_stage') == 'awaiting_collection':
             self._record(key, 'inventory_confirmed', pending_batch=False,
-                         pending_stage=None, collection_probed=False, inventory_confirmation=None)
+                         pending_stage=None, collection_probed=False, inventory_confirmation=None,
+                         inventory_receipt=None)
 
     def observe_inventory(self, frame, items):
-        """Retire a finished batch only when an observed requirement is fulfilled."""
+        """Remember positive stock evidence and reconcile completed batches."""
         self._check()
         for item in items:
             available, required = self._quantity(frame, item.quantity_bounds, item)
@@ -285,6 +312,8 @@ class ResourceWorker:
         key = self._resolve_key(key)
         if self.fruits is not None:
             self.fruits.observe_inventory(key, status, available, required, observation_id)
+        if self.fishing is not None:
+            self.fishing.observe_inventory(key, status, available, required, observation_id)
         if self.orchards is not None:
             self.orchards.observe_inventory(key, status, available, required, observation_id)
         before = self._state['items'].get(key, {}).get('inventory_before', {})
@@ -300,7 +329,7 @@ class ResourceWorker:
         entry = self._state['items'].get(key, {})
         if entry.get('work_retry_at') and (increased or same_requirement_fulfilled):
             self._record(key, 'work_recheck_due', work_retry_at=None)
-        if not entry.get('pending_batch') or entry.get('pending_stage') != 'awaiting_collection':
+        if not entry.get('pending_batch') or entry.get('pending_stage') not in {'queued', 'awaiting_collection'}:
             return
         if not (increased or same_requirement_fulfilled):
             if entry.get('inventory_confirmation'):
@@ -317,6 +346,9 @@ class ResourceWorker:
             'evidence': evidence, 'observation_id': observation_id, 'count': count,
         })
         if count >= 2:
+            if entry.get('pending_stage') == 'queued' and not entry.get('inventory_receipt'):
+                self._record(key, 'stock_received_before_vacancy', inventory_receipt={
+                    'evidence': evidence, 'observation_id': observation_id, 'count': 2})
             self._inventory_confirmed(key, available)
 
     @staticmethod
@@ -348,28 +380,39 @@ class ResourceWorker:
         })
 
     def pending_reconciliation(self, frame, item, *, item_key=None):
-        """Read pending fruit stock at the order board before any location tap.
+        """Read pending harvest stock at the order board before any location tap.
 
-        FruitWorker owns the immutable harvest intent and its positive two-frame
+        The harvest worker owns its immutable intent and positive two-frame
         confirmation. This query never changes that intent or authorizes a retry.
         ``item_key`` carries a previous result's identity through reconciliation.
         """
         self._check()
-        state = getattr(self.fruits, 'state', None)
-        if not isinstance(state, dict) or not isinstance(state.get('items'), dict):
+        states = [worker.state for worker in (self.fruits, self.fishing)
+                  if isinstance(getattr(worker, 'state', None), dict)
+                  and isinstance(worker.state.get('items'), dict)]
+        if not states:
             return None
         selected_key = self._known_icon(OrderReader.item_icon(frame.png, item))
         selected_key = self._resolve_key(selected_key) if selected_key else None
         key = self._resolve_key(item_key) if item_key else selected_key
-        entry = state['items'].get(key)
+        entries = [state['items'][key] for state in states if key in state['items']]
+        pending = [entry for entry in entries if entry.get('stage') == 'attempted']
+        if len(pending) > 1:
+            return ResourceResult('unsupported', 'Multiple harvest intents need inventory reconciliation.')
+        entry = pending[0] if pending else next(iter(entries), None)
         if not isinstance(entry, dict):
             return None
         if entry.get('stage') == 'confirmed':
-            return (ResourceResult('collected', 'The pending fruit harvest has two positive stock confirmations.',
+            return (ResourceResult('collected', 'The pending harvest has two positive stock confirmations.',
                                    {'item': key, 'pending_harvest': False, 'inventory_confirmed': True})
                     if item_key else None)
         if entry.get('stage') != 'attempted':
             return None
+        if selected_key == key and self.fishing is not None and self.fishing.can_check_returned_lure(key):
+            return ResourceResult('waiting',
+                'Fish stock is unchanged after the completed cast; inspecting whether its lure was returned.',
+                {'item': key, 'operation': entry.get('operation'), 'pending_harvest': True,
+                 'lure_check_ready': True, 'defer_item': True, 'retry_after_seconds': 1})
         details = {'item': key, 'operation': entry.get('operation'), 'pending_harvest': True,
                    'inventory_only': True, 'wait_seconds': 3, 'observation_id': frame.captured_at}
         if selected_key != key:
@@ -384,7 +427,7 @@ class ResourceWorker:
                 if ancestor == key:
                     return None
             return ResourceResult('unsupported',
-                'An earlier fruit harvest is still unconfirmed for a recipe ingredient. Its intent is preserved; '
+                'An earlier harvest is still unconfirmed for a recipe ingredient. Its intent is preserved; '
                 'inspect that ingredient’s stock before another resource visit.', details)
         available, required = self._quantity(frame, item.quantity_bounds, item)
         before = entry.get('inventory_before', {})
@@ -393,7 +436,7 @@ class ResourceWorker:
                              and type(before.get('available')) is int and before.get('required') == required
                              and available == before['available']))
         return ResourceResult('waiting',
-            'The fruit harvest is unconfirmed. Checking its order stock without revisiting the tree or repeating the drag.',
+            'The harvest is unconfirmed. Checking its order stock before any further resource input.',
             details)
 
     @staticmethod
@@ -408,7 +451,12 @@ class ResourceWorker:
 
     def _dismiss(self, frame):
         """Tap observed open ground; Android Back opens Hay Day's exit dialog."""
-        ground = CameraNavigator._grass_start(frame, 0, 0)
+        cow = getattr(getattr(self.fruits,'vision',None),'_cow',None)
+        ground = cow.menu_ground(frame,self.cancel_event.is_set) if cow is not None else None
+        if ground is None:
+            if cow is not None and cow.menu_visible(frame.png,self.cancel_event.is_set):
+                raise ResourceChanged('No clear ground outside the cow controls was verified.')
+            ground = CameraNavigator._menu_ground(frame, self._observe(frame))
         if ground is None:
             raise ResourceChanged('No clear farm ground is visible to close the resource menu.')
         return self._tap(ground[:2], frame)
@@ -422,7 +470,13 @@ class ResourceWorker:
                 frame = self._dismiss(frame)
                 scene = self._observe(frame)
                 if scene.popups or scene.empty_slots:
-                    self._dismiss(frame)
+                    frame = self._dismiss(frame)
+                    scene = self._observe(frame)
+            if (not scene.popups and not scene.empty_slots
+                    and not self._caring_animals
+                    and self.state_path.with_name('animal_care.json').exists()):
+                self._ensure_animal_care()
+                self._animal_care.remember_view(frame)
         self._menu_open = False
         return ResourceResult(status, message, details)
 
@@ -439,6 +493,37 @@ class ResourceWorker:
         if delay is not None:
             self._record(key, 'work_deferred', work_retry_at=utc_timestamp()+delay)
         return result
+
+    def _confirm_recipe_receipts(self, recipe):
+        """Save ingredient receipts before another batch can consume their stock."""
+        identities = [self._known_icon(row.icon_png) for row in recipe.rows]
+        pending = {key for key in identities if key and self._state['items'].get(key, {}).get('pending_batch')
+                   and self._state['items'][key].get('pending_stage') in {'queued', 'awaiting_collection'}}
+        if not pending:
+            return None
+        fresh = self._capture()
+        scene = self._observe(fresh)
+        checked = [popup for popup in scene.popups if popup.rows
+                   and self.vision.titles_match(recipe.title_png, popup.title_png)]
+        if (len(checked) != 1 or not checked[0].recipe_complete
+                or len(checked[0].rows) != len(recipe.rows)
+                or any(row.missing is not False for row in checked[0].rows)):
+            raise ResourceChanged('The ingredient recipe changed while confirming collected stock.')
+        for expected, row in zip(identities, checked[0].rows, strict=True):
+            if expected not in pending:
+                continue
+            if self._known_icon(row.icon_png) != expected:
+                raise ResourceChanged('The collected ingredient identity changed before its stock was confirmed.')
+            available, required = self._quantity(fresh, row.quantity_box)
+            self._acknowledge_inventory(expected, 'fulfilled', available, required, fresh.captured_at)
+        for key in pending:
+            entry = self._state['items'][key]
+            receipt = entry.get('inventory_receipt') or entry.get('inventory_confirmation') or {}
+            if entry.get('pending_batch') and receipt.get('count', 0) < 2:
+                return self._finish('waiting',
+                    'Collected ingredient stock needs another consistent reading before it can be used.', fresh,
+                    item=key, defer_item=True, retry_after_seconds=30)
+        return None
 
     def _follow_location(self, popup):
         """Follow a still-visible item prompt before doing expensive bookkeeping."""
@@ -460,13 +545,13 @@ class ResourceWorker:
             self._menu_open = False
             self._size = frame.width, frame.height
             pending = self.pending_reconciliation(frame, item)
-            if pending is not None:
+            if pending is not None and not pending.details.get('lure_check_ready'):
                 return pending
             icon = OrderReader.item_icon(frame.png, item)
             key = self._learn(icon, source=frame, box=item.icon_bounds)
             remaining = self._wait_remaining(key)
             if remaining:
-                return ResourceResult('waiting', 'This item already has work in progress; checking other requirements.',
+                return ResourceResult('waiting', 'This item is deferred; checking other requirements.',
                     {'item': key, 'defer_item': True, 'retry_after_seconds': remaining})
             fresh = self._capture()
             if not self._unchanged_patch(frame, fresh, item.bounds):
@@ -489,6 +574,44 @@ class ResourceWorker:
         except ResourceChanged as exc:
             return ResourceResult('changed', str(exc))
 
+    def _production_items(self, frame, icon, minimum_score):
+        """Distinguish palette products from identical artwork in the queue."""
+        from hayday.farming import FarmingWorker
+        from hayday.quantities import read_count
+
+        candidates = self.vision.find_item(
+            frame.png, icon, min_scale=.8, max_scale=3.4,
+            region=(0, 0, int(frame.width*.64), int(frame.height*.86)),
+            cancel=self.cancel_event.is_set, threshold=minimum_score,
+        )
+        products = []
+        for candidate in candidates:
+            self._check()
+            # Every selectable recipe has a stock badge above its artwork.
+            # A queued copy may score higher, but has no such badge. Reuse the
+            # seed picker's native badge reader, including joined-paper recovery.
+            for separate in (False, True):
+                # Board icons can omit a product's tall upper detail (e.g. a
+                # hat's pom-pom), leaving its badge farther above the match.
+                box = FarmingWorker._stock_box(frame, candidate, separate=separate,
+                                               upper_margin=1.2)
+                if box and read_count(frame.png, box) is not None:
+                    products.append(candidate)
+                    break
+        return tuple(products)
+
+    @staticmethod
+    def _collection_candidate(candidates):
+        """A close-scoring farm decoration cannot establish a collection target."""
+        if not candidates:
+            return None
+        best = max(candidates, key=lambda target: target.score)
+        if any(other is not best and other.score >= best.score-.03
+               and not ResourceWorker._near(other.center, best.center, max(8, best.width*.3))
+               for other in candidates):
+            return None
+        return best
+
     def _at_source(self, frame, icon, key, expected_title, ancestors, depth):
         self._check()
         if depth > self.max_depth or key in ancestors:
@@ -505,6 +628,13 @@ class ResourceWorker:
             key = self._bind_title(key, expected_title)
             if key in ancestors:
                 return self._finish('unsupported', 'A resource dependency identity returned to an ancestor.', frame)
+
+        if self.fishing is not None or isinstance(self.vision, ResourceVision):
+            self._ensure_fishing_worker()
+            fishing_result = self.fishing.work_if_recognized(
+                frame, icon, key, baseline=self._state['items'].get(key, {}).get('inventory_before'))
+            if fishing_result is not None:
+                return fishing_result
 
         # Field and animal gestures are recognized separately from production
         # queues, using actual tool+target references from the observed game.
@@ -526,7 +656,8 @@ class ResourceWorker:
             from hayday.farming import FarmingWorker
             self.fields = FarmingWorker(self.client, self._capture, self.cancel_event,
                                         self.progress, self.state_path.with_name('farming.json'))
-        farm_result = self.fields.work_if_recognized(frame, icon, key)
+        farm_result = self.fields.work_if_recognized(
+            frame, icon, key, baseline=self._state['items'].get(key, {}).get('inventory_before'))
         if farm_result is not None:
             return farm_result
 
@@ -572,11 +703,7 @@ class ResourceWorker:
         # Product artwork can also be part of a machine's decoration (the Loom
         # is a real example), so closing a usable producer menu and matching
         # that decoration could tap an unrelated object instead of crafting.
-        menu_items = self.vision.find_item(
-            frame.png, icon, min_scale=.8, max_scale=3.4,
-            region=(0, 0, int(frame.width*.64), int(frame.height*.86)),
-            cancel=self.cancel_event.is_set, threshold=minimum_score,
-        )
+        menu_items = self._production_items(frame, icon, minimum_score)
         visible_slots = tuple(
             target for target in scene.empty_slots if self._outside_popups(target, scene)
         )
@@ -592,11 +719,7 @@ class ResourceWorker:
             self._wait(.25)
             frame = self._capture()
             scene = self._observe(frame)
-            menu_items = self.vision.find_item(
-                frame.png, icon, min_scale=.8, max_scale=3.4,
-                region=(0, 0, int(frame.width*.64), int(frame.height*.86)),
-                cancel=self.cancel_event.is_set, threshold=minimum_score,
-            )
+            menu_items = self._production_items(frame, icon, minimum_score)
             visible_slots = tuple(
                 target for target in scene.empty_slots if self._outside_popups(target, scene)
             )
@@ -618,11 +741,7 @@ class ResourceWorker:
         if producer_menu and awaiting_collection:
             frame = self._dismiss(frame)
             scene = self._observe(frame)
-            menu_items = self.vision.find_item(
-                frame.png, icon, min_scale=.8, max_scale=3.4,
-                region=(0, 0, int(frame.width*.64), int(frame.height*.86)),
-                cancel=self.cancel_event.is_set, threshold=minimum_score,
-            )
+            menu_items = self._production_items(frame, icon, minimum_score)
             visible_slots = tuple(
                 target for target in scene.empty_slots if self._outside_popups(target, scene)
             )
@@ -643,7 +762,11 @@ class ResourceWorker:
                 candidates = [c for c in candidates if frame.width*.14 < c.center[0] < frame.width*.86
                               and frame.height*.2 < c.center[1] < frame.height*.84]
                 if candidates:
-                    target = max(candidates, key=lambda c: c.score)
+                    target = self._collection_candidate(candidates)
+                    if target is None:
+                        return self._finish('waiting',
+                            'Finished-product artwork matches multiple farm objects; checking other requirements.',
+                            frame, item=key, defer_item=True, retry_after_seconds=60)
                     self._record(key, 'collection_attempted', collection_probed=True)
                     frame = self._tap(target.center, frame)
                     return self._finish('waiting', 'Collection attempted; returning to verify order inventory.', frame,
@@ -733,12 +856,19 @@ class ResourceWorker:
                     {**details, 'more_ingredients': True, 'wait_seconds': 1})
             return result
 
+        receipt_result = self._confirm_recipe_receipts(recipe)
+        if receipt_result is not None:
+            return receipt_result
+        # Receipt bookkeeping can take time. Capture again so the product,
+        # recipe and queue target are still fresh immediately before input.
         # Keep the recipe visible. The product and one explicit EMPTY label must
         # both remain outside every popup. This permits all three observations
         # (ingredients, product, destination) to come from the same fresh frame.
         fresh = self._capture()
         verified_at = time.monotonic()
         fresh_scene = self._observe(fresh)
+        fresh, fresh_scene, verified_at = self._refresh_expired_recipe(
+            fresh, fresh_scene, menu, icon, minimum_score, verified_at)
         checked = [popup for popup in fresh_scene.popups if popup.rows and (
             self.vision.titles_match(recipe.title_png, popup.title_png)
         )]
@@ -755,7 +885,10 @@ class ResourceWorker:
                     # The observed product floats vertically when its recipe
                     # opens (24 px for the 119 px ice-cream reference). Its
                     # freshly matched artwork and title still identify it.
-                    and self._near(target.center, menu.center, max(8, menu.width*.30))]
+                    # Small feed icons rise about 26 px despite being only
+                    # 72 px wide; allow that observed viewport-scaled motion.
+                    and self._near(target.center, menu.center,
+                                   max(8, menu.width*.30, 32*fresh.height/1080))]
         if not slots:
             return self._finish('waiting', 'No EMPTY queue target remains visible outside the recipe; no production gesture was sent.', fresh,
                                 wait_seconds=30, item=key, defer_item=True, retry_after_seconds=30)
@@ -765,7 +898,8 @@ class ResourceWorker:
         # Persist uncertain intent before input; a command error must not cause
         # a second batch to be started automatically on restart.
         self._record(key, 'queue_attempted', pending_batch=True, pending_stage='uncertain',
-                     empty_before=len(slots), collection_probed=False, inventory_confirmation=None, pending_slot={
+                     empty_before=len(slots), collection_probed=False, inventory_confirmation=None,
+                     inventory_receipt=None, pending_slot={
                          'dx': slot.center[0]-menu.center[0], 'dy': slot.center[1]-menu.center[1],
                          'menu_width': menu.width, 'label_width': slot.width,
                      })
@@ -785,6 +919,25 @@ class ResourceWorker:
         self._record(key, 'batch_queued', pending_batch=True, pending_stage='queued')
         return self._finish('queued', 'One batch was queued after verifying every ingredient. Returning to check the order.', after,
                             item=key, wait_seconds=1, defer_item=True, retry_after_seconds=60)
+
+    def _refresh_expired_recipe(self, frame, scene, menu, icon, minimum_score, observed_at):
+        # Recipe popovers expire while ingredient receipts are saved. Reopen
+        # the same independently matched menu product once, then read every
+        # ingredient again; old stock evidence never authorizes production.
+        if scene.popups or not scene.empty_slots:
+            return frame, scene, observed_at
+        products = self.vision.find_item(frame.png, icon, min_scale=.8, max_scale=3.4,
+            region=(0, 0, int(frame.width*.64), int(frame.height*.86)),
+            cancel=self.cancel_event.is_set, threshold=minimum_score)
+        products = [target for target in products
+                    if self._near(target.center, menu.center,
+                                  max(8, menu.width*.30, 32*frame.height/1080))]
+        if len(products) != 1 or time.monotonic()-observed_at > 2:
+            return frame, scene, observed_at
+        self.progress('Reopening the expired recipe before verifying ingredients and queueing.')
+        frame = self._tap(products[0].center, frame)
+        observed_at = time.monotonic()
+        return frame, self._observe(frame), observed_at
 
     @staticmethod
     def _near(first, second, distance):
@@ -824,6 +977,15 @@ class ResourceWorker:
                 if state.get('pending_stage') == 'queued':
                     self._record(key, 'queue_vacated', pending_batch=True,
                                  pending_stage='awaiting_collection', collection_probed=False)
+                    # Opening a machine can collect its output before we see
+                    # the empty slot. Preserve the earlier two stock readings
+                    # while queued, but require this vacancy before retiring it.
+                    receipt = state.get('inventory_receipt') or state.get('inventory_confirmation') or {}
+                    if receipt.get('count', 0) >= 2:
+                        self._inventory_confirmed(key)
+                        return self._finish('waiting',
+                            'The source slot is empty and collected stock was confirmed; rechecking the order.',
+                            frame, wait_seconds=1, item=key)
                     return self._finish('waiting', 'The queued batch left its slot; collection and inventory confirmation are still required.', frame,
                                         wait_seconds=1, item=key)
                 if state.get('collection_probed'):

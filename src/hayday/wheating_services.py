@@ -37,6 +37,13 @@ class WheatingServices:
             if state.get('frame'):
                 self.frame, self.frame_serial = state['frame'], state['serial']
 
+    def select_wheating_sell_price(self, value):
+        with self._lock:
+            self._ensure_open()
+            if self._wheating_runner:
+                raise AdbError('Stop Wheating before changing its sell price.')
+            self.save_settings(replace(self.settings, wheating_sell_price=value))
+
     def _start_wheating_fleet(self, cancel_event, progress, max_seconds, reset_restart_cooldown):
         from hayday.wheating_fleet import WheatingFleet
 
@@ -65,7 +72,8 @@ class WheatingServices:
 
             fleet = WheatingFleet(selected, self.data.root/'diagnostics'/'wheating',
                 progress=publish, cancel_event=cancel_event, max_seconds=max_seconds,
-                reset_restart_cooldown=reset_restart_cooldown)
+                reset_restart_cooldown=reset_restart_cooldown,
+                sell_price=self.settings.wheating_sell_price)
             self._wheating_runner = fleet
         try:
             result = fleet.run()
@@ -109,7 +117,8 @@ class WheatingServices:
             try:
                 runner = WheatingRunner(client, self.data.root/'diagnostics'/'wheating',
                     cancel_event=cancel_event, progress=publish, max_seconds=max_seconds,
-                    reset_restart_cooldown=reset_restart_cooldown)
+                    reset_restart_cooldown=reset_restart_cooldown,
+                    sell_price=self.settings.wheating_sell_price)
             except Exception:
                 client.close()
                 raise

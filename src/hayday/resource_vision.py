@@ -319,6 +319,12 @@ class ResourceVision:
         kernel = np.ones((max(1, round(3*scale)),)*2, np.uint8)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         count, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
+        action_mask = np.all(
+            np.abs(frame.astype(np.float32)-np.array([178, 224, 239])*gain) < 18*gain,
+            axis=2,
+        ).astype(np.uint8)
+        action_mask = cv2.morphologyEx(action_mask, cv2.MORPH_CLOSE, kernel)
+        _, _, action_stats, _ = cv2.connectedComponentsWithStats(action_mask)
         popups = []
         for label in range(1, count):
             x, y, w, h, area = (int(value) for value in stats[label])
@@ -326,12 +332,27 @@ class ResourceVision:
             navigation = tuple(arrow for arrow in arrows if _contains(box, arrow.center))
             if not navigation or not 145*scale < h < height*0.85:
                 continue
+            # The action rows are independent of the cream paper around them.
+            # Read their full bounds before a joined order-panel component can
+            # distort the popup's width or cut through its title/ingredients.
+            action_rows = [(int(rx), int(ry), int(rw), int(rh))
+                for rx, ry, rw, rh, row_area in action_stats[1:]
+                if 130*scale < rw < 600*scale and 30*scale < rh < 125*scale
+                and row_area >= rw*rh*.35
+                and any(_contains((rx, ry, rw, rh), arrow.center) for arrow in navigation)]
             # A stock bubble can bridge the popover's cream into the order
             # panel behind it (observed for White Sugar). Its lateral extension
             # is shallow; the actual popup retains tall cream side borders.
             component = labels[y:y+h, x:x+w] == label
             borders = np.flatnonzero(component.sum(axis=0) >= h*.65)
-            if len(borders) >= 2:
+            if action_rows:
+                padding = round(26*scale)
+                left = max(x, min(row[0] for row in action_rows)-padding)
+                right = min(x+w, max(row[0]+row[2] for row in action_rows)+padding)
+                area = int(component[:, left-x:right-x].sum())
+                x, y, w, h = box = (left, y, right-left, h)
+                navigation = tuple(arrow for arrow in navigation if _contains(box, arrow.center))
+            elif len(borders) >= 2:
                 padding = max(1, round(2*scale))
                 left = max(0, int(borders[0])-padding)
                 right = min(w, int(borders[-1])+padding+1)
@@ -353,6 +374,12 @@ class ResourceVision:
             if np.count_nonzero(dark) < max(20, title.size//100):
                 continue
             title = self._title_crop(title)
+            # Two-line names can cross the initial header boundary. Extend
+            # only when the selected title's ink is clipped at that boundary;
+            # extending every header would include adjacent production UI.
+            if np.count_nonzero(np.max(title[-2:],axis=2) < 70) >= max(4,round(4*scale)):
+                extended_height = min(h//2,round(115*scale))
+                title = self._title_crop(popup[round(2*scale):extended_height,:])
             row_background = np.all(
                 np.abs(popup.astype(np.float32)-np.array([178, 224, 239])*gain) < 18*gain,
                 axis=2,
@@ -403,8 +430,11 @@ class ResourceVision:
                 ):
                     continue
                 quantity = (
-                    x+rx+round(rw*0.32), y+ry+round(rh*0.20),
-                    round(rw*0.34), round(rh*0.66),
+                    # Item artwork can hide the left background. The right
+                    # edge and row height stay stable, keeping the first digit
+                    # intact without including a brown ingredient illustration.
+                    x+rx+rw-round(rh*2.10), y+ry+round(rh*0.20),
+                    round(rh*1.30), round(rh*0.66),
                 )
                 qx, qy, qw, qh = quantity
                 missing = self._row_missing(frame[qy:qy+qh, qx:qx+qw])

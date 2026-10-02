@@ -292,6 +292,38 @@
           0.65,
           3.3
         ]
+      },
+      {
+        "file": "cherry_cluster_mumu_left.png",
+        "source": "tests/fixtures/orders/cherry_small.png",
+        "box": [
+          970,
+          554,
+          994,
+          570
+        ],
+        "source_sha256": "f7ecaa1401944aab71f78791b42674149b0c887312c970f8d9ddef9527fad72d",
+        "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close then one 3x3 dilation. RGB pixels remain unchanged.",
+        "world_scale_range": [
+          0.65,
+          3.3
+        ]
+      },
+      {
+        "file": "cherry_cluster_mumu_right.png",
+        "source": "tests/fixtures/orders/cherry_small.png",
+        "box": [
+          995,
+          543,
+          1018,
+          557
+        ],
+        "source_sha256": "f7ecaa1401944aab71f78791b42674149b0c887312c970f8d9ddef9527fad72d",
+        "mask": "Original BGR: R>80, R>1.6G, B>1.2G, R>1.5B; binary 3x3 close then one 3x3 dilation. RGB pixels remain unchanged.",
+        "world_scale_range": [
+          0.65,
+          3.3
+        ]
       }
     ],
     "cluster_evidence": "Two distinct patterns scoring at least 0.86, or one detailed multi-cherry pattern scoring at least 0.93 with surrounding textured green leaves. All candidates require cherry color and the requested item match.",

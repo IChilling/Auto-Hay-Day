@@ -44,6 +44,8 @@ class ShopView:
     minus_quantity: VisualTarget | None = None
     plus_price: VisualTarget | None = None
     max_price: VisualTarget | None = None
+    min_price: VisualTarget | None = None
+    minus_price: VisualTarget | None = None
     submit: VisualTarget | None = None
     newspaper: VisualTarget | None = None
     ad_free: bool = False
@@ -950,6 +952,8 @@ class WheatingVision:
             wheat=self.relative(anchor, (1356, 237, 112, 125)) if title else wheat,
             stock=stock, quantity=quantity, price=price,
             plus_quantity=layout['plus'], max_price=layout['maximum'],
+            min_price=self.near(frame, anchor, 'price_min'),
+            minus_price=self._minus_button(image, anchor, (1135, 412, 119, 120)) if title else None,
             minus_quantity=self._quantity_minus(image, anchor) if title else None,
             submit=layout['submit'] if self._enabled(image, layout['submit']) else None,
             newspaper=newspaper, ad_checked=bool(tick),
@@ -958,7 +962,11 @@ class WheatingVision:
 
     def _quantity_minus(self, image, anchor):
         """Verify the fixed quantity button's gold face and white minus glyph."""
-        target = self.relative(anchor, (1135, 242, 119, 120))
+        return self._minus_button(image, anchor, (1135, 242, 119, 120))
+
+    def _minus_button(self, image, anchor, box):
+        """Verify a gold button and its white minus glyph in the current frame."""
+        target = self.relative(anchor, box)
         x, y, w, h = target.box
         if x < 0 or y < 0 or x+w > image.shape[1] or y+h > image.shape[0]:
             return None
